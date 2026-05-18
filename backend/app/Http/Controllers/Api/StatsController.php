@@ -60,10 +60,15 @@ class StatsController extends Controller
 
         return response()->json([
             'users_total' => User::count(),
-            'users_by_role' => User::query()
-                ->get(['role'])
-                ->groupBy('role')
-                ->map(fn ($users) => $users->count()),
+            'users_by_role' => collect(User::raw(function ($collection) {
+                return $collection->aggregate([
+                    ['$group' => ['_id' => '$role', 'count' => ['$sum' => 1]]],
+                ]);
+            })->toArray())->mapWithKeys(function ($result) {
+                $role = data_get($result, '_id');
+
+                return [(string) ($role ?? '') => (int) data_get($result, 'count', 0)];
+            }),
             'events_total' => Event::count(),
             'events_published' => Event::where('status', 'published')->count(),
             'registrations_total' => Registration::count(),
