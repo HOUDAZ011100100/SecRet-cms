@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\RegistrationException;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
-use App\Models\Payment;
 use App\Models\Registration;
 use App\Models\User;
-use App\Services\NotificationService;
+use App\Services\RegistrationService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class RegistrationController extends Controller
 {
+    public function __construct(private readonly RegistrationService $registrations) {}
+
     /** Colonnes événement chargées avec les inscriptions participant. */
     private function registrationEventSelect(): array
     {
@@ -45,62 +45,13 @@ class RegistrationController extends Controller
     {
         abort_unless($request->user()->role === User::ROLE_PARTICIPANT, 403);
 
-        if ($event->status !== 'published') {
-            return response()->json(['message' => 'Événement non ouvert aux inscriptions.'], 422);
+        try {
+            $registration = $this->registrations->register($request->user(), $event);
+        } catch (RegistrationException $exception) {
+            return response()->json($exception->toResponsePayload(), $exception->status);
         }
 
-        return DB::transaction(function () use ($request, $event) {
-            $event->refresh();
-            $locked = Event::query()->whereKey($event->id)->firstOrFail();
-
-            if ($locked->registered_count >= $locked->capacity) {
-                return response()->json(['message' => 'Événement complet.'], 422);
-            }
-
-            $existing = Registration::where('event_id', $locked->id)
-                ->where('user_id', $request->user()->id)
-                ->first();
-
-            if ($existing) {
-                return response()->json(['message' => 'Déjà inscrit.', 'registration' => $existing], 422);
-            }
-
-            $incremented = Event::query()
-                ->whereKey($locked->id)
-                ->where('registered_count', '<', $locked->capacity)
-                ->increment('registered_count');
-
-            if (! $incremented) {
-                return response()->json(['message' => 'Événement complet.'], 422);
-            }
-
-            $registration = Registration::create([
-                'event_id' => $locked->id,
-                'user_id' => $request->user()->id,
-                'status' => 'registered',
-                'payment_status' => (float) $locked->ticket_price <= 0 ? 'paid' : 'pending',
-                'ticket_code' => (string) Str::uuid(),
-                'amount' => $locked->ticket_price,
-                'paid_at' => (float) $locked->ticket_price <= 0 ? now() : null,
-                'registered_at' => now(),
-            ]);
-
-            if ((float) $locked->ticket_price <= 0) {
-                Payment::create([
-                    'registration_id' => $registration->id,
-                    'amount' => 0,
-                    'currency' => 'EUR',
-                    'status' => 'completed',
-                    'method' => 'free',
-                    'meta' => ['note' => 'Gratuit'],
-                ]);
-            }
-
-            $registration->load('event', 'user');
-            NotificationService::participantRegistered($registration);
-
-            return response()->json($registration, 201);
-        });
+        return response()->json($registration, 201);
     }
 
     public function pay(Request $request, Registration $registration)
@@ -109,32 +60,13 @@ class RegistrationController extends Controller
         abort_unless($registration->user_id === $user->id, 403);
         abort_unless($user->role === User::ROLE_PARTICIPANT, 403);
 
-        if ($registration->payment_status === 'paid') {
-            return response()->json(['message' => 'Déjà payé.', 'registration' => $registration]);
+        try {
+            $registration = $this->registrations->pay($registration);
+        } catch (RegistrationException $exception) {
+            return response()->json($exception->toResponsePayload(), $exception->status);
         }
 
-        $amount = (float) $registration->amount;
-
-        return DB::transaction(function () use ($registration, $amount) {
-            $registration->update([
-                'payment_status' => 'paid',
-                'paid_at' => now(),
-            ]);
-
-            Payment::create([
-                'registration_id' => $registration->id,
-                'amount' => $amount,
-                'currency' => 'EUR',
-                'status' => 'completed',
-                'method' => 'card_mock',
-                'meta' => ['simulated' => true],
-            ]);
-
-            $registration = $registration->fresh($this->registrationEventWith());
-            NotificationService::participantPaid($registration);
-
-            return response()->json($registration);
-        });
+        return response()->json($registration);
     }
 
     public function destroy(Request $request, Registration $registration)
@@ -143,22 +75,13 @@ class RegistrationController extends Controller
         abort_unless($registration->user_id === $user->id, 403);
         abort_unless($user->role === User::ROLE_PARTICIPANT, 403);
 
-        if ($registration->payment_status === 'paid') {
-            return response()->json([
-                'message' => 'Impossible d\'annuler une inscription déjà payée.',
-            ], 422);
+        try {
+            $this->registrations->cancel($registration);
+        } catch (RegistrationException $exception) {
+            return response()->json($exception->toResponsePayload(), $exception->status);
         }
 
-        return DB::transaction(function () use ($registration) {
-            $registration->delete();
-
-            Event::query()
-                ->whereKey($registration->event_id)
-                ->where('registered_count', '>', 0)
-                ->decrement('registered_count');
-
-            return response()->json(['message' => 'Inscription annulée.']);
-        });
+        return response()->json(['message' => 'Inscription annulée.']);
     }
 
     public function myRegistrationForEvent(Request $request, Event $event)
