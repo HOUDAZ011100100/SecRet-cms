@@ -8,6 +8,16 @@ use MongoDB\Laravel\Eloquent\Model;
 
 class Event extends Model
 {
+    public const STATUS_CANCELLED = 'cancelled';
+
+    public const STATUS_COMPLETED = 'completed';
+
+    public const STATUS_DRAFT = 'draft';
+
+    public const STATUS_PENDING_PUBLICATION = 'pending_publication';
+
+    public const STATUS_PUBLISHED = 'published';
+
     protected $connection = 'mongodb';
 
     protected $table = 'events';
