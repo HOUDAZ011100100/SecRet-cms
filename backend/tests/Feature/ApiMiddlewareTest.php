@@ -1,0 +1,38 @@
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+
+class ApiMiddlewareTest extends TestCase
+{
+    public function test_api_responses_include_security_headers_and_request_id(): void
+    {
+        $this->getJson('/api/health')
+            ->assertOk()
+            ->assertHeader('X-Content-Type-Options', 'nosniff')
+            ->assertHeader('X-Frame-Options', 'DENY')
+            ->assertHeader('Referrer-Policy', 'no-referrer')
+            ->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()')
+            ->assertHeader('X-Permitted-Cross-Domain-Policies', 'none')
+            ->assertHeader('X-Request-Id');
+    }
+
+    public function test_api_reuses_safe_inbound_request_id(): void
+    {
+        $this->withHeader('X-Request-Id', 'frontend-request-123')
+            ->getJson('/api/health')
+            ->assertOk()
+            ->assertHeader('X-Request-Id', 'frontend-request-123');
+    }
+
+    public function test_api_replaces_invalid_inbound_request_id(): void
+    {
+        $response = $this->withHeader('X-Request-Id', "bad\nheader")
+            ->getJson('/api/health')
+            ->assertOk();
+
+        $this->assertNotSame("bad\nheader", $response->headers->get('X-Request-Id'));
+        $this->assertNotEmpty($response->headers->get('X-Request-Id'));
+    }
+}

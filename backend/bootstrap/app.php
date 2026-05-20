@@ -1,6 +1,8 @@
 <?php
 
 use App\Exceptions\Contracts\ApiException;
+use App\Http\Middleware\ApplyApiSecurityHeaders;
+use App\Http\Middleware\AttachRequestId;
 use App\Http\Middleware\EnsureRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -15,6 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->api(append: [
+            AttachRequestId::class,
+            ApplyApiSecurityHeaders::class,
+        ]);
+
         $middleware->alias([
             'role' => EnsureRole::class,
         ]);
