@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\AppNotification;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
 use Tests\Support\RefreshMongoDatabase;
@@ -12,6 +13,14 @@ use Tests\TestCase;
 class AuthAndUserManagementFlowTest extends TestCase
 {
     use RefreshMongoDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->refreshMongoDatabase();
+        Cache::flush();
+    }
 
     public function test_participant_registers_and_receives_token(): void
     {
@@ -112,6 +121,50 @@ class AuthAndUserManagementFlowTest extends TestCase
             ->getJson('/api/notifications/unread-count')
             ->assertOk()
             ->assertJsonPath('count', 0);
+    }
+
+    public function test_login_is_rate_limited_by_email_and_ip(): void
+    {
+        $ip = '203.0.113.10';
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->withServerVariables(['REMOTE_ADDR' => $ip])->postJson('/api/login', [
+                'email' => 'auth@example.com',
+                'password' => 'wrong-password',
+            ])->assertUnprocessable();
+        }
+
+        $this->withServerVariables(['REMOTE_ADDR' => $ip])->postJson('/api/login', [
+            'email' => 'auth@example.com',
+            'password' => 'wrong-password',
+        ])
+            ->assertTooManyRequests()
+            ->assertJsonPath('message', 'Trop de tentatives de connexion. Réessayez dans une minute.');
+    }
+
+    public function test_registration_is_rate_limited_by_ip(): void
+    {
+        $ip = '203.0.113.11';
+
+        for ($i = 0; $i < 3; $i++) {
+            $this->withServerVariables(['REMOTE_ADDR' => $ip])->postJson('/api/register', [
+                'name' => "Rate Limited {$i}",
+                'email' => "rate-limited-{$i}@example.com",
+                'password' => 'password123',
+                'password_confirmation' => 'password123',
+                'role' => User::ROLE_PARTICIPANT,
+            ])->assertCreated();
+        }
+
+        $this->withServerVariables(['REMOTE_ADDR' => $ip])->postJson('/api/register', [
+            'name' => 'Rate Limited Blocked',
+            'email' => 'rate-limited-blocked@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'role' => User::ROLE_PARTICIPANT,
+        ])
+            ->assertTooManyRequests()
+            ->assertJsonPath('message', 'Trop de créations de compte. Réessayez dans une minute.');
     }
 
     public function test_admin_creates_updates_and_deletes_users(): void

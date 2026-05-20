@@ -24,6 +24,11 @@ trait RefreshMongoDatabase
     {
         parent::setUp();
 
+        $this->refreshMongoDatabase();
+    }
+
+    protected function refreshMongoDatabase(): void
+    {
         $database = DB::connection('mongodb')->getDatabase();
 
         if (! MongoDatabaseState::$migrated) {
@@ -33,8 +38,6 @@ trait RefreshMongoDatabase
 
             $this->artisan('migrate', ['--force' => true])->run();
             MongoDatabaseState::$migrated = true;
-
-            return;
         }
 
         foreach ($this->mongoCollections as $collection) {
