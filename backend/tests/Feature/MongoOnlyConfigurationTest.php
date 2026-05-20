@@ -10,7 +10,17 @@ class MongoOnlyConfigurationTest extends TestCase
     {
         $this->getJson('/api/health')
             ->assertOk()
-            ->assertExactJson(['status' => 'ok']);
+            ->assertJsonPath('status', 'ok')
+            ->assertJsonPath('services.mongodb.status', 'ok')
+            ->assertJsonPath('services.redis.status', 'ok')
+            ->assertJsonStructure([
+                'status',
+                'checked_at',
+                'services' => [
+                    'mongodb' => ['status'],
+                    'redis' => ['status'],
+                ],
+            ]);
     }
 
     public function test_database_configuration_is_mongo_only(): void
