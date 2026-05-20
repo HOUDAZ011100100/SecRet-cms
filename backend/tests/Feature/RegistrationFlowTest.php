@@ -7,7 +7,10 @@ use App\Models\Payment;
 use App\Models\Registration;
 use App\Models\User;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
+use MongoDB\Driver\Exception\BulkWriteException;
+use Ramsey\Uuid\Uuid;
 use Tests\Support\RefreshMongoDatabase;
 use Tests\TestCase;
 
@@ -68,6 +71,53 @@ class RegistrationFlowTest extends TestCase
             ->assertJsonPath('message', 'Déjà inscrit.');
 
         $this->assertSame(1, Registration::query()->count());
+        $this->assertSame(1, (int) $event->fresh()->registered_count);
+    }
+
+    public function test_registration_unique_index_blocks_duplicate_event_participant_documents(): void
+    {
+        $participant = $this->user(User::ROLE_PARTICIPANT);
+        $event = $this->publishedEvent(['capacity' => 2]);
+
+        $this->registration($participant, $event);
+
+        $this->expectException(BulkWriteException::class);
+
+        $this->registration($participant, $event, [
+            'ticket_code' => 'duplicate-ticket',
+        ]);
+    }
+
+    public function test_registration_service_skips_colliding_ticket_codes(): void
+    {
+        $firstTicketCode = '11111111-1111-4111-8111-111111111111';
+        $secondTicketCode = '22222222-2222-4222-8222-222222222222';
+
+        $existingParticipant = $this->user(User::ROLE_PARTICIPANT);
+        $existingEvent = $this->publishedEvent(['title' => 'Existing Ticket Event']);
+        $this->registration($existingParticipant, $existingEvent, [
+            'ticket_code' => $firstTicketCode,
+        ]);
+
+        $participant = $this->user(User::ROLE_PARTICIPANT);
+        $event = $this->publishedEvent(['capacity' => 2]);
+
+        Str::createUuidsUsingSequence([
+            Uuid::fromString($firstTicketCode),
+            Uuid::fromString($secondTicketCode),
+        ]);
+
+        try {
+            Sanctum::actingAs($participant);
+
+            $this->postJson("/api/events/{$event->id}/register")
+                ->assertCreated()
+                ->assertJsonPath('ticket_code', $secondTicketCode);
+        } finally {
+            Str::createUuidsNormally();
+        }
+
+        $this->assertSame(2, Registration::query()->count());
         $this->assertSame(1, (int) $event->fresh()->registered_count);
     }
 

@@ -8,7 +8,7 @@ Public endpoints:
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/health` | Health check. |
+| `GET` | `/api/health` | Readiness check for MongoDB and Redis. |
 | `POST` | `/api/register` | Register a participant or client account. |
 | `POST` | `/api/login` | Login and receive a Sanctum bearer token. |
 
@@ -18,6 +18,8 @@ Authenticated requests use:
 Authorization: Bearer <token>
 Accept: application/json
 ```
+
+All `/api/*` responses are JSON, including framework errors such as unauthenticated `401` responses. Clients may send `X-Request-Id`; safe values are echoed back, and otherwise the backend generates one. API responses include the security headers `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, and `X-Permitted-Cross-Domain-Policies`.
 
 Demo users after `php artisan migrate:fresh --seed --force`:
 
@@ -40,7 +42,7 @@ Demo users after `php artisan migrate:fresh --seed --force`:
 | `GET` | `/api/notifications/unread-count` | Unread notification count. |
 | `POST` | `/api/notifications/read-all` | Marks all current user's notifications as read. |
 | `POST` | `/api/notifications/{notification}/read` | Marks one notification as read. |
-| `GET` | `/api/events/browse` | Published event browser. |
+| `GET` | `/api/events/browse` | Published event browser. Optional `q` search, max 120 chars. |
 | `GET` | `/api/events/{event}` | Event detail. Unpublished events are manager-only. |
 | `GET` | `/api/events/{event}/feedbacks` | Public feedback, with expanded visibility for admins. |
 
@@ -50,7 +52,7 @@ Demo users after `php artisan migrate:fresh --seed --force`:
 | --- | --- | --- |
 | `POST` | `/api/events/{event}/register` | Register for a published event. Capacity and duplicate registration are guarded. |
 | `GET` | `/api/events/{event}/my-registration` | Participant registration for one event. |
-| `GET` | `/api/my-registrations` | Participant registration history. |
+| `GET` | `/api/my-registrations` | Participant registration history. Optional `payment_status`: `pending` or `paid`. |
 | `POST` | `/api/registrations/{registration}/pay` | Mock payment for a pending registration. |
 | `DELETE` | `/api/registrations/{registration}` | Cancel an unpaid registration. |
 | `GET` | `/api/registrations/{registration}/ticket` | Returns ticket payload for a paid registration. |
@@ -83,7 +85,7 @@ Admins can use organizer event planning routes and also have these admin-only ro
 
 | Method | Path | Notes |
 | --- | --- | --- |
-| `GET` | `/api/admin/events` | All events. |
+| `GET` | `/api/admin/events` | All events. Optional `q` search, max 120 chars. |
 | `GET` | `/api/admin/organizer-events` | Events owned or created by organizers. |
 | `GET` | `/api/admin/my-events` | Events assigned to or created by the admin. |
 | `DELETE` | `/api/admin/events/{event}` | Delete event. |
@@ -91,9 +93,9 @@ Admins can use organizer event planning routes and also have these admin-only ro
 | `PATCH` | `/api/admin/events/{event}` | Update event. |
 | `PATCH` | `/api/admin/events/{event}/capacity` | Update capacity. |
 | `POST` | `/api/admin/events/{event}/approve-publication` | Publish pending event. |
-| `GET` | `/api/admin/event-requests` | List client event requests. |
+| `GET` | `/api/admin/event-requests` | List client event requests. Optional `status`: `pending`, `approved`, or `rejected`. |
 | `POST` | `/api/admin/event-requests/{eventRequest}/review` | Approve or reject event request. |
-| `GET` | `/api/admin/users` | List users. |
+| `GET` | `/api/admin/users` | List users. Optional `role`: `admin`, `organizer`, `participant`, or `client`. |
 | `GET` | `/api/admin/organizers` | List organizers. |
 | `POST` | `/api/admin/users` | Create user. |
 | `PATCH` | `/api/admin/users/{user}` | Update user. |
@@ -129,5 +131,7 @@ Validation errors use Laravel's default `422` JSON response. Domain errors use:
   "message": "Human readable error."
 }
 ```
+
+Login and registration are rate limited. Rate-limit responses use HTTP `429` with the same message envelope.
 
 The OpenAPI contract in `openapi.yaml` documents the route inventory and main request/response schemas. It is intentionally frontend-facing; the generated class docs remain available for internal PHP implementation details.

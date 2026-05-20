@@ -30,12 +30,13 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required: [status]
-                properties:
-                  status:
-                    type: string
-                    const: ok
+                $ref: "#/components/schemas/HealthReport"
+        "503":
+          description: MongoDB or Redis is unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthReport"
   /register:
     post:
       tags: [Auth]
@@ -56,6 +57,8 @@ paths:
                 $ref: "#/components/schemas/AuthTokenResponse"
         "422":
           $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /login:
     post:
       tags: [Auth]
@@ -76,6 +79,8 @@ paths:
                 $ref: "#/components/schemas/AuthTokenResponse"
         "422":
           $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /logout:
     post:
       tags: [Auth]
@@ -158,6 +163,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedEvents"
+        "422":
+          $ref: "#/components/responses/ValidationError"
   /events/{event}:
     get:
       tags: [Events]
@@ -218,13 +225,19 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: "#/components/schemas/Registration"
-                  - type: "null"
+                type: object
+                required: [registration]
+                properties:
+                  registration:
+                    oneOf:
+                      - $ref: "#/components/schemas/Registration"
+                      - type: "null"
   /my-registrations:
     get:
       tags: [Registrations]
       summary: Current participant registrations
+      parameters:
+        - $ref: "#/components/parameters/paymentStatusFilter"
       responses:
         "200":
           description: Registration list.
@@ -234,6 +247,8 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Registration"
+        "422":
+          $ref: "#/components/responses/ValidationError"
   /registrations/{registration}/pay:
     post:
       tags: [Registrations]
@@ -562,6 +577,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedEvents"
+        "422":
+          $ref: "#/components/responses/ValidationError"
   /admin/organizer-events:
     get:
       tags: [Events]
@@ -794,6 +811,8 @@ paths:
     get:
       tags: [Event Requests]
       summary: Admin event request list
+      parameters:
+        - $ref: "#/components/parameters/eventRequestStatusFilter"
       responses:
         "200":
           description: Event requests.
@@ -803,6 +822,8 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/EventRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
   /admin/event-requests/{eventRequest}/review:
     post:
       tags: [Event Requests]
@@ -821,13 +842,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EventRequest"
+                oneOf:
+                  - $ref: "#/components/schemas/EventRequest"
+                  - $ref: "#/components/schemas/EventRequestApprovalResponse"
         "422":
           $ref: "#/components/responses/DomainError"
   /admin/users:
     get:
       tags: [Users]
       summary: Admin user list
+      parameters:
+        - $ref: "#/components/parameters/roleFilter"
       responses:
         "200":
           description: Users.
@@ -837,6 +862,8 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/User"
+        "422":
+          $ref: "#/components/responses/ValidationError"
     post:
       tags: [Users]
       summary: Admin create user
@@ -1071,12 +1098,53 @@ components:
       required: false
       schema:
         type: string
+        maxLength: 120
+    roleFilter:
+      name: role
+      in: query
+      required: false
+      schema:
+        $ref: "#/components/schemas/Role"
+    eventRequestStatusFilter:
+      name: status
+      in: query
+      required: false
+      schema:
+        $ref: "#/components/schemas/EventRequestStatus"
+    paymentStatusFilter:
+      name: payment_status
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [pending, paid]
     eventIdQuery:
       name: event_id
       in: query
       required: false
       schema:
         $ref: "#/components/schemas/ObjectId"
+  headers:
+    RequestId:
+      description: Correlation identifier returned on every API response.
+      schema:
+        type: string
+        maxLength: 128
+    ContentTypeOptions:
+      description: Prevents MIME sniffing.
+      schema:
+        type: string
+        const: nosniff
+    FrameOptions:
+      description: Disallows framing of API responses.
+      schema:
+        type: string
+        const: DENY
+    ReferrerPolicy:
+      description: Prevents referrer leakage from API responses.
+      schema:
+        type: string
+        const: no-referrer
   responses:
     Message:
       description: Message response.
@@ -1124,7 +1192,42 @@ components:
                   type: array
                   items:
                     type: string
+    TooManyRequests:
+      description: Request was rate limited.
+      headers:
+        X-Request-Id:
+          $ref: "#/components/headers/RequestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Message"
   schemas:
+    DependencyStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok, down]
+        error:
+          type: string
+    HealthReport:
+      type: object
+      required: [status, checked_at, services]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+        checked_at:
+          $ref: "#/components/schemas/IsoDateTime"
+        services:
+          type: object
+          required: [mongodb, redis]
+          properties:
+            mongodb:
+              $ref: "#/components/schemas/DependencyStatus"
+            redis:
+              $ref: "#/components/schemas/DependencyStatus"
     ObjectId:
       type: string
       pattern: "^[a-fA-F0-9]{24}$"
@@ -1395,6 +1498,14 @@ components:
           type:
             - string
             - "null"
+    EventRequestApprovalResponse:
+      type: object
+      required: [event_request, event]
+      properties:
+        event_request:
+          $ref: "#/components/schemas/EventRequest"
+        event:
+          $ref: "#/components/schemas/Event"
     EventRequestWriteRequest:
       type: object
       required: [title, description, preferred_start, preferred_end, location, ticket_price]
@@ -1421,9 +1532,9 @@ components:
           type: string
     EventRequestReviewRequest:
       type: object
-      required: [status]
+      required: [decision]
       properties:
-        status:
+        decision:
           type: string
           enum: [approved, rejected]
         rejection_reason:

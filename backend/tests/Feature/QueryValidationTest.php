@@ -44,6 +44,15 @@ class QueryValidationTest extends TestCase
             ->assertJsonValidationErrors('q');
     }
 
+    public function test_participant_registration_index_rejects_invalid_payment_status_filter(): void
+    {
+        Sanctum::actingAs($this->user(User::ROLE_PARTICIPANT));
+
+        $this->getJson('/api/my-registrations?payment_status=refunded')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('payment_status');
+    }
+
     private function user(string $role): User
     {
         return User::factory()->create(['role' => $role]);

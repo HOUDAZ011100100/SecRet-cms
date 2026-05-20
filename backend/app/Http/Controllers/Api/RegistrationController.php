@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Registrations\ParticipantRegistrationIndexRequest;
 use App\Models\Event;
 use App\Models\Registration;
 use App\Models\User;
@@ -78,14 +79,12 @@ class RegistrationController extends Controller
      *
      * @return JsonResponse List of registrations.
      */
-    public function myRegistrations(Request $request)
+    public function myRegistrations(ParticipantRegistrationIndexRequest $request)
     {
-        // Optional filter by payment status (pending, paid)
-        $status = $request->filled('payment_status')
-            ? $request->string('payment_status')->toString()
-            : null;
-
-        return response()->json($this->registrations->listForParticipant($this->actor($request), $status));
+        return response()->json($this->registrations->listForParticipant(
+            $this->actor($request),
+            $request->validated('payment_status'),
+        ));
     }
 
     /**

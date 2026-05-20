@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use MongoDB\Driver\Exception\BulkWriteException;
 
 /**
  * Service managing the lifecycle of participant registrations for events.
@@ -36,68 +37,74 @@ class RegistrationService
             throw new RegistrationException('Événement non ouvert aux inscriptions.');
         }
 
-        return DB::transaction(function () use ($participant, $event) {
-            // Lock the event record to get the most accurate registered_count and prevent overbooking.
-            $freshEvent = Event::query()->whereKey($event->id)->firstOrFail();
+        try {
+            return DB::transaction(function () use ($participant, $event) {
+                // Lock the event record to get the most accurate registered_count and prevent overbooking.
+                $freshEvent = Event::query()->whereKey($event->id)->firstOrFail();
 
-            if ((int) $freshEvent->registered_count >= (int) $freshEvent->capacity) {
-                throw new RegistrationException('Événement complet.');
-            }
+                if ((int) $freshEvent->registered_count >= (int) $freshEvent->capacity) {
+                    throw new RegistrationException('Événement complet.');
+                }
 
-            // Check if the user is already registered to avoid duplicates.
-            $existing = Registration::query()
-                ->where('event_id', $freshEvent->id)
-                ->where('user_id', $participant->id)
-                ->first();
+                // Check if the user is already registered to avoid duplicates.
+                $existing = Registration::query()
+                    ->where('event_id', $freshEvent->id)
+                    ->where('user_id', $participant->id)
+                    ->first();
 
-            if ($existing) {
-                throw new RegistrationException('Déjà inscrit.', registration: $existing);
-            }
+                if ($existing) {
+                    throw new RegistrationException('Déjà inscrit.', registration: $existing);
+                }
 
-            // Atomically increment the registered count while double-checking the capacity.
-            // This is an extra layer of protection against race conditions.
-            $incremented = Event::query()
-                ->whereKey($freshEvent->id)
-                ->where('registered_count', '<', (int) $freshEvent->capacity)
-                ->increment('registered_count');
+                // Atomically increment the registered count while double-checking the capacity.
+                // This is an extra layer of protection against race conditions.
+                $incremented = Event::query()
+                    ->whereKey($freshEvent->id)
+                    ->where('registered_count', '<', (int) $freshEvent->capacity)
+                    ->increment('registered_count');
 
-            if (! $incremented) {
-                throw new RegistrationException('Événement complet.');
-            }
+                if (! $incremented) {
+                    throw new RegistrationException('Événement complet.');
+                }
 
-            $amountCents = Money::toCents($freshEvent->ticket_price);
-            $isFree = $amountCents <= 0;
+                $amountCents = Money::toCents($freshEvent->ticket_price);
+                $isFree = $amountCents <= 0;
 
-            // Create the registration record.
-            $registration = Registration::create([
-                'event_id' => $freshEvent->id,
-                'user_id' => $participant->id,
-                'status' => 'registered',
-                'payment_status' => $isFree ? 'paid' : 'pending',
-                'ticket_code' => (string) Str::uuid(), // Unique code for ticket verification.
-                'amount' => $freshEvent->ticket_price,
-                'paid_at' => $isFree ? now() : null,
-                'registered_at' => now(),
-            ]);
-
-            // If the event is free, we create a 'completed' payment record immediately.
-            if ($isFree) {
-                Payment::create([
-                    'registration_id' => $registration->id,
-                    'amount' => 0,
-                    'currency' => 'EUR',
-                    'status' => 'completed',
-                    'method' => 'free',
-                    'meta' => ['note' => 'Gratuit'],
+                // Create the registration record.
+                $registration = Registration::create([
+                    'event_id' => $freshEvent->id,
+                    'user_id' => $participant->id,
+                    'status' => 'registered',
+                    'payment_status' => $isFree ? 'paid' : 'pending',
+                    'ticket_code' => $this->uniqueTicketCode(),
+                    'amount' => $freshEvent->ticket_price,
+                    'paid_at' => $isFree ? now() : null,
+                    'registered_at' => now(),
                 ]);
-            }
 
-            $registration->load('event', 'user');
-            // Notify admins and organizers about the new participant.
-            NotificationService::participantRegistered($registration);
+                // If the event is free, we create a 'completed' payment record immediately.
+                if ($isFree) {
+                    Payment::create([
+                        'registration_id' => $registration->id,
+                        'amount' => 0,
+                        'currency' => 'EUR',
+                        'status' => 'completed',
+                        'method' => 'free',
+                        'meta' => ['note' => 'Gratuit'],
+                    ]);
+                }
 
-            return $registration;
-        });
+                $registration->load('event', 'user');
+                // Notify admins and organizers about the new participant.
+                NotificationService::participantRegistered($registration);
+
+                return $registration;
+            });
+        } catch (BulkWriteException $exception) {
+            $this->throwDuplicateRegistrationIfNeeded($exception, $participant, $event);
+
+            throw $exception;
+        }
     }
 
     /**
@@ -181,5 +188,50 @@ class RegistrationService
                 ->where('registered_count', '>', 0)
                 ->decrement('registered_count');
         });
+    }
+
+    private function uniqueTicketCode(): string
+    {
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $ticketCode = (string) Str::uuid();
+
+            if (! Registration::query()->where('ticket_code', $ticketCode)->exists()) {
+                return $ticketCode;
+            }
+        }
+
+        throw new RegistrationException('Impossible de générer un billet unique.');
+    }
+
+    /**
+     * @throws RegistrationException
+     */
+    private function throwDuplicateRegistrationIfNeeded(BulkWriteException $exception, User $participant, Event $event): void
+    {
+        if (! $this->isDuplicateKey($exception) || ! $this->isRegistrationUniquenessConflict($exception)) {
+            return;
+        }
+
+        $existing = Registration::query()
+            ->where('event_id', $event->id)
+            ->where('user_id', $participant->id)
+            ->first();
+
+        if (! $existing) {
+            return;
+        }
+
+        throw new RegistrationException('Déjà inscrit.', registration: $existing);
+    }
+
+    private function isDuplicateKey(BulkWriteException $exception): bool
+    {
+        return str_contains($exception->getMessage(), 'duplicate key')
+            || str_contains($exception->getMessage(), 'E11000');
+    }
+
+    private function isRegistrationUniquenessConflict(BulkWriteException $exception): bool
+    {
+        return str_contains($exception->getMessage(), 'registrations_event_user_unique');
     }
 }
