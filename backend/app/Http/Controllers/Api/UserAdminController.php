@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Users\StoreUserRequest;
 use App\Http\Requests\Users\UpdateUserRequest;
 use App\Http\Requests\Users\UserIndexRequest;
@@ -16,7 +15,7 @@ use Illuminate\Http\Request;
  *
  * Ce contrôleur permet aux administrateurs de lister, créer, mettre à jour et supprimer des utilisateurs.
  */
-class UserAdminController extends Controller
+class UserAdminController extends ApiController
 {
     /**
      * @param  UserWriteService  $users  Service pour la création et la mise à jour des utilisateurs.
@@ -33,7 +32,7 @@ class UserAdminController extends Controller
         $q = User::query()->orderBy('created_at', 'desc');
 
         // Filtre de rôle optionnel (admin, organisateur, client)
-        if ($role = $request->validated('role')) {
+        if ($role = $this->validatedNullableString($request, 'role')) {
             $q->where('role', $role);
         }
 
@@ -93,18 +92,5 @@ class UserAdminController extends Controller
         $this->users->delete($this->actor($request), $user);
 
         return response()->json(null, 204);
-    }
-
-    /**
-     * Récupérer et valider l'utilisateur authentifié.
-     */
-    private function actor(Request $request): User
-    {
-        $user = $request->user();
-        if (! $user instanceof User) {
-            abort(401);
-        }
-
-        return $user;
     }
 }

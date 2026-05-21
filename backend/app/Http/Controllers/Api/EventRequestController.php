@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\EventRequests\EventRequestIndexRequest;
 use App\Http\Requests\EventRequests\ReviewEventRequestRequest;
 use App\Http\Requests\EventRequests\StoreClientEventRequest;
 use App\Models\EventRequest;
-use App\Models\User;
 use App\Services\EventRequestReviewService;
 use App\Services\EventRequests\EventRequestSubmissionService;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +17,7 @@ use Illuminate\Http\Request;
  * Les clients utilisent ce contrôleur pour proposer de nouveaux événements. Les administrateurs l'utilisent pour
  * examiner (approuver/rejeter) ces demandes. Les demandes approuvées mènent généralement à la création d'un Événement.
  */
-class EventRequestController extends Controller
+class EventRequestController extends ApiController
 {
     /**
      * @param  EventRequestSubmissionService  $submissions  Service pour la soumission et la gestion des demandes.
@@ -69,7 +67,7 @@ class EventRequestController extends Controller
             ->orderBy('created_at', 'desc');
 
         // Filtrage optionnel par statut (pending, approved, rejected)
-        if ($status = $request->validated('status')) {
+        if ($status = $this->validatedNullableString($request, 'status')) {
             $query->where('status', $status);
         }
 
@@ -94,24 +92,11 @@ class EventRequestController extends Controller
             return response()->json($this->reviews->reject(
                 $eventRequest,
                 $this->actor($request),
-                $data['rejection_reason'] ?? null,
+                $this->validatedNullableString($request, 'rejection_reason'),
             ));
         }
 
         // Gérer l'approbation (cela déclenche généralement la création de l'événement)
         return response()->json($this->reviews->approve($eventRequest, $this->actor($request)));
-    }
-
-    /**
-     * Récupérer et valider l'utilisateur authentifié.
-     */
-    private function actor(Request $request): User
-    {
-        $user = $request->user();
-        if (! $user instanceof User) {
-            abort(401);
-        }
-
-        return $user;
     }
 }

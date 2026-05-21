@@ -52,7 +52,9 @@ php artisan serve --host=127.0.0.1 --port=8000
 
 - Guide API par roles: `backend/docs/api/README.md`
 - Specification OpenAPI 3.1: `backend/docs/api/openapi.yaml`
+- Visionneuse API HTML: ouvrir `backend/docs/api/index.html`
 - Carte de lecture du backend: `backend/docs/architecture/backend-map.md`
+- Plan de durcissement backend: `backend/docs/operations/hardening.md`
 - Documentation Merise: `backend/docs/merise/README.md`
 - Diagrammes UML des workflows: `backend/docs/uml/workflows.md`
 - Reference PHP generee: ouvrir `backend/docs/index.html` dans un navigateur
@@ -71,6 +73,16 @@ Pour comprendre une fonctionnalite, suivez toujours le meme chemin:
 6. `backend/tests/Feature/` pour confirmer le comportement attendu par role.
 
 Les commentaires dans le code sont volontaires. Ils doivent rester explicites, surtout autour des transactions Mongo, des mises a jour atomiques, des roles, des montants en centimes, des dates et des formes de reponse attendues par le frontend.
+
+## Durcissement backend
+
+Le backend s'appuie sur Redis pour le cache, les sessions, la limitation de debit et les files d'attente. En production, un worker doit tourner pour traiter les jobs, notamment la diffusion des notifications aux participants:
+
+```bash
+php artisan queue:work redis --tries=3 --timeout=120
+```
+
+La checklist complete est dans `backend/docs/operations/hardening.md`.
 
 ## Fonctionnalites par acteur
 

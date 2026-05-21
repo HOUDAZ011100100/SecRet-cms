@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Registrations\ParticipantRegistrationIndexRequest;
 use App\Models\Event;
 use App\Models\Registration;
-use App\Models\User;
 use App\Services\Registrations\ParticipantRegistrationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,7 +13,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 /**
  * Contrôleur pour la gestion des inscriptions des participants aux événements.
  */
-class RegistrationController extends Controller
+class RegistrationController extends ApiController
 {
     /**
      * @param  ParticipantRegistrationService  $registrations  Service pour les flux de travail d'inscription des participants.
@@ -83,7 +81,7 @@ class RegistrationController extends Controller
     {
         return response()->json($this->registrations->listForParticipant(
             $this->actor($request),
-            $request->validated('payment_status'),
+            $this->validatedNullableString($request, 'payment_status'),
         ));
     }
 
@@ -102,18 +100,5 @@ class RegistrationController extends Controller
         }, $ticket->filename, [
             'Content-Type' => 'application/json',
         ]);
-    }
-
-    /**
-     * Récupérer et valider l'utilisateur authentifié.
-     */
-    private function actor(Request $request): User
-    {
-        $user = $request->user();
-        if (! $user instanceof User) {
-            abort(401);
-        }
-
-        return $user;
     }
 }

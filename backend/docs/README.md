@@ -10,9 +10,11 @@ Seule la documentation rédigée dans ce dossier est versionnée :
 
 - `README.md`
 - `api/README.md`
+- `api/index.html`
 - `api/openapi.yaml`
 - `architecture/backend-map.md`
 - `merise/README.md`
+- `operations/hardening.md`
 - `uml/workflows.md`
 
 La sortie générée de la documentation de classe et le cache `backend/.phpdoc/` sont des artefacts de construction locale et ne doivent pas être commités.
@@ -21,10 +23,12 @@ La sortie générée de la documentation de classe et le cache `backend/.phpdoc/
 
 - Guide des routes lisible par l'homme : `api/README.md`
 - Contrat OpenAPI 3.1 : `api/openapi.yaml`
+- Visionneuse HTML ReDoc : `api/index.html` charge directement `api/openapi.yaml`
 
 ## Architecture et Diagrammes
 
 - Carte de lecture du backend et standard de commentaires : `architecture/backend-map.md`
+- Plan de durcissement et checklist production : `operations/hardening.md`
 - Documentation Merise avec MCD, MLD et MCT : `merise/README.md`
 - Diagrammes de flux de travail de style UML pour les flux de l'application : `uml/workflows.md`
 

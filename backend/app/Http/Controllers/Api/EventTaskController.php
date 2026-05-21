@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\EventTasks\StoreEventTaskRequest;
 use App\Http\Requests\EventTasks\UpdateEventTaskRequest;
 use App\Models\Event;
 use App\Models\EventTask;
-use App\Models\User;
 use App\Services\Events\EventTaskService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,7 +16,7 @@ use Illuminate\Http\Request;
  * Les tâches sont des éléments internes de la liste de choses à faire pour que les organisateurs gèrent la préparation de l'événement.
  * Ce contrôleur délègue toute la logique métier et l'autorisation à l'EventTaskService.
  */
-class EventTaskController extends Controller
+class EventTaskController extends ApiController
 {
     /**
      * @param  EventTaskService  $tasks  Service pour la gestion des tâches.
@@ -78,18 +76,5 @@ class EventTaskController extends Controller
         $this->tasks->delete($this->actor($request), $event, $eventTask);
 
         return response()->json(null, 204);
-    }
-
-    /**
-     * Récupérer et valider l'utilisateur authentifié.
-     */
-    private function actor(Request $request): User
-    {
-        $user = $request->user();
-        if (! $user instanceof User) {
-            abort(401);
-        }
-
-        return $user;
     }
 }

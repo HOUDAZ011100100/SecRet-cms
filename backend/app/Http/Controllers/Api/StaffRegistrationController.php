@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Registrations\StaffRegistrationIndexRequest;
 use App\Models\Registration;
-use App\Models\User;
 use App\Services\Registrations\StaffRegistrationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,7 +13,7 @@ use Illuminate\Http\Request;
  *
  * Ce contrôleur permet au personnel de visualiser, rechercher et gérer les inscriptions pour les événements qu'ils gèrent.
  */
-class StaffRegistrationController extends Controller
+class StaffRegistrationController extends ApiController
 {
     /**
      * @param  StaffRegistrationService  $registrations  Service pour la gestion des inscriptions au niveau du personnel.
@@ -92,18 +90,5 @@ class StaffRegistrationController extends Controller
         $this->registrations->deleteForAdmin($this->actor($request), $registration);
 
         return response()->json(['message' => 'Inscription supprimée.']);
-    }
-
-    /**
-     * Récupérer et valider l'utilisateur authentifié.
-     */
-    private function actor(Request $request): User
-    {
-        $user = $request->user();
-        if (! $user instanceof User) {
-            abort(401);
-        }
-
-        return $user;
     }
 }

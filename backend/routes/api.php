@@ -1,13 +1,15 @@
 <?php
 
+use App\Http\Controllers\Api\AdminEventController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EventActivityController;
-use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\EventRequestController;
 use App\Http\Controllers\Api\EventTaskController;
 use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\OrganizerEventController;
+use App\Http\Controllers\Api\PublicEventController;
 use App\Http\Controllers\Api\RegistrationController;
 use App\Http\Controllers\Api\StaffRegistrationController;
 use App\Http\Controllers\Api\StatsController;
@@ -33,8 +35,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead']);
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markRead']);
 
-    Route::get('/events/browse', [EventController::class, 'browsePublished']);
-    Route::get('/events/{event}', [EventController::class, 'show']);
+    Route::get('/events/browse', [PublicEventController::class, 'browse']);
+    Route::get('/events/{event}', [PublicEventController::class, 'show']);
     Route::get('/events/{event}/feedbacks', [FeedbackController::class, 'index']);
 
     Route::middleware('role:participant')->group(function () {
@@ -54,11 +56,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::middleware('role:organizer,admin')->group(function () {
-        Route::get('/organizer/events', [EventController::class, 'indexMine']);
-        Route::post('/organizer/events', [EventController::class, 'store']);
-        Route::patch('/organizer/events/{event}', [EventController::class, 'update']);
-        Route::patch('/organizer/events/{event}/capacity', [EventController::class, 'updateCapacity']);
-        Route::post('/organizer/events/{event}/request-publication', [EventController::class, 'requestPublication']);
+        Route::get('/organizer/events', [OrganizerEventController::class, 'index']);
+        Route::post('/organizer/events', [OrganizerEventController::class, 'store']);
+        Route::patch('/organizer/events/{event}', [OrganizerEventController::class, 'update']);
+        Route::patch('/organizer/events/{event}/capacity', [OrganizerEventController::class, 'updateCapacity']);
+        Route::post('/organizer/events/{event}/request-publication', [OrganizerEventController::class, 'requestPublication']);
 
         Route::get('/organizer/events/{event}/tasks', [EventTaskController::class, 'index']);
         Route::post('/organizer/events/{event}/tasks', [EventTaskController::class, 'store']);
@@ -72,15 +74,15 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::middleware('role:admin')->group(function () {
-        Route::get('/admin/events', [EventController::class, 'indexAll']);
-        Route::get('/admin/organizer-events', [EventController::class, 'indexOrganizerSpace']);
-        Route::get('/admin/my-events', [EventController::class, 'indexAssignedToMe']);
-        Route::delete('/admin/events/{event}', [EventController::class, 'destroy']);
-        Route::patch('/admin/events/{event}/assign-organizer', [EventController::class, 'assignOrganizer']);
+        Route::get('/admin/events', [AdminEventController::class, 'index']);
+        Route::get('/admin/organizer-events', [AdminEventController::class, 'organizerSpace']);
+        Route::get('/admin/my-events', [AdminEventController::class, 'assignedToMe']);
+        Route::delete('/admin/events/{event}', [AdminEventController::class, 'destroy']);
+        Route::patch('/admin/events/{event}/assign-organizer', [AdminEventController::class, 'assignOrganizer']);
 
-        Route::patch('/admin/events/{event}', [EventController::class, 'update']);
-        Route::patch('/admin/events/{event}/capacity', [EventController::class, 'updateCapacity']);
-        Route::post('/admin/events/{event}/approve-publication', [EventController::class, 'approvePublication']);
+        Route::patch('/admin/events/{event}', [AdminEventController::class, 'update']);
+        Route::patch('/admin/events/{event}/capacity', [AdminEventController::class, 'updateCapacity']);
+        Route::post('/admin/events/{event}/approve-publication', [AdminEventController::class, 'approvePublication']);
 
         Route::get('/admin/events/{event}/tasks', [EventTaskController::class, 'index']);
         Route::post('/admin/events/{event}/tasks', [EventTaskController::class, 'store']);

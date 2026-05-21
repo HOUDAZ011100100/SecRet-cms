@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Feedbacks\StoreFeedbackRequest;
 use App\Http\Resources\FeedbackResource;
 use App\Models\Event;
 use App\Models\Feedback;
-use App\Models\User;
 use App\Services\Feedbacks\FeedbackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,7 +17,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  * Les participants peuvent soumettre des commentaires pour les événements auxquels ils ont assisté.
  * Les commentaires peuvent nécessiter l'approbation d'un administrateur avant de devenir publics.
  */
-class FeedbackController extends Controller
+class FeedbackController extends ApiController
 {
     /**
      * @param  FeedbackService  $feedbacks  Service pour la logique métier des commentaires.
@@ -33,13 +31,8 @@ class FeedbackController extends Controller
      */
     public function index(Request $request, Event $event)
     {
-        $user = $request->user();
-        if (! $user instanceof User) {
-            abort(401);
-        }
-
         // Le service gère la visibilité : commentaires publics pour tout le monde, tous les commentaires pour les administrateurs.
-        return FeedbackResource::collection($this->feedbacks->listForEvent($user, $event));
+        return FeedbackResource::collection($this->feedbacks->listForEvent($this->actor($request), $event));
     }
 
     /**
@@ -50,7 +43,7 @@ class FeedbackController extends Controller
      */
     public function store(StoreFeedbackRequest $request, Event $event)
     {
-        $feedback = $this->feedbacks->submit($request->user(), $event, $request->validated());
+        $feedback = $this->feedbacks->submit($this->actor($request), $event, $request->validated());
 
         return FeedbackResource::make($feedback)
             ->additional(['message' => 'Votre avis a bien été envoyé. Il sera visible après validation par notre équipe.'])
@@ -67,7 +60,7 @@ class FeedbackController extends Controller
      */
     public function approve(Request $request, Feedback $feedback)
     {
-        $result = $this->feedbacks->approve($request->user(), $feedback);
+        $result = $this->feedbacks->approve($this->actor($request), $feedback);
 
         return FeedbackResource::make($result->feedback)
             ->additional(['message' => $result->message]);
@@ -80,7 +73,7 @@ class FeedbackController extends Controller
      */
     public function destroy(Request $request, Feedback $feedback)
     {
-        $this->feedbacks->delete($request->user(), $feedback);
+        $this->feedbacks->delete($this->actor($request), $feedback);
 
         return response()->json(null, 204);
     }

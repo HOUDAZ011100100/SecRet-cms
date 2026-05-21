@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Services\Stats\AdminStatsService;
 use App\Services\Stats\ClientStatsService;
 use Illuminate\Http\JsonResponse;
@@ -14,7 +12,7 @@ use Illuminate\Http\Request;
  *
  * Prend en charge les statistiques globales pour les administrateurs et les statistiques personnelles pour les clients.
  */
-class StatsController extends Controller
+class StatsController extends ApiController
 {
     /**
      * @param  AdminStatsService  $adminStats  Service pour les statistiques globales au niveau administrateur.
@@ -47,18 +45,5 @@ class StatsController extends Controller
     public function client(Request $request): JsonResponse
     {
         return response()->json($this->clientStats->payloadFor($this->actor($request)));
-    }
-
-    /**
-     * Récupérer et valider l'utilisateur authentifié.
-     */
-    private function actor(Request $request): User
-    {
-        $user = $request->user();
-        if (! $user instanceof User) {
-            abort(401);
-        }
-
-        return $user;
     }
 }

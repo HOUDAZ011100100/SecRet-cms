@@ -2,16 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\EventActivities\StoreEventActivityRequest;
 use App\Http\Requests\EventActivities\UpdateEventActivityRequest;
 use App\Models\Event;
 use App\Models\EventActivity;
-use App\Models\User;
 use App\Services\Events\EventActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
  * Contrôleur pour la gestion des activités d'événement (programme/calendrier).
@@ -19,7 +16,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * Les activités sont des éléments spécifiques dans le programme d'un événement (ex : ateliers, discours).
  * Ce contrôleur délègue la logique métier et les vérifications d'autorisation à l'EventActivityService.
  */
-class EventActivityController extends Controller
+class EventActivityController extends ApiController
 {
     /**
      * @param  EventActivityService  $activities  Service pour la gestion des activités.
@@ -77,22 +74,5 @@ class EventActivityController extends Controller
         $this->activities->delete($this->actor($request), $event, $eventActivity);
 
         return response()->json(null, 204);
-    }
-
-    /**
-     * Récupérer et valider l'utilisateur authentifié à partir de la requête.
-     *
-     * @return User L'utilisateur authentifié.
-     *
-     * @throws HttpException 401 si non authentifié.
-     */
-    private function actor(Request $request): User
-    {
-        $user = $request->user();
-        if (! $user instanceof User) {
-            abort(401);
-        }
-
-        return $user;
     }
 }

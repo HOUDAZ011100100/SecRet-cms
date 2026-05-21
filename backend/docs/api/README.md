@@ -19,7 +19,9 @@ Authorization: Bearer <token>
 Accept: application/json
 ```
 
-Toutes les réponses de `/api/*` sont au format JSON, y compris les erreurs du framework telles que les réponses `401` non authentifiées. Les clients peuvent envoyer un `X-Request-Id` ; les valeurs sûres sont renvoyées, sinon le backend en génère une. Les réponses de l'API incluent les en-têtes de sécurité `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, et `X-Permitted-Cross-Domain-Policies`.
+Toutes les réponses de `/api/*` sont au format JSON, y compris les erreurs du framework telles que les réponses `401` non authentifiées. Les clients peuvent envoyer un `X-Request-Id` ; les valeurs sûres sont renvoyées, sinon le backend en génère une. Les réponses de l'API incluent les en-têtes de sécurité `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `X-Permitted-Cross-Domain-Policies` et `Content-Security-Policy`.
+
+`/api/health` reste public pour Docker et les tests de fumée. En production (`APP_DEBUG=false`), les erreurs de dépendances sont volontairement génériques afin de ne pas exposer les détails de connexion MongoDB ou Redis.
 
 Utilisateurs de démonstration après `php artisan migrate:fresh --seed --force` :
 
@@ -38,7 +40,7 @@ Utilisateurs de démonstration après `php artisan migrate:fresh --seed --force`
 | --- | --- | --- |
 | `POST` | `/api/logout` | Révoque le jeton actuel. |
 | `GET` | `/api/user` | Utilisateur authentifié actuel. |
-| `GET` | `/api/notifications` | Notifications de l'utilisateur actuel. |
+| `GET` | `/api/notifications` | Notifications paginées de l'utilisateur actuel avec `unread_count` et `meta`. Query optionnelle : `page`, `unread_only`. |
 | `GET` | `/api/notifications/unread-count` | Nombre de notifications non lues. |
 | `POST` | `/api/notifications/read-all` | Marque toutes les notifications de l'utilisateur actuel comme lues. |
 | `POST` | `/api/notifications/{notification}/read` | Marque une notification comme lue. |
@@ -100,7 +102,7 @@ Les administrateurs peuvent utiliser les routes de planification d'événements 
 | `POST` | `/api/admin/users` | Créer un utilisateur. |
 | `PATCH` | `/api/admin/users/{user}` | Mettre à jour un utilisateur. |
 | `DELETE` | `/api/admin/users/{user}` | Supprimer un utilisateur. L'auto-suppression est bloquée. |
-| `GET` | `/api/admin/stats` | Métriques du tableau de bord administrateur. |
+| `GET` | `/api/admin/stats` | Métriques du tableau de bord administrateur, mises en cache brièvement côté backend. |
 | `GET` | `/api/admin/registrations/events` | Événements avec le nombre d'inscriptions. |
 | `GET` | `/api/admin/registrations` | Liste de gestion des inscriptions. |
 | `DELETE` | `/api/admin/registrations/{registration}` | Supprimer une inscription non payée. |

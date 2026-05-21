@@ -143,29 +143,35 @@ Règles :
 
 ```mermaid
 flowchart TD
-    A[Le flux crée un événement de domaine] --> B[NotificationService choisit les destinataires]
-    B --> C[Crée les documents app_notifications]
-    C --> D[L'utilisateur appelle GET /api/notifications]
-    D --> E[NotificationController renvoie la boîte de réception de l'utilisateur actuel]
-    E --> F{L'utilisateur marque les notifications comme lues ?}
-    F -- une notification --> G["Route de lecture d'une notification POST"]
-    F -- toutes les notifications --> H[POST /api/notifications/read-all]
-    G --> I[Définit read_at]
-    H --> I
-    I --> J[Le nombre de messages non lus diminue]
+    A[Le flux métier demande une notification] --> B{Diffusion massive aux participants ?}
+    B -- non --> C[NotificationService crée les documents app_notifications]
+    B -- oui --> D[Dispatch Redis FanOutPublishedEventNotifications]
+    D --> E[Le job parcourt les participants avec cursor et chunks de 500]
+    E --> C
+    C --> F[L'utilisateur appelle GET /api/notifications]
+    F --> G[NotificationInboxService agrège page, total et unread_count avec Mongo facet]
+    G --> H[NotificationController renvoie data, unread_count et meta]
+    H --> I{L'utilisateur marque les notifications comme lues ?}
+    I -- une notification --> J["Route de lecture d'une notification POST"]
+    I -- toutes les notifications --> K[POST /api/notifications/read-all]
+    J --> L[Définit read_at]
+    K --> L
+    L --> M[Le nombre de messages non lus diminue]
 ```
 
 Règles :
 
 - Un utilisateur ne peut lire et mettre à jour que ses propres notifications.
 - Les données de notification sont stockées sous forme de métadonnées structurées dans `data`.
+- La publication d'un événement ne charge pas tous les participants dans la requête HTTP ; la diffusion passe par la file Redis.
+- La liste `/api/notifications` renvoie une page de données, `unread_count` et `meta`.
 
 ## 5. Flux de Navigation dans les Événements Publics
 
 ```mermaid
 flowchart TD
-    A[L'utilisateur authentifié demande /api/events/browse] --> B[EventIndexRequest valide q max 120 chars]
-    B --> C[Requête sur les événements publiés]
+    A[L'utilisateur authentifié demande /api/events/browse] --> B[PublicEventController lit EventIndexRequest]
+    B --> C[EventListingService requête les événements publiés]
     C --> D[Applique la recherche optionnelle]
     D --> E[Ordonne et pagine]
     E --> F[Renvoie la liste des événements avec image_url et ticket_price]
@@ -198,7 +204,7 @@ Règles :
 ```mermaid
 sequenceDiagram
     actor Organizer
-    participant API as EventController
+    participant API as OrganizerEventController
     participant Request as StoreEventRequest
     participant Service as EventManagementService
     participant Storage as EventImageStorage
@@ -227,12 +233,12 @@ Règles :
 ```mermaid
 sequenceDiagram
     actor Admin
-    participant API as EventController
+    participant API as OrganizerEventController
     participant Request as StoreEventRequest
     participant Service as EventManagementService
     participant Event as Modèle Event
 
-    Admin->>API: POST /api/organizer/events ou route d'événement admin
+    Admin->>API: POST /api/organizer/events
     API->>Request: valide la charge utile
     API->>Service: create(admin, data)
     alt le statut est publié
@@ -313,7 +319,8 @@ flowchart TD
     B -- non --> C[Erreur de domaine 422]
     B -- oui --> D[Définit le statut à published]
     D --> E[Notifie l'organisateur ou les parties prenantes]
-    E --> F[L'événement devient visible dans la liste de navigation]
+    E --> F[Déclenche le job de diffusion aux participants]
+    F --> G[L'événement devient visible dans la liste de navigation]
 ```
 
 Règles :
@@ -326,13 +333,13 @@ Règles :
 ```mermaid
 sequenceDiagram
     actor Admin
-    participant API as EventController
+    participant API as AdminEventController
     participant Request as AssignEventOrganizerRequest
     participant Service as EventManagementService
     participant Event as Modèle Event
     participant User as Modèle User
 
-    Admin->>API: PATCH route d'assignation d'organisateur de l'événement admin
+    Admin->>API: PATCH /api/admin/events/{event}/assign-organizer
     API->>Request: valide l'organizer_id
     Request->>User: vérifie que l'utilisateur est organisateur
     API->>Service: assignOrganizer(event, organizer)
@@ -700,17 +707,21 @@ Règles :
 
 ```mermaid
 flowchart TD
-    A[L'admin appelle /api/admin/stats] --> B[Compte les utilisateurs par rôle]
-    B --> C[Compte les événements par statut]
-    C --> D[Compte les demandes et commentaires en attente]
-    D --> E[Somme des centimes de paiement complétés]
-    E --> F[Renvoie la charge utile du tableau de bord]
+    A[L'admin appelle /api/admin/stats] --> B{Cache admin_stats_payload disponible ?}
+    B -- oui --> C[Renvoie la charge utile cachée]
+    B -- non --> D[Compte les utilisateurs par rôle]
+    D --> E[Compte les événements et inscriptions]
+    E --> F[Compte les demandes et publications en attente]
+    F --> G[Somme les centimes de paiement complétés]
+    G --> H[Stocke le résultat 60 secondes]
+    H --> I[Renvoie la charge utile du tableau de bord]
 ```
 
 Règles :
 
 - Le revenu utilise uniquement les paiements complétés.
 - Les montants sont sommés à partir des centimes, et non des champs d'affichage décimaux.
+- Les statistiques administrateur utilisent un cache court pour éviter de recalculer plusieurs agrégations à chaque hit.
 
 ## 30. Flux de Statistiques Client
 
@@ -774,6 +785,7 @@ Règles :
 
 - Les vérifications de santé sont publiques.
 - Le point de terminaison est utilisé par les healthchecks Docker et les tests de fumée locaux.
+- En production (`APP_DEBUG=false`), les erreurs de dépendances sont génériques pour ne pas exposer de détails MongoDB ou Redis.
 
 ## 33. Flux des Middlewares API Transversaux
 
@@ -784,14 +796,14 @@ flowchart TD
     C --> D[Contrôleur ou FormRequest]
     D --> E[Réponse générée]
     E --> F[Middleware ApplyApiSecurityHeaders]
-    F --> G[Réponse JSON avec ID de requête et en-têtes de sécurité]
+    F --> G[Réponse JSON avec ID de requête et en-têtes de sécurité, dont CSP]
 ```
 
 Règles :
 
 - Les erreurs d'API renvoient du JSON.
 - Un `X-Request-Id` entrant sûr est réutilisé ; sinon, un nouvel ID de requête est généré.
-- Des en-têtes de sécurité sont attachés aux réponses de succès et d'erreur.
+- Des en-têtes de sécurité sont attachés aux réponses de succès et d'erreur, y compris `Content-Security-Policy`.
 
 ## 34. Résumé de la Propriété des Flux de Travail
 
@@ -799,10 +811,10 @@ Règles :
 | --- | --- | --- | --- |
 | Créer un compte | visiteur | `UserWriteService` | `users`, `personal_access_tokens` |
 | Connexion/déconnexion | tout utilisateur | Auth Laravel/Sanctum | `users`, `personal_access_tokens` |
-| Parcourir les événements | utilisateur authentifié | `EventManagementService` et couche de requête | `events` |
+| Parcourir les événements | utilisateur authentifié | `EventListingService` | `events` |
 | Créer/maj événement | admin, organisateur | `EventManagementService` | `events`, `users` |
 | Demander publication | organisateur | `EventManagementService` | `events`, `app_notifications` |
-| Approuver publication | admin | `EventManagementService` | `events`, `app_notifications` |
+| Approuver publication | admin | `EventManagementService`, `FanOutPublishedEventNotifications` | `events`, `app_notifications`, `users` |
 | Soumettre demande événement | client | `EventRequestSubmissionService` | `event_requests`, `events` |
 | Réviser demande événement | admin | `EventRequestReviewService` | `event_requests`, `events` |
 | Gérer les tâches | admin, organisateur | `EventTaskService` | `event_tasks`, `events` |
@@ -813,5 +825,5 @@ Règles :
 | Staff gère inscriptions | admin, organisateur | `StaffRegistrationService` | `registrations`, `events` |
 | Soumettre commentaire | participant | `FeedbackService` | `feedbacks`, `registrations`, `events` |
 | Modérer commentaires | admin | `FeedbackService` | `feedbacks`, `app_notifications` |
-| Notifications | tous les utilisateurs authentifiés | `NotificationService` | `app_notifications` |
-| Stats | admin, client | `AdminStatsService`, `ClientStatsService` | `users`, `events`, `event_requests`, `registrations`, `payments`, `feedbacks` |
+| Notifications | tous les utilisateurs authentifiés | `NotificationService`, `NotificationInboxService`, `FanOutPublishedEventNotifications` | `app_notifications`, `users` |
+| Stats | admin, client | `AdminStatsService` avec cache 60 s, `ClientStatsService` | `users`, `events`, `event_requests`, `registrations`, `payments`, `feedbacks` |

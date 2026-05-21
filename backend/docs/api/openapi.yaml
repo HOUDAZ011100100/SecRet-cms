@@ -108,15 +108,26 @@ paths:
     get:
       tags: [Notifications]
       summary: Lister les notifications de l'utilisateur actuel
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: unread_only
+          in: query
+          required: false
+          schema:
+            type: boolean
       responses:
         "200":
-          description: Liste de notifications.
+          description: Page de notifications avec le nombre de non lues.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Notification"
+                $ref: "#/components/schemas/NotificationPage"
   /notifications/unread-count:
     get:
       tags: [Notifications]
@@ -1629,7 +1640,7 @@ components:
           type: string
         title:
           type: string
-        body:
+        message:
           type: string
         data:
           type: object
@@ -1638,6 +1649,37 @@ components:
           oneOf:
             - $ref: "#/components/schemas/IsoDateTime"
             - type: "null"
+        created_at:
+          $ref: "#/components/schemas/IsoDateTime"
+        updated_at:
+          $ref: "#/components/schemas/IsoDateTime"
+    NotificationPage:
+      type: object
+      required: [data, unread_count, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Notification"
+        unread_count:
+          type: integer
+          minimum: 0
+        meta:
+          type: object
+          required: [current_page, last_page, per_page, total]
+          properties:
+            current_page:
+              type: integer
+              minimum: 1
+            last_page:
+              type: integer
+              minimum: 1
+            per_page:
+              type: integer
+              minimum: 1
+            total:
+              type: integer
+              minimum: 0
     AdminUserWriteRequest:
       type: object
       required: [name, email, role]

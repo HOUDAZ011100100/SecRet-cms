@@ -412,7 +412,7 @@ Index :
 | L'organisateur met à jour l'événement | Mettre à jour l'événement géré | L'organisateur doit posséder ou avoir créé l'événement ; l'organisateur ne peut pas publier directement | L'événement est mis à jour |
 | L'admin assigne un organisateur | Assigner un propriétaire d'événement | L'utilisateur assigné doit être un organisateur | L'organisateur de l'événement change |
 | L'organisateur demande la publication | Passer l'événement en attente de publication | L'événement doit être gérable par l'organisateur | L'approbation de l'administrateur devient requise |
-| L'admin approuve la publication | Publier l'événement | L'événement doit être en attente de publication ou en projet selon les règles du service | L'événement devient publié |
+| L'admin approuve la publication | Publier l'événement | L'événement doit être en attente de publication ou en projet selon les règles du service | L'événement devient publié et la diffusion participant est mise en file Redis |
 | Le gestionnaire change la capacité | Mettre à jour la capacité | La capacité ne peut pas être inférieure à `registered_count` | La capacité change |
 
 ### Planification d'Événement
@@ -444,15 +444,24 @@ Index :
 | Le participant soumet un commentaire | Stocker le commentaire en attente | Le participant doit avoir une inscription payée ; un commentaire par événement | Un commentaire en attente est créé |
 | L'admin approuve le commentaire | Publier le commentaire | Administrateur uniquement | Le commentaire devient approuvé et des notifications sont envoyées |
 | L'admin supprime le commentaire | Supprimer le commentaire | Administrateur uniquement | Le commentaire est supprimé |
-| L'utilisateur ouvre les notifications | Lister la boîte de réception | L'utilisateur ne voit que ses propres notifications | Les notifications sont renvoyées |
+| Un flux métier envoie une notification ciblée | Créer les documents `app_notifications` | Les destinataires sont dédupliqués avant l'écriture | Les notifications sont stockées par utilisateur |
+| La publication d'un événement déclenche la diffusion participant | Mettre en file `FanOutPublishedEventNotifications` | Le job parcourt les participants avec un curseur et écrit par lots | La requête HTTP ne charge pas tous les participants en mémoire |
+| L'utilisateur ouvre les notifications | Lister la boîte de réception | L'utilisateur ne voit que ses propres notifications ; la requête Mongo utilise un `facet` pour la page et le compteur non lu | Les notifications, `unread_count` et `meta` sont renvoyés |
 | L'utilisateur marque une notification comme lue | Mettre à jour l'état de lecture | La notification doit appartenir à l'utilisateur | `read_at` est défini |
 
 ### Stats
 
 | Événement Externe | Opération | Règles Métier | Résultat |
 | --- | --- | --- | --- |
-| L'admin ouvre le tableau de bord | Agréger les statistiques globales | Administrateur uniquement | Les décomptes, revenus, travaux en attente et données d'événements sont renvoyés |
+| L'admin ouvre le tableau de bord | Agréger les statistiques globales | Administrateur uniquement ; le payload est mis en cache 60 secondes | Les décomptes, revenus, travaux en attente et données d'événements sont renvoyés |
 | Le client ouvre les stats | Agréger les statistiques du client | Client uniquement ; seuls les événements possédés/demandés sont inclus | Les groupes de demandes, listes d'événements et revenus sont renvoyés |
+
+### Exploitation et Sécurité Transversales
+
+| Événement Externe | Opération | Règles Métier | Résultat |
+| --- | --- | --- | --- |
+| Un outil appelle `/api/health` | Vérifier MongoDB et Redis | Le endpoint est public ; en production, les erreurs détaillées sont masquées | Statut `ok` ou `degraded` avec détails non sensibles |
+| Une réponse API sort de Laravel | Appliquer les en-têtes de sécurité | Les réponses JSON de succès et d'erreur passent par le middleware API | `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `X-Permitted-Cross-Domain-Policies` et `Content-Security-Policy` sont présents |
 
 ## Notes Merise pour cette Implémentation Mongo
 
@@ -462,4 +471,6 @@ Le modèle Merise classique suppose souvent une base de données relationnelle. 
 - les clés étrangères sont des champs de chaîne ObjectId ;
 - l'intégrité référentielle est assurée par les services et les tests, et non par des contraintes SQL ;
 - l'unicité et la performance des requêtes sont assurées par des index Mongo ;
-- des transactions sont utilisées pour les flux de travail où plusieurs documents doivent changer ensemble.
+- des transactions sont utilisées pour les flux de travail où plusieurs documents doivent changer ensemble ;
+- Redis est requis pour les files d'attente, le cache, la limitation de débit et les sessions ;
+- un worker de queue doit tourner en production pour exécuter les diffusions de notifications mises en file.

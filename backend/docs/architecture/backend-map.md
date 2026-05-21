@@ -42,9 +42,9 @@ Les bons commentaires expliquent :
 | Santé | `/api/health` | `HealthController` | aucune | `HealthCheckService` | aucun | `MongoOnlyConfigurationTest`, `ApiMiddlewareTest` |
 | Auth | `/register`, `/login`, `/logout`, `/user` | `AuthController` | `RegisterRequest`, `LoginRequest` | `UserWriteService` | `User`, `PersonalAccessToken` | `AuthAndUserManagementFlowTest` |
 | Admin Utilisateurs | `/admin/users`, `/admin/organizers` | `UserAdminController` | `UserIndexRequest`, `StoreUserRequest`, `UpdateUserRequest` | `UserWriteService` | `User` | `AuthAndUserManagementFlowTest`, `QueryValidationTest` |
-| Navigation Événements | `/events/browse`, `/events/{event}` | `EventController` | `EventIndexRequest` | `EventManagementService` | `Event`, `Feedback` | `EventManagementFlowTest`, `QueryValidationTest` |
-| Gestion Événements Organisateur | `/organizer/events...` | `EventController` | `StoreEventRequest`, `UpdateEventRequest`, `UpdateEventCapacityRequest` | `EventManagementService`, `EventImageStorage` | `Event` | `EventManagementFlowTest` |
-| Gestion Événements Admin | `/admin/events...` | `EventController` | `AssignEventOrganizerRequest`, requêtes d'écriture d'événement | `EventManagementService`, `EventImageStorage` | `Event`, `User` | `EventManagementFlowTest` |
+| Navigation Événements | `/events/browse`, `/events/{event}` | `PublicEventController` | `EventIndexRequest` | `EventListingService`, `EventManagementService` | `Event`, `Feedback` | `EventManagementFlowTest`, `QueryValidationTest` |
+| Gestion Événements Organisateur | `/organizer/events...` | `OrganizerEventController` | `StoreEventRequest`, `UpdateEventRequest`, `UpdateEventCapacityRequest` | `EventManagementService`, `EventListingService`, `EventImageStorage` | `Event` | `EventManagementFlowTest` |
+| Gestion Événements Admin | `/admin/events...` | `AdminEventController` | `AssignEventOrganizerRequest`, requêtes d'écriture d'événement | `EventManagementService`, `EventListingService`, `EventImageStorage` | `Event`, `User` | `EventManagementFlowTest` |
 | Demandes d'Événements Client | `/event-requests` | `EventRequestController` | `StoreClientEventRequest` | `EventRequestSubmissionService`, `EventRequestEligibilityService`, `EventRequestImageStorage` | `EventRequest`, `Event` | `EventRequestClientFlowTest` |
 | Révision Demande Événement | `/admin/event-requests...` | `EventRequestController` | `EventRequestIndexRequest`, `ReviewEventRequestRequest` | `EventRequestReviewService` | `EventRequest`, `Event` | `EventRequestReviewFlowTest` |
 | Tâches de Planification | `/organizer/events/{event}/tasks`, `/admin/events/{event}/tasks` | `EventTaskController` | `StoreEventTaskRequest`, `UpdateEventTaskRequest` | `EventTaskService` | `EventTask`, `Event` | `EventPlanningFlowTest` |
@@ -52,8 +52,8 @@ Les bons commentaires expliquent :
 | Inscriptions Participants | `/events/{event}/register`, `/my-registrations`, `/registrations/{registration}` | `RegistrationController` | `ParticipantRegistrationIndexRequest` | `ParticipantRegistrationService`, `RegistrationService` | `Registration`, `Payment`, `Event` | `RegistrationFlowTest`, `MoneyStorageTest` |
 | Gestion Inscriptions Staff | `/organizer/registrations...`, `/admin/registrations...` | `StaffRegistrationController` | `StaffRegistrationIndexRequest` | `StaffRegistrationService`, `RegistrationStatsService` | `Registration`, `Event` | `StaffRegistrationFlowTest` |
 | Commentaires (Feedback) | `/events/{event}/feedback`, `/admin/feedbacks...` | `FeedbackController` | `StoreFeedbackRequest` | `FeedbackService` | `Feedback`, `Registration`, `Event` | `FeedbackFlowTest` |
-| Notifications | `/notifications...` | `NotificationController` | aucune | `NotificationService` | `AppNotification` | couvert par les tests de flux |
-| Stats | `/admin/stats`, `/client/stats` | `StatsController` | aucune | `AdminStatsService`, `ClientStatsService` | `Event`, `Registration`, `Payment`, `EventRequest`, `Feedback` | `StatsFlowTest`, `MoneyStorageTest` |
+| Notifications | `/notifications...` | `NotificationController` | aucune | `NotificationService`, `NotificationInboxService`, `FanOutPublishedEventNotifications` | `AppNotification`, `User` | `NotificationFlowTest`, `EventManagementFlowTest` |
+| Stats | `/admin/stats`, `/client/stats` | `StatsController` | aucune | `AdminStatsService` (cache 60 s), `ClientStatsService` | `Event`, `Registration`, `Payment`, `EventRequest`, `Feedback` | `StatsFlowTest`, `MoneyStorageTest` |
 
 ## Responsabilités des Couches
 
@@ -65,6 +65,8 @@ Les contrôleurs doivent rester courts. Ils sont responsables de :
 - extraire l'acteur authentifié ;
 - passer les données validées à un service ;
 - préserver la forme de réponse de l'API attendue par le frontend.
+
+`ApiController` fournit les helpers partagés pour récupérer l'acteur authentifié et lire des valeurs validées typées. Les contrôleurs métier doivent l'utiliser au lieu de dupliquer ces détails.
 
 Les contrôleurs ne doivent pas contenir de flux de travail métier en plusieurs étapes, de logique de capacité, de règles d'approbation ou de détails sur les transactions Mongo.
 
@@ -86,6 +88,8 @@ Les services constituent la couche métier du backend. Ils sont responsables de 
 - éligibilité des demandes des clients ;
 - décisions de révision des administrateurs ;
 - diffusion des notifications ;
+- pagination et agrégation des boîtes de réception ;
+- cache court des statistiques administrateur ;
 - transactions Mongo et mises à jour atomiques.
 
 ### Modèles (Models)
@@ -120,3 +124,6 @@ Les modèles décrivent les documents Mongo et le comportement de sérialisation
 | Pas de suppression d'inscription payée | `RegistrationService` et `StaffRegistrationService` |
 | Pas d'accès à l'API non authentifié | Middleware `auth:sanctum` |
 | Pas d'accès à une route avec le mauvais rôle | Middleware `role` et Form Requests |
+| Pas de diffusion massive de notifications dans le cycle HTTP | Job Redis `FanOutPublishedEventNotifications` |
+| Pas de fuite de messages de dépendance en production | `HealthCheckService` quand `APP_DEBUG=false` |
+| Pas de réponses API sans en-têtes de sécurité attendus | `ApplyApiSecurityHeaders`, y compris `Content-Security-Policy` |
