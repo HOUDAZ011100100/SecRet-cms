@@ -326,6 +326,7 @@ flowchart TD
 Règles :
 
 - Seuls les administrateurs peuvent approuver la publication.
+- Le service accepte uniquement un événement déjà au statut `pending_publication`.
 - Les événements publiés deviennent ouverts aux inscriptions si les autres règles d'inscription passent.
 
 ## 13. Flux d'Assignation d'un Organisateur par l'Admin
@@ -341,7 +342,7 @@ sequenceDiagram
 
     Admin->>API: PATCH /api/admin/events/{event}/assign-organizer
     API->>Request: valide l'organizer_id
-    Request->>User: vérifie que l'utilisateur est organisateur
+    Service->>User: vérifie que l'utilisateur est organisateur ou administrateur
     API->>Service: assignOrganizer(event, organizer)
     Service->>Event: met à jour l'organizer_id
     Event-->>Service: événement mis à jour
@@ -351,7 +352,7 @@ sequenceDiagram
 
 Règles :
 
-- L'utilisateur assigné doit avoir le rôle d'organisateur.
+- L'utilisateur assigné doit avoir le rôle `organizer` ou `admin`.
 - Les administrateurs peuvent toujours gérer tous les événements, même s'ils ne sont pas assignés.
 
 ## 14. Flux de Soumission d'une Demande d'Événement par le Client
@@ -715,13 +716,14 @@ flowchart TD
     F --> G[Somme les centimes de paiement complétés]
     G --> H[Stocke le résultat 60 secondes]
     H --> I[Renvoie la charge utile du tableau de bord]
+    J[Mutation User/Event/EventRequest/Registration/Payment/Feedback] --> K[AdminStatsCacheObserver oublie le cache]
 ```
 
 Règles :
 
 - Le revenu utilise uniquement les paiements complétés.
 - Les montants sont sommés à partir des centimes, et non des champs d'affichage décimaux.
-- Les statistiques administrateur utilisent un cache court pour éviter de recalculer plusieurs agrégations à chaque hit.
+- Les statistiques administrateur utilisent un cache court pour éviter de recalculer plusieurs agrégations à chaque hit, et ce cache est invalidé sur les modèles qui alimentent le tableau de bord.
 
 ## 30. Flux de Statistiques Client
 
@@ -826,4 +828,4 @@ Règles :
 | Soumettre commentaire | participant | `FeedbackService` | `feedbacks`, `registrations`, `events` |
 | Modérer commentaires | admin | `FeedbackService` | `feedbacks`, `app_notifications` |
 | Notifications | tous les utilisateurs authentifiés | `NotificationService`, `NotificationInboxService`, `FanOutPublishedEventNotifications` | `app_notifications`, `users` |
-| Stats | admin, client | `AdminStatsService` avec cache 60 s, `ClientStatsService` | `users`, `events`, `event_requests`, `registrations`, `payments`, `feedbacks` |
+| Stats | admin, client | `AdminStatsService` avec cache 60 s invalidé par observer, `ClientStatsService` | `users`, `events`, `event_requests`, `registrations`, `payments`, `feedbacks` |

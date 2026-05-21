@@ -163,7 +163,7 @@ erDiagram
 | Utilisateur - Révision EventRequest | un administrateur pour zéro ou plusieurs demandes révisées | Une demande révisée peut référencer l'administrateur qui l'a révisée. |
 | EventRequest - Event | une demande pour zéro ou un événement | L'approbation crée un projet d'événement. Le rejet ne crée aucun événement. |
 | Utilisateur - Créateur Event | un utilisateur pour zéro ou plusieurs événements créés | Un administrateur ou un organisateur peut créer des événements. |
-| Utilisateur - Organisateur Event | un organisateur pour zéro ou plusieurs événements assignés | Un événement peut ne pas être assigné jusqu'à ce qu'un administrateur assigne un organisateur. |
+| Utilisateur - Organisateur Event | un organisateur ou administrateur pour zéro ou plusieurs événements assignés | Un événement peut être assigné à un organisateur, et le service accepte aussi un administrateur comme responsable interne. |
 | Événement - EventTask | un événement pour zéro ou plusieurs tâches | Les tâches appartiennent à un seul événement. |
 | Événement - EventActivity | un événement pour zéro ou plusieurs activités | Les activités appartiennent à une seule chronologie d'événement. |
 | Événement - Registration | un événement pour zéro ou plusieurs inscriptions | Les inscriptions comptent pour la capacité de l'événement. |
@@ -171,7 +171,7 @@ erDiagram
 | Inscription - Payment | une inscription pour zéro ou plusieurs paiements | Les événements gratuits créent un paiement gratuit complété ; les événements payants créent un paiement lors du règlement. |
 | Événement - Feedback | un événement pour zéro ou plusieurs commentaires | Les commentaires sont attachés à un événement. |
 | Utilisateur - Feedback | un participant pour zéro ou plusieurs commentaires | Un participant peut laisser un seul commentaire par événement. |
-| Inscription - Feedback | une inscription payée et assistée permet zéro ou un commentaire | Les commentaires ne sont acceptés que de la part des participants éligibles. |
+| Inscription - Feedback | une inscription payée permet zéro ou un commentaire | Les commentaires ne sont acceptés que de la part des participants ayant une inscription payée. |
 | Utilisateur - AppNotification | un utilisateur pour zéro ou plusieurs notifications | Les notifications sont stockées par destinataire. |
 
 ## MLD - Collections Mongo Logiques
@@ -243,7 +243,7 @@ Champs :
 
 - `_id`.
 - `event_request_id` : demande source (nullable).
-- `organizer_id` : organisateur assigné (nullable).
+- `organizer_id` : organisateur ou administrateur assigné (nullable).
 - `created_by` : utilisateur ayant créé l'événement.
 - `title`, `description`, `image_path`, `location`, `room`.
 - `start_at`, `end_at`.
@@ -410,9 +410,9 @@ Index :
 | L'organisateur crée l'événement | Créer un projet d'événement | L'organisateur ne peut pas publier directement | Un projet d'événement est créé |
 | L'admin crée l'événement | Créer un événement | L'admin peut créer un événement publié | L'événement est créé avec le statut demandé |
 | L'organisateur met à jour l'événement | Mettre à jour l'événement géré | L'organisateur doit posséder ou avoir créé l'événement ; l'organisateur ne peut pas publier directement | L'événement est mis à jour |
-| L'admin assigne un organisateur | Assigner un propriétaire d'événement | L'utilisateur assigné doit être un organisateur | L'organisateur de l'événement change |
+| L'admin assigne un responsable | Assigner un propriétaire d'événement | L'utilisateur assigné doit être un organisateur ou un administrateur | Le responsable de l'événement change |
 | L'organisateur demande la publication | Passer l'événement en attente de publication | L'événement doit être gérable par l'organisateur | L'approbation de l'administrateur devient requise |
-| L'admin approuve la publication | Publier l'événement | L'événement doit être en attente de publication ou en projet selon les règles du service | L'événement devient publié et la diffusion participant est mise en file Redis |
+| L'admin approuve la publication | Publier l'événement | L'événement doit être au statut `pending_publication` | L'événement devient publié et la diffusion participant est mise en file Redis |
 | Le gestionnaire change la capacité | Mettre à jour la capacité | La capacité ne peut pas être inférieure à `registered_count` | La capacité change |
 
 ### Planification d'Événement
@@ -453,7 +453,7 @@ Index :
 
 | Événement Externe | Opération | Règles Métier | Résultat |
 | --- | --- | --- | --- |
-| L'admin ouvre le tableau de bord | Agréger les statistiques globales | Administrateur uniquement ; le payload est mis en cache 60 secondes | Les décomptes, revenus, travaux en attente et données d'événements sont renvoyés |
+| L'admin ouvre le tableau de bord | Agréger les statistiques globales | Administrateur uniquement ; le payload est mis en cache 60 secondes et invalidé par observer lors des mutations suivies | Les décomptes, revenus, travaux en attente et données d'événements sont renvoyés |
 | Le client ouvre les stats | Agréger les statistiques du client | Client uniquement ; seuls les événements possédés/demandés sont inclus | Les groupes de demandes, listes d'événements et revenus sont renvoyés |
 
 ### Exploitation et Sécurité Transversales

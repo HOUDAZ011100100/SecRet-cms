@@ -39,7 +39,7 @@ Les bons commentaires expliquent :
 
 | Fonctionnalité | Routes | Contrôleur | Requêtes | Services | Modèles | Tests Principaux |
 | --- | --- | --- | --- | --- | --- | --- |
-| Santé | `/api/health` | `HealthController` | aucune | `HealthCheckService` | aucun | `MongoOnlyConfigurationTest`, `ApiMiddlewareTest` |
+| Santé | `/health` | `HealthController` | aucune | `HealthCheckService` | aucun | `MongoOnlyConfigurationTest`, `ApiMiddlewareTest` |
 | Auth | `/register`, `/login`, `/logout`, `/user` | `AuthController` | `RegisterRequest`, `LoginRequest` | `UserWriteService` | `User`, `PersonalAccessToken` | `AuthAndUserManagementFlowTest` |
 | Admin Utilisateurs | `/admin/users`, `/admin/organizers` | `UserAdminController` | `UserIndexRequest`, `StoreUserRequest`, `UpdateUserRequest` | `UserWriteService` | `User` | `AuthAndUserManagementFlowTest`, `QueryValidationTest` |
 | Navigation Événements | `/events/browse`, `/events/{event}` | `PublicEventController` | `EventIndexRequest` | `EventListingService`, `EventManagementService` | `Event`, `Feedback` | `EventManagementFlowTest`, `QueryValidationTest` |
@@ -53,9 +53,11 @@ Les bons commentaires expliquent :
 | Gestion Inscriptions Staff | `/organizer/registrations...`, `/admin/registrations...` | `StaffRegistrationController` | `StaffRegistrationIndexRequest` | `StaffRegistrationService`, `RegistrationStatsService` | `Registration`, `Event` | `StaffRegistrationFlowTest` |
 | Commentaires (Feedback) | `/events/{event}/feedback`, `/admin/feedbacks...` | `FeedbackController` | `StoreFeedbackRequest` | `FeedbackService` | `Feedback`, `Registration`, `Event` | `FeedbackFlowTest` |
 | Notifications | `/notifications...` | `NotificationController` | aucune | `NotificationService`, `NotificationInboxService`, `FanOutPublishedEventNotifications` | `AppNotification`, `User` | `NotificationFlowTest`, `EventManagementFlowTest` |
-| Stats | `/admin/stats`, `/client/stats` | `StatsController` | aucune | `AdminStatsService` (cache 60 s), `ClientStatsService` | `Event`, `Registration`, `Payment`, `EventRequest`, `Feedback` | `StatsFlowTest`, `MoneyStorageTest` |
+| Stats | `/admin/stats`, `/client/stats` | `StatsController` | aucune | `AdminStatsService` (cache 60 s invalidé par observer), `ClientStatsService` | `Event`, `Registration`, `Payment`, `EventRequest`, `Feedback` | `StatsFlowTest`, `MoneyStorageTest` |
 
 ## Responsabilités des Couches
+
+Les chemins de la carte ci-dessus sont indiqués relativement au préfixe `/api`.
 
 ### Contrôleurs
 

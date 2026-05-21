@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Support\Facades\Route;
 use Symfony\Component\Yaml\Yaml;
 use Tests\TestCase;
 
@@ -33,6 +34,15 @@ class OpenApiContractTest extends TestCase
         $this->assertSame([], data_get($this->document, 'paths./health.get.security'));
     }
 
+    public function test_openapi_documents_every_api_route_method(): void
+    {
+        $documented = $this->documentedOperations();
+        $actual = $this->actualApiRouteOperations();
+
+        $this->assertSame([], array_values(array_diff($actual, $documented)), 'Missing OpenAPI operations.');
+        $this->assertSame([], array_values(array_diff($documented, $actual)), 'Extra OpenAPI operations.');
+    }
+
     public function test_notifications_endpoint_documents_real_paginated_shape(): void
     {
         $this->assertSame(
@@ -49,5 +59,52 @@ class OpenApiContractTest extends TestCase
             ['data', 'unread_count', 'meta'],
             data_get($this->document, 'components.schemas.NotificationPage.required'),
         );
+    }
+
+    /** @return list<string> */
+    private function documentedOperations(): array
+    {
+        $operations = [];
+
+        foreach (data_get($this->document, 'paths', []) as $path => $methods) {
+            if (! is_array($methods)) {
+                continue;
+            }
+
+            foreach (array_keys($methods) as $method) {
+                if (in_array($method, ['get', 'post', 'patch', 'put', 'delete'], true)) {
+                    $operations[] = $method.' '.$path;
+                }
+            }
+        }
+
+        sort($operations);
+
+        return $operations;
+    }
+
+    /** @return list<string> */
+    private function actualApiRouteOperations(): array
+    {
+        $operations = [];
+
+        foreach (Route::getRoutes()->getRoutes() as $route) {
+            $uri = $route->uri();
+            if (! str_starts_with($uri, 'api/')) {
+                continue;
+            }
+
+            foreach ($route->methods() as $method) {
+                if ($method === 'HEAD') {
+                    continue;
+                }
+
+                $operations[] = strtolower($method).' /'.substr($uri, 4);
+            }
+        }
+
+        sort($operations);
+
+        return $operations;
     }
 }

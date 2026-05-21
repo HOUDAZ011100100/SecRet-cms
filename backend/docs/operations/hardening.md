@@ -13,7 +13,7 @@ Ce document est la référence courte pour expliquer ce qui est déjà durci dan
 | Intégrité métier | Services et index | Transactions Mongo, index uniques, incrémentation atomique de capacité |
 | Notifications massives | Queue Redis | `FanOutPublishedEventNotifications` traite les participants par curseur et lots de 500 |
 | Boîte de réception notifications | Agrégation Mongo | `NotificationInboxService` renvoie `data`, `unread_count` et `meta` avec un `$facet` |
-| Stats admin | Cache court | `AdminStatsService` cache le payload pendant 60 secondes |
+| Stats admin | Cache court invalidé | `AdminStatsService` cache le payload pendant 60 secondes et `AdminStatsCacheObserver` l'invalide sur les mutations suivies |
 | Santé API | Dépendances réelles | `HealthCheckService` vérifie MongoDB et Redis |
 | Erreurs santé en production | Messages génériques | `APP_DEBUG=false` masque les messages d'exception de dépendances |
 | En-têtes de sécurité | Middleware API | `ApplyApiSecurityHeaders` inclut CSP, frame denial, nosniff, policies |
@@ -41,6 +41,4 @@ Ce document est la référence courte pour expliquer ce qui est déjà durci dan
 
 ## Dette Connue
 
-- La baseline PHPStan contient encore 130 erreurs historiques ignorées. Le niveau est `max`, mais il faut réduire cette baseline progressivement.
-- Le cache admin stats est volontairement basé sur un TTL court de 60 secondes. Il n'y a pas encore d'invalidation événementielle.
 - Si la documentation de classe PHP générée est publiée, elle doit être régénérée après modification des docblocks PHP. La visionneuse `backend/docs/api/index.html` charge directement `backend/docs/api/openapi.yaml`.

@@ -91,7 +91,7 @@ Les administrateurs peuvent utiliser les routes de planification d'événements 
 | `GET` | `/api/admin/organizer-events` | Événements possédés ou créés par des organisateurs. |
 | `GET` | `/api/admin/my-events` | Événements assignés à ou créés par l'administrateur. |
 | `DELETE` | `/api/admin/events/{event}` | Supprimer un événement. |
-| `PATCH` | `/api/admin/events/{event}/assign-organizer` | Assigner un organisateur. |
+| `PATCH` | `/api/admin/events/{event}/assign-organizer` | Assigner un responsable d'événement. Le service accepte un utilisateur `organizer` ou `admin`. |
 | `PATCH` | `/api/admin/events/{event}` | Mettre à jour un événement. |
 | `PATCH` | `/api/admin/events/{event}/capacity` | Mettre à jour la capacité. |
 | `POST` | `/api/admin/events/{event}/approve-publication` | Publier un événement en attente. |

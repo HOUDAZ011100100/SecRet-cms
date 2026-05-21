@@ -57,7 +57,7 @@ php artisan serve --host=127.0.0.1 --port=8000
 - Plan de durcissement backend: `backend/docs/operations/hardening.md`
 - Documentation Merise: `backend/docs/merise/README.md`
 - Diagrammes UML des workflows: `backend/docs/uml/workflows.md`
-- Reference PHP generee: ouvrir `backend/docs/index.html` dans un navigateur
+- Reference PHP generee: generer localement avec la commande indiquee dans `backend/docs/README.md` si une documentation de classes est necessaire
 
 Le cache phpDocumentor `backend/.phpdoc/` est ignore. Les pages generees doivent etre regenerees uniquement quand les docblocks backend changent vraiment.
 

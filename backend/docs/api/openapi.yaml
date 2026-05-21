@@ -662,7 +662,8 @@ paths:
   /admin/events/{event}/assign-organizer:
     patch:
       tags: [Events]
-      summary: Assigner un organisateur à l'événement
+      summary: Assigner un responsable à l'événement
+      description: Le champ `organizer_id` doit référencer un utilisateur avec le rôle `organizer` ou `admin`.
       parameters:
         - $ref: "#/components/parameters/event"
       requestBody:

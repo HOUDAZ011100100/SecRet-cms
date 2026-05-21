@@ -1,8 +1,7 @@
 # Documentation du Backend VELORA
 
-Ce répertoire contient trois couches de documentation :
+Ce répertoire contient les couches de documentation versionnées du backend :
 
-- Pages de référence de classe phpDocumentor générées pour les composants internes du backend.
 - `api/` contient la documentation de l'API rédigée pour les routes, les rôles, les corps de requête et les contrats destinés au frontend.
 - `architecture/`, `merise/`, et `uml/` contiennent des explications sur le backend, l'analyse Merise et les diagrammes de flux de travail.
 
