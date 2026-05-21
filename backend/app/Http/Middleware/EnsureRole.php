@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,6 +16,13 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  */
 class EnsureRole
 {
+    /**
+     * @var array<string, string>
+     */
+    private const ROLE_ALIASES = [
+        'organizer' => User::ROLE_ORGANIZER,
+    ];
+
     /**
      * Gérer une requête entrante.
      *
@@ -36,15 +44,26 @@ class EnsureRole
         // Normaliser la liste des rôles à partir de chaînes potentielles séparées par des virgules ou de plusieurs arguments
         $allowed = [];
         foreach ($roles as $chunk) {
-            $allowed = array_merge($allowed, array_map('trim', explode(',', $chunk)));
+            foreach (explode(',', $chunk) as $role) {
+                $role = trim($role);
+
+                if ($role !== '') {
+                    $allowed[] = $this->normalizeRole($role);
+                }
+            }
         }
         $allowed = array_values(array_unique(array_filter($allowed)));
 
         // Effectuer la vérification du rôle
-        if (! in_array($user->role, $allowed, true)) {
+        if (! in_array($this->normalizeRole($user->role), $allowed, true)) {
             abort(403, 'Accès refusé pour ce rôle.');
         }
 
         return $next($request);
+    }
+
+    private function normalizeRole(string $role): string
+    {
+        return self::ROLE_ALIASES[$role] ?? $role;
     }
 }

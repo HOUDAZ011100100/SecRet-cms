@@ -22,6 +22,13 @@ use MongoDB\Laravel\Connection as MongoConnection;
 class AdminStatsService
 {
     /**
+     * @var array<string, string>
+     */
+    private const ROLE_RESPONSE_KEYS = [
+        User::ROLE_ORGANIZER => 'organizer',
+    ];
+
+    /**
      * @param  RegistrationStatsService  $registrationStats  Service pour attacher les nombres d'inscriptions aux modèles d'événements.
      */
     public function __construct(private readonly RegistrationStatsService $registrationStats) {}
@@ -69,10 +76,16 @@ class AdminStatsService
         $counts = [];
         foreach ($results as $result) {
             $role = data_get($result, '_id');
-            $counts[(string) ($role ?? '')] = (int) data_get($result, 'count', 0);
+            $key = $this->roleResponseKey((string) ($role ?? ''));
+            $counts[$key] = ($counts[$key] ?? 0) + (int) data_get($result, 'count', 0);
         }
 
         return $counts;
+    }
+
+    private function roleResponseKey(string $role): string
+    {
+        return self::ROLE_RESPONSE_KEYS[$role] ?? $role;
     }
 
     /**
