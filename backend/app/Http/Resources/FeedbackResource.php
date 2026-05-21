@@ -8,18 +8,18 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Resource for transforming Feedback model data into an API-friendly format.
+ * Ressource pour transformer les données du modèle Feedback dans un format adapté à l'API.
  *
- * This resource ensures consistent output for feedback records, including
- * nested user information if the relationship is loaded.
+ * Cette ressource garantit une sortie cohérente pour les enregistrements de feedback, y compris
+ * les informations utilisateur imbriquées si la relation est chargée.
  */
 class FeedbackResource extends JsonResource
 {
     /**
-     * Transform the resource into an array.
+     * Transformer la ressource en tableau.
      *
-     * Maps the Feedback model attributes to the response structure.
-     * Includes the user's name and ID if the 'user' relation is available.
+     * Mappe les attributs du modèle Feedback à la structure de la réponse.
+     * Inclut le nom et l'ID de l'utilisateur si la relation 'user' est disponible.
      *
      * @return array<string, mixed>
      */
@@ -30,7 +30,7 @@ class FeedbackResource extends JsonResource
             return [];
         }
 
-        // Safely extract the user relation if it has been eager-loaded
+        // Extraire en toute sécurité la relation utilisateur si elle a été chargée en amont
         $user = $feedback->relationLoaded('user') ? $feedback->getRelation('user') : null;
         $user = $user instanceof User ? $user : null;
 

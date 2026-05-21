@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 /**
- * Base controller for the application.
+ * Contrôleur de base pour l'application.
  *
- * All specific controllers should extend this class to benefit from
- * shared behavior or shared middleware definitions.
+ * Tous les contrôleurs spécifiques doivent étendre cette classe pour bénéficier de
+ * comportements partagés ou de définitions de middlewares partagées.
  */
 abstract class Controller
 {

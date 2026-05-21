@@ -7,22 +7,22 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Translation\PotentiallyTranslatedString;
 
 /**
- * Custom validation rule for MongoDB ObjectIDs.
+ * Règle de validation personnalisée pour les ObjectIDs MongoDB.
  *
- * It ensures that a given value matches the 24-character hexadecimal format used by MongoDB.
+ * Elle garantit qu'une valeur donnée correspond au format hexadécimal de 24 caractères utilisé par MongoDB.
  */
 class MongoObjectId implements ValidationRule
 {
     /**
-     * Run the validation rule.
+     * Exécuter la règle de validation.
      *
-     * @param  string  $attribute  The name of the attribute being validated.
-     * @param  mixed  $value  The value of the attribute.
+     * @param  string  $attribute  Le nom de l'attribut en cours de validation.
+     * @param  mixed  $value  La valeur de l'attribut.
      * @param  Closure(string): PotentiallyTranslatedString  $fail
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        // MongoDB ObjectIDs are 12-byte binary values, represented as 24-character hex strings.
+        // Les ObjectIDs MongoDB sont des valeurs binaires de 12 octets, représentées par des chaînes hexadécimales de 24 caractères.
         if (! is_string($value) || ! preg_match('/^[a-f\d]{24}$/i', $value)) {
             $fail("Le champ {$attribute} doit être un identifiant MongoDB valide.");
         }

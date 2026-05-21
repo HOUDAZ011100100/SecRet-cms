@@ -7,18 +7,18 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Form request for updating an existing event.
+ * Requête de formulaire pour la mise à jour d'un événement existant.
  *
- * This request handles partial updates to event details. All fields are optional
- * but must follow the specified rules if provided.
+ * Cette requête gère les mises à jour partielles des détails de l'événement. Tous les champs sont optionnels
+ * mais doivent suivre les règles spécifiées s'ils sont fournis.
  */
 class UpdateEventRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Détermine si l'utilisateur est autorisé à effectuer cette requête.
      *
-     * Authenticated users can attempt this; specific permissions
-     * (e.g., event owner or admin) are checked in the business logic.
+     * Les utilisateurs authentifiés peuvent tenter cela ; les permissions spécifiques
+     * (ex : propriétaire de l'événement ou administrateur) sont vérifiées dans la logique métier.
      */
     public function authorize(): bool
     {
@@ -26,14 +26,14 @@ class UpdateEventRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * Obtenir les règles de validation qui s'appliquent à la requête.
      *
-     * Rules use 'sometimes' to allow partial updates:
-     * - title: String, max 255.
-     * - start_at: Valid date.
-     * - end_at: Valid date after start_at.
-     * - capacity: Integer >= 1.
-     * - status: Must be a valid event status (draft, published, completed, etc.).
+     * Les règles utilisent 'sometimes' pour permettre des mises à jour partielles :
+     * - title : Chaîne de caractères, max 255.
+     * - start_at : Date valide.
+     * - end_at : Date valide après start_at.
+     * - capacity : Entier >= 1.
+     * - status : Doit être un statut d'événement valide (draft, published, completed, etc.).
      *
      * @return array<string, mixed>
      */

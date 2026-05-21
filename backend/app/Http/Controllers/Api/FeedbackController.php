@@ -14,22 +14,22 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
- * Controller for managing event feedback (reviews).
+ * Contrôleur pour la gestion des commentaires d'événement (avis).
  *
- * Participants can submit feedback for events they attended.
- * Feedback may require Admin approval before becoming public.
+ * Les participants peuvent soumettre des commentaires pour les événements auxquels ils ont assisté.
+ * Les commentaires peuvent nécessiter l'approbation d'un administrateur avant de devenir publics.
  */
 class FeedbackController extends Controller
 {
     /**
-     * @param  FeedbackService  $feedbacks  Service for feedback business logic.
+     * @param  FeedbackService  $feedbacks  Service pour la logique métier des commentaires.
      */
     public function __construct(private readonly FeedbackService $feedbacks) {}
 
     /**
-     * List feedback for a specific event.
+     * Lister les commentaires pour un événement spécifique.
      *
-     * @return AnonymousResourceCollection Collection of FeedbackResource.
+     * @return AnonymousResourceCollection Collection de FeedbackResource.
      */
     public function index(Request $request, Event $event)
     {
@@ -38,15 +38,15 @@ class FeedbackController extends Controller
             abort(401);
         }
 
-        // Service handles visibility: public feedbacks for everyone, all feedbacks for admins.
+        // Le service gère la visibilité : commentaires publics pour tout le monde, tous les commentaires pour les administrateurs.
         return FeedbackResource::collection($this->feedbacks->listForEvent($user, $event));
     }
 
     /**
-     * Submit new feedback for an event.
+     * Soumettre un nouveau commentaire pour un événement.
      *
-     * @param  StoreFeedbackRequest  $request  Validated feedback (rating, comment).
-     * @return JsonResponse 201 Created with FeedbackResource and a success message.
+     * @param  StoreFeedbackRequest  $request  Commentaire validé (note, commentaire).
+     * @return JsonResponse 201 Created avec FeedbackResource et un message de succès.
      */
     public function store(StoreFeedbackRequest $request, Event $event)
     {
@@ -59,11 +59,11 @@ class FeedbackController extends Controller
     }
 
     /**
-     * Approve a feedback entry (Admin only).
+     * Approuver une entrée de commentaire (Administrateur uniquement).
      *
-     * Makes the feedback visible to the public.
+     * Rend le commentaire visible au public.
      *
-     * @return FeedbackResource Updated feedback.
+     * @return FeedbackResource Commentaire mis à jour.
      */
     public function approve(Request $request, Feedback $feedback)
     {
@@ -74,7 +74,7 @@ class FeedbackController extends Controller
     }
 
     /**
-     * Delete a feedback entry.
+     * Supprimer une entrée de commentaire.
      *
      * @return JsonResponse 204 No Content.
      */

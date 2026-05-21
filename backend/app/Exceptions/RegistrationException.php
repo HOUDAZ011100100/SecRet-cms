@@ -7,17 +7,17 @@ use App\Models\Registration;
 use RuntimeException;
 
 /**
- * Exception thrown for errors related to event registrations.
+ * Exception levée pour les erreurs liées aux inscriptions aux événements.
  *
- * This includes failures during the registration process, payment issues,
- * or violations of registration constraints (e.g., event at full capacity).
+ * Cela inclut les échecs lors du processus d'inscription, les problèmes de paiement,
+ * ou les violations des contraintes d'inscription (par exemple, événement complet).
  */
 class RegistrationException extends RuntimeException implements ApiException
 {
     /**
-     * @param  string  $message  The error message.
-     * @param  int  $status  The HTTP status code.
-     * @param  Registration|null  $registration  The registration instance associated with the error, if any.
+     * @param  string  $message  Le message d'erreur.
+     * @param  int  $status  Le code de statut HTTP.
+     * @param  Registration|null  $registration  L'instance d'inscription associée à l'erreur, le cas échéant.
      */
     public function __construct(
         string $message,
@@ -28,7 +28,7 @@ class RegistrationException extends RuntimeException implements ApiException
     }
 
     /**
-     * Get the HTTP status code for the response.
+     * Récupère le code de statut HTTP pour la réponse.
      */
     public function statusCode(): int
     {
@@ -36,7 +36,7 @@ class RegistrationException extends RuntimeException implements ApiException
     }
 
     /**
-     * Get the response payload, optionally including the registration details.
+     * Récupère la charge utile de la réponse, incluant éventuellement les détails de l'inscription.
      *
      * @return array<string, mixed>
      */

@@ -9,11 +9,11 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Builds the public API health report used by Docker and manual smoke checks.
+ * Génère le rapport de santé de l'API publique utilisé par Docker et les vérifications manuelles.
  *
- * This endpoint checks real runtime dependencies instead of returning a static "ok".
- * A degraded response is still JSON so local tooling and frontend checks can show which
- * dependency is down without reading container logs first.
+ * Ce point de terminaison vérifie les dépendances d'exécution réelles au lieu de renvoyer un "ok" statique.
+ * Une réponse dégradée est toujours au format JSON afin que les outils locaux et les vérifications du frontend
+ * puissent montrer quelle dépendance est en panne sans avoir à lire les logs du conteneur au préalable.
  */
 class HealthCheckService
 {
@@ -26,7 +26,7 @@ class HealthCheckService
      */
     public function report(): array
     {
-        // Keep dependency names stable because the OpenAPI contract documents these keys.
+        // Garder les noms des dépendances stables car le contrat OpenAPI documente ces clés.
         $services = [
             'mongodb' => $this->checkMongo(),
             'redis' => $this->checkRedis(),
@@ -61,12 +61,12 @@ class HealthCheckService
         try {
             $connection = DB::connection('mongodb');
 
-            // A wrong driver here means the app is no longer running in Mongo-only mode.
+            // Un mauvais pilote ici signifie que l'application ne fonctionne plus en mode MongoDB uniquement.
             if (! $connection instanceof MongoConnection) {
-                throw new RuntimeException('MongoDB connection is not using the MongoDB driver.');
+                throw new RuntimeException('La connexion MongoDB n\'utilise pas le pilote MongoDB.');
             }
 
-            // ping is cheap and verifies the current connection can talk to the Mongo server.
+            // ping est peu coûteux et vérifie que la connexion actuelle peut communiquer avec le serveur Mongo.
             $connection->getDatabase()->command(['ping' => 1])->toArray();
 
             return ['status' => 'ok'];
@@ -81,7 +81,7 @@ class HealthCheckService
     private function checkRedis(): array
     {
         try {
-            // Redis backs cache, queues, rate limiting, and sessions in the local stack.
+            // Redis gère le cache, les files d'attente, la limitation de débit et les sessions dans la pile locale.
             Redis::connection()->ping();
 
             return ['status' => 'ok'];
@@ -95,7 +95,7 @@ class HealthCheckService
      */
     private function down(Throwable $exception): array
     {
-        // Include the dependency error in local/dev health responses to speed up troubleshooting.
+        // Inclure l'erreur de dépendance dans les réponses de santé en local/dev pour accélérer le dépannage.
         return [
             'status' => 'down',
             'error' => $exception->getMessage(),

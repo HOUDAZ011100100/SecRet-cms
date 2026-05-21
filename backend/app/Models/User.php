@@ -14,23 +14,23 @@ use Laravel\Sanctum\HasApiTokens;
 use MongoDB\Laravel\Auth\User as Authenticatable;
 
 /**
- * User Model
+ * Modèle User
  *
- * Represents a user in the system with specific roles and permissions.
- * This model uses MongoDB as its primary data store.
+ * Représente un utilisateur dans le système avec des rôles et des permissions spécifiques.
+ * Ce modèle utilise MongoDB comme stockage de données principal.
  *
- * @property string $_id MongoDB document ID
- * @property string $name Full name of the user
- * @property string $email Unique email address used for authentication
- * @property string $password Hashed password
- * @property string $role User role (admin, organizer, participant, client)
+ * @property string $_id ID du document MongoDB
+ * @property string $name Nom complet de l'utilisateur
+ * @property string $email Adresse email unique utilisée pour l'authentification
+ * @property string $password Mot de passe haché
+ * @property string $role Rôle de l'utilisateur (admin, organizer, participant, client)
  * @property Carbon|null $email_verified_at
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read Collection|Event[] $organizedEvents Events where this user is the organizer
- * @property-read Collection|Registration[] $registrations Event registrations made by this user
- * @property-read Collection|AppNotification[] $appNotifications Notifications sent to this user
+ * @property-read Collection|Event[] $organizedEvents Événements dont cet utilisateur est l'organisateur
+ * @property-read Collection|Registration[] $registrations Inscriptions aux événements effectuées par cet utilisateur
+ * @property-read Collection|AppNotification[] $appNotifications Notifications envoyées à cet utilisateur
  */
 #[Fillable(['name', 'email', 'password', 'role'])]
 #[Hidden(['password', 'remember_token'])]
@@ -40,41 +40,41 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     /**
-     * The database connection used by the model.
+     * La connexion à la base de données utilisée par le modèle.
      *
      * @var string
      */
     protected $connection = 'mongodb';
 
     /**
-     * The table/collection associated with the model.
+     * La table/collection associée au modèle.
      *
      * @var string
      */
     protected $table = 'users';
 
     /**
-     * Administrator role constant.
+     * Constante pour le rôle administrateur.
      */
     public const ROLE_ADMIN = 'admin';
 
     /**
-     * Organizer role constant.
+     * Constante pour le rôle organisateur.
      */
-    public const ROLE_ORGANIZER = 'organizer';
+    public const ROLE_ORGANIZER = 'organisateur';
 
     /**
-     * Participant/End-user role constant.
+     * Constante pour le rôle participant/utilisateur final.
      */
     public const ROLE_PARTICIPANT = 'participant';
 
     /**
-     * Client/Requestor role constant.
+     * Constante pour le rôle client/demandeur.
      */
     public const ROLE_CLIENT = 'client';
 
     /**
-     * Get the attributes that should be cast.
+     * Récupère les attributs qui doivent être castés.
      *
      * @return array<string, string>
      */
@@ -87,7 +87,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if the user has the administrator role.
+     * Vérifie si l'utilisateur a le rôle administrateur.
      */
     public function isAdmin(): bool
     {
@@ -95,7 +95,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if the user has the organizer role or higher (admin).
+     * Vérifie si l'utilisateur a le rôle organisateur ou supérieur (admin).
      */
     public function isOrganizer(): bool
     {
@@ -103,7 +103,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Define the relationship for events organized by this user.
+     * Définit la relation pour les événements organisés par cet utilisateur.
      *
      * @return HasMany
      */
@@ -113,7 +113,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Define the relationship for registrations made by this user.
+     * Définit la relation pour les inscriptions effectuées par cet utilisateur.
      *
      * @return HasMany
      */
@@ -123,7 +123,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Define the relationship for in-app notifications received by this user.
+     * Définit la relation pour les notifications dans l'application reçues par cet utilisateur.
      *
      * @return HasMany
      */

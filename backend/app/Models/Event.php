@@ -12,43 +12,43 @@ use Illuminate\Support\Carbon;
 use MongoDB\Laravel\Eloquent\Model;
 
 /**
- * Event Model
+ * Modèle Event
  *
- * Represents an event managed within the system. Events can be created by clients
- * (as requests) and then managed by organizers or admins.
+ * Représente un événement géré dans le système. Les événements peuvent être créés par des clients
+ * (sous forme de demandes) puis gérés par des organisateurs ou des administrateurs.
  *
- * @property string $_id MongoDB document ID
- * @property string|null $event_request_id ID of the originating event request
- * @property string|null $organizer_id ID of the assigned organizer
- * @property string $created_by ID of the user who created the event record
- * @property string $title Event title
- * @property string|null $description Detailed event description
- * @property string|null $image_path Path to the event image in storage
- * @property string|null $location Physical location or venue name
- * @property string|null $room Specific room or sub-location
- * @property Carbon|null $start_at Event start date and time
- * @property Carbon|null $end_at Event end date and time
- * @property int $capacity Maximum number of participants
- * @property int $registered_count Current number of registered participants
- * @property int $ticket_price_cents Ticket price in cents
- * @property string $status Event status (draft, pending_publication, published, cancelled, completed)
+ * @property string $_id ID du document MongoDB
+ * @property string|null $event_request_id ID de la demande d'événement d'origine
+ * @property string|null $organizer_id ID de l'organisateur assigné
+ * @property string $created_by ID de l'utilisateur ayant créé l'enregistrement de l'événement
+ * @property string $title Titre de l'événement
+ * @property string|null $description Description détaillée de l'événement
+ * @property string|null $image_path Chemin vers l'image de l'événement dans le stockage
+ * @property string|null $location Lieu physique ou nom de la salle
+ * @property string|null $room Salle spécifique ou sous-emplacement
+ * @property Carbon|null $start_at Date et heure de début de l'événement
+ * @property Carbon|null $end_at Date et heure de fin de l'événement
+ * @property int $capacity Nombre maximum de participants
+ * @property int $registered_count Nombre actuel de participants inscrits
+ * @property int $ticket_price_cents Prix du billet en centimes
+ * @property string $status Statut de l'événement (draft, pending_publication, published, cancelled, completed)
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read string|null $image_url Computed absolute URL for the event image
- * @property-read float $ticket_price Computed ticket price in main currency units
- * @property-read EventRequest|null $eventRequest Originating request for this event
- * @property-read User|null $organizer Assigned organizer
- * @property-read User|null $creator User who created the record
- * @property-read Collection|EventTask[] $tasks Associated planning tasks
- * @property-read Collection|EventActivity[] $activities Associated event activities
- * @property-read Collection|Registration[] $registrations Participant registrations
- * @property-read Collection|Feedback[] $feedbacks Participant feedback
+ * @property-read string|null $image_url URL absolue calculée pour l'image de l'événement
+ * @property-read float $ticket_price Prix du billet calculé dans l'unité monétaire principale
+ * @property-read EventRequest|null $eventRequest Demande d'origine pour cet événement
+ * @property-read User|null $organizer Organisateur assigné
+ * @property-read User|null $creator Utilisateur ayant créé l'enregistrement
+ * @property-read Collection|EventTask[] $tasks Tâches de planification associées
+ * @property-read Collection|EventActivity[] $activities Activités d'événement associées
+ * @property-read Collection|Registration[] $registrations Inscriptions des participants
+ * @property-read Collection|Feedback[] $feedbacks Commentaires des participants
  */
 class Event extends Model
 {
     use StoresMoneyAsCents;
 
-    /** Status constants */
+    /** Constantes de statut */
     public const STATUS_CANCELLED = 'cancelled';
 
     public const STATUS_COMPLETED = 'completed';
@@ -60,35 +60,35 @@ class Event extends Model
     public const STATUS_PUBLISHED = 'published';
 
     /**
-     * The database connection used by the model.
+     * La connexion à la base de données utilisée par le modèle.
      *
      * @var string
      */
     protected $connection = 'mongodb';
 
     /**
-     * The table/collection associated with the model.
+     * La table/collection associée au modèle.
      *
      * @var string
      */
     protected $table = 'events';
 
     /**
-     * Accessors to append to the model's array form.
+     * Accesseurs à ajouter à la forme tableau du modèle.
      *
      * @var list<string>
      */
     protected $appends = ['image_url', 'ticket_price'];
 
     /**
-     * Attributes that should be hidden for serialization.
+     * Attributs qui doivent être cachés pour la sérialisation.
      *
      * @var list<string>
      */
     protected $hidden = ['ticket_price_cents'];
 
     /**
-     * Attributes that are mass assignable.
+     * Attributs qui sont assignables en masse.
      *
      * @var list<string>
      */
@@ -111,7 +111,7 @@ class Event extends Model
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * Récupère les attributs qui doivent être castés.
      *
      * @return array<string, string>
      */
@@ -124,7 +124,7 @@ class Event extends Model
     }
 
     /**
-     * Accessor for the ticket price, converting cents to decimal.
+     * Accesseur pour le prix du billet, convertissant les centimes en décimal.
      */
     protected function ticketPrice(): Attribute
     {
@@ -132,7 +132,7 @@ class Event extends Model
     }
 
     /**
-     * Accessor for the image URL.
+     * Accesseur pour l'URL de l'image.
      */
     public function getImageUrlAttribute(): ?string
     {
@@ -148,7 +148,7 @@ class Event extends Model
     }
 
     /**
-     * Get the originating event request.
+     * Récupère la demande d'événement d'origine.
      */
     public function eventRequest(): BelongsTo
     {
@@ -156,7 +156,7 @@ class Event extends Model
     }
 
     /**
-     * Get the assigned organizer.
+     * Récupère l'organisateur assigné.
      */
     public function organizer(): BelongsTo
     {
@@ -164,7 +164,7 @@ class Event extends Model
     }
 
     /**
-     * Get the user who created the event record.
+     * Récupère l'utilisateur ayant créé l'enregistrement de l'événement.
      */
     public function creator(): BelongsTo
     {
@@ -172,7 +172,7 @@ class Event extends Model
     }
 
     /**
-     * Get the associated planning tasks.
+     * Récupère les tâches de planification associées.
      */
     public function tasks(): HasMany
     {
@@ -180,7 +180,7 @@ class Event extends Model
     }
 
     /**
-     * Get the associated event activities.
+     * Récupère les activités d'événement associées.
      */
     public function activities(): HasMany
     {
@@ -188,7 +188,7 @@ class Event extends Model
     }
 
     /**
-     * Get the participant registrations.
+     * Récupère les inscriptions des participants.
      */
     public function registrations(): HasMany
     {
@@ -196,7 +196,7 @@ class Event extends Model
     }
 
     /**
-     * Get the participant feedbacks.
+     * Récupère les commentaires des participants.
      */
     public function feedbacks(): HasMany
     {
@@ -204,8 +204,8 @@ class Event extends Model
     }
 
     /**
-     * Check if a given user is an organizer of this event.
-     * Admins are always considered organizers.
+     * Vérifie si un utilisateur donné est un organisateur de cet événement.
+     * Les administrateurs sont toujours considérés comme des organisateurs.
      */
     public function isOrganizer(User $user): bool
     {
@@ -217,7 +217,7 @@ class Event extends Model
     }
 
     /**
-     * Check if the event has already finished based on the end time.
+     * Vérifie si l'événement est déjà terminé en fonction de l'heure de fin.
      */
     public function isFinished(): bool
     {
@@ -227,7 +227,7 @@ class Event extends Model
     }
 
     /**
-     * Scope a query to only include events that haven't finished yet.
+     * Portée (scope) d'une requête pour inclure uniquement les événements qui ne sont pas encore terminés.
      *
      * @param  Builder  $query
      * @return Builder
@@ -243,7 +243,7 @@ class Event extends Model
     }
 
     /**
-     * Scope a query to only include events that have already finished.
+     * Portée (scope) d'une requête pour inclure uniquement les événements déjà terminés.
      *
      * @param  Builder  $query
      * @return Builder

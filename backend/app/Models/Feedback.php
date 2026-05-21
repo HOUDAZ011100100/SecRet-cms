@@ -8,45 +8,45 @@ use Illuminate\Support\Carbon;
 use MongoDB\Laravel\Eloquent\Model;
 
 /**
- * Feedback Model
+ * Modèle Feedback
  *
- * Represents feedback submitted by a participant after an event has concluded.
- * Feedback includes a numerical rating and optional text comments.
+ * Représente un commentaire soumis par un participant après la fin d'un événement.
+ * Le feedback comprend une note numérique et des commentaires textuels facultatifs.
  *
- * @property string $_id MongoDB document ID
- * @property string $event_id ID of the event being rated
- * @property string|null $user_id ID of the participant who submitted the feedback
- * @property int $rating Numerical rating (e.g., 1-5)
- * @property string|null $comment Optional text comments from the participant
- * @property string $status Moderation status (pending, approved)
+ * @property string $_id ID du document MongoDB
+ * @property string $event_id ID de l'événement noté
+ * @property string|null $user_id ID du participant ayant soumis le commentaire
+ * @property int $rating Note numérique (ex: 1-5)
+ * @property string|null $comment Commentaires textuels facultatifs du participant
+ * @property string $status Statut de modération (pending, approved)
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read Event|null $event Event associated with this feedback
- * @property-read User|null $user Participant who provided the feedback
+ * @property-read Event|null $event Événement associé à ce commentaire
+ * @property-read User|null $user Participant ayant fourni le commentaire
  */
 class Feedback extends Model
 {
     /**
-     * The database connection used by the model.
+     * La connexion à la base de données utilisée par le modèle.
      *
      * @var string
      */
     protected $connection = 'mongodb';
 
     /**
-     * The table/collection associated with the model.
+     * La table/collection associée au modèle.
      *
      * @var string
      */
     protected $table = 'feedbacks';
 
-    /** Status constants */
+    /** Constantes de statut */
     public const STATUS_PENDING = 'pending';
 
     public const STATUS_APPROVED = 'approved';
 
     /**
-     * Attributes that are mass assignable.
+     * Attributs qui sont assignables en masse.
      *
      * @var list<string>
      */
@@ -59,7 +59,7 @@ class Feedback extends Model
     ];
 
     /**
-     * Scope a query to only include approved feedback.
+     * Portée (scope) d'une requête pour inclure uniquement les commentaires approuvés.
      *
      * @param  Builder  $query
      * @return Builder
@@ -70,7 +70,7 @@ class Feedback extends Model
     }
 
     /**
-     * Define the relationship for the associated event.
+     * Définit la relation pour l'événement associé.
      */
     public function event(): BelongsTo
     {
@@ -78,7 +78,7 @@ class Feedback extends Model
     }
 
     /**
-     * Define the relationship for the participant who provided feedback.
+     * Définit la relation pour le participant ayant fourni le commentaire.
      */
     public function user(): BelongsTo
     {

@@ -12,20 +12,20 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Service for administrative management of registrations.
+ * Service pour la gestion administrative des inscriptions.
  *
- * It allows Organizers and Admins to view, search, and delete registrations for the events they manage.
- * It also provides summary statistics (paid vs pending) for registrations.
+ * Il permet aux Organisateurs et aux Administrateurs de visualiser, rechercher et supprimer des inscriptions pour les événements qu'ils gèrent.
+ * Il fournit également des statistiques récapitulatives (payées vs en attente) pour les inscriptions.
  */
 class StaffRegistrationService
 {
     /**
-     * @param  RegistrationStatsService  $registrationStats  Service to calculate and attach registration counts.
+     * @param  RegistrationStatsService  $registrationStats  Service pour calculer et attacher les nombres d'inscriptions.
      */
     public function __construct(private readonly RegistrationStatsService $registrationStats) {}
 
     /**
-     * Retrieves events managed by an organizer with their registration counts.
+     * Récupère les événements gérés par un organisateur avec leurs nombres d'inscriptions.
      *
      * @return Collection<int, Event>
      */
@@ -41,7 +41,7 @@ class StaffRegistrationService
     }
 
     /**
-     * Retrieves events managed by an admin (or linked to organizers they supervise) with counts.
+     * Récupère les événements gérés par un administrateur (ou liés aux organisateurs qu'il supervise) avec les comptes.
      *
      * @return Collection<int, Event>
      */
@@ -57,10 +57,10 @@ class StaffRegistrationService
     }
 
     /**
-     * Lists registrations for an organizer with filtering and searching.
+     * Liste les inscriptions pour un organisateur avec filtrage et recherche.
      *
-     * @param  array<string, mixed>  $filters  Possible keys: 'event_id', 'payment_status', 'q' (search).
-     * @return array<string, mixed> Returns a structured array with data, meta (pagination), and summary.
+     * @param  array<string, mixed>  $filters  Clés possibles : 'event_id', 'payment_status', 'q' (recherche).
+     * @return array<string, mixed> Retourne un tableau structuré avec les données, les méta-données (pagination) et un résumé.
      */
     public function listForOrganizer(User $organizer, array $filters): array
     {
@@ -70,7 +70,7 @@ class StaffRegistrationService
     }
 
     /**
-     * Lists registrations for an admin with filtering and searching.
+     * Liste les inscriptions pour un administrateur avec filtrage et recherche.
      *
      * @param  array<string, mixed>  $filters
      * @return array<string, mixed>
@@ -83,7 +83,7 @@ class StaffRegistrationService
     }
 
     /**
-     * Deletes a registration as an organizer.
+     * Supprime une inscription en tant qu'organisateur.
      */
     public function deleteForOrganizer(User $organizer, Registration $registration): void
     {
@@ -92,7 +92,7 @@ class StaffRegistrationService
     }
 
     /**
-     * Deletes a registration as an admin.
+     * Supprime une inscription en tant qu'administrateur.
      */
     public function deleteForAdmin(User $admin, Registration $registration): void
     {
@@ -101,9 +101,9 @@ class StaffRegistrationService
     }
 
     /**
-     * Base query for events an organizer has access to.
+     * Requête de base pour les événements auxquels un organisateur a accès.
      *
-     * Access rule: Events created by them OR assigned to them as organizer.
+     * Règle d'accès : Événements créés par lui OU assignés à lui en tant qu'organisateur.
      *
      * @return Builder<Event>
      */
@@ -118,9 +118,9 @@ class StaffRegistrationService
     }
 
     /**
-     * Base query for events an admin has access to.
+     * Requête de base pour les événements auxquels un administrateur a accès.
      *
-     * Access rule: Events created by/assigned to them, OR events managed by any organizer.
+     * Règle d'accès : Événements créés par/assignés à lui, OU événements gérés par n'importe quel organisateur.
      *
      * @return Builder<Event>
      */
@@ -135,9 +135,9 @@ class StaffRegistrationService
     }
 
     /**
-     * Core logic for listing and filtering registrations across all accessible events.
+     * Logique centrale pour lister et filtrer les inscriptions sur tous les événements accessibles.
      *
-     * @param  Builder  $eventsQuery  Scoped event query based on role.
+     * @param  Builder  $eventsQuery  Requête d'événement scopée basée sur le rôle.
      * @param  array<string, mixed>  $filters
      * @return array<string, mixed>
      */
@@ -145,12 +145,12 @@ class StaffRegistrationService
     {
         $eventIds = $this->eventIds($eventsQuery);
 
-        // If the user has no events, return an empty structure immediately.
+        // Si l'utilisateur n'a aucun événement, retourner une structure vide immédiatement.
         if ($eventIds === []) {
             return $this->emptyListPayload();
         }
 
-        // Security check: if a specific event_id is requested, ensure it's within accessible events.
+        // Vérification de sécurité : si un event_id spécifique est demandé, s'assurer qu'il fait partie des événements accessibles.
         $eventId = isset($filters['event_id']) ? (string) $filters['event_id'] : null;
         if ($eventId !== null && ! in_array($eventId, $eventIds, true)) {
             throw new RegistrationException('Accès refusé pour ce rôle.', 403);
@@ -164,7 +164,7 @@ class StaffRegistrationService
                 'user:id,name,email',
             ]);
 
-        // Apply filters
+        // Appliquer les filtres
         if ($eventId !== null) {
             $registrationsQuery->where('event_id', $eventId);
         }
@@ -174,12 +174,12 @@ class StaffRegistrationService
             $registrationsQuery->where('payment_status', $paymentFilter);
         }
 
-        // Apply keyword search (name, email, title, ticket code)
+        // Appliquer la recherche par mot-clé (nom, e-mail, titre, code du billet)
         if (! empty($filters['q'])) {
             $this->applySearch($registrationsQuery, (string) $filters['q']);
         }
 
-        // Calculate summary before pagination
+        // Calculer le résumé avant la pagination
         $summary = $this->summary($eventIds, $eventId);
         $paginated = $registrationsQuery->orderBy('created_at', 'desc')->paginate(20);
 
@@ -196,25 +196,25 @@ class StaffRegistrationService
     }
 
     /**
-     * Performs a hard delete of a registration and updates event counters.
+     * Effectue une suppression définitive d'une inscription et met à jour les compteurs d'événements.
      *
-     * @param  Builder  $eventsQuery  Access control query.
+     * @param  Builder  $eventsQuery  Requête de contrôle d'accès.
      */
     private function delete(Registration $registration, Builder $eventsQuery): void
     {
         $eventIds = $this->eventIds($eventsQuery);
 
-        // Verify that the registration belongs to an event the staff member manages.
+        // Vérifier que l'inscription appartient à un événement géré par le membre du personnel.
         if (! in_array((string) $registration->getAttribute('event_id'), $eventIds, true)) {
             throw new RegistrationException('Accès refusé pour ce rôle.', 403);
         }
 
-        // Business rule: Paid registrations cannot be deleted. They must be refunded/handled manually.
+        // Règle métier : Les inscriptions payées ne peuvent pas être supprimées. Elles doivent être remboursées/gérées manuellement.
         if ($registration->getAttribute('payment_status') === 'paid') {
             throw new RegistrationException('Impossible de supprimer une inscription déjà payée.');
         }
 
-        // Atomically delete and decrement the event's registration counter.
+        // Supprimer atomiquement et décrémenter le compteur d'inscriptions de l'événement.
         DB::transaction(function () use ($registration): void {
             $registration->delete();
 
@@ -226,7 +226,7 @@ class StaffRegistrationService
     }
 
     /**
-     * Attaches registration counts to a collection of events.
+     * Attache les nombres d'inscriptions à une collection d'événements.
      *
      * @param  Collection<int, Event>  $events
      * @return Collection<int, Event>
@@ -239,13 +239,13 @@ class StaffRegistrationService
         return $events;
     }
 
-    /** @return list<string> Fields for event summary selection. */
+    /** @return list<string> Champs pour la sélection du résumé de l'événement. */
     private function eventSelect(): array
     {
         return ['id', 'title', 'start_at', 'status', 'registered_count', 'capacity'];
     }
 
-    /** @return list<string> IDs of events in the query. */
+    /** @return list<string> Identifiants des événements dans la requête. */
     private function eventIds(Builder $eventsQuery): array
     {
         return (clone $eventsQuery)
@@ -255,7 +255,7 @@ class StaffRegistrationService
             ->all();
     }
 
-    /** @return array<string, mixed> Empty structure for list responses. */
+    /** @return array<string, mixed> Structure vide pour les réponses de liste. */
     private function emptyListPayload(): array
     {
         return [
@@ -275,10 +275,10 @@ class StaffRegistrationService
     }
 
     /**
-     * Calculates registration summary (total/paid/pending) for the given scope.
+     * Calcule le résumé des inscriptions (total/payé/en attente) pour le périmètre donné.
      *
-     * @param  list<string>  $eventIds  Accessible events.
-     * @param  string|null  $eventId  Specific event filter.
+     * @param  list<string>  $eventIds  Événements accessibles.
+     * @param  string|null  $eventId  Filtre d'événement spécifique.
      * @return array{total: int, paid: int, pending: int}
      */
     private function summary(array $eventIds, ?string $eventId): array
@@ -297,10 +297,10 @@ class StaffRegistrationService
     }
 
     /**
-     * Applies keyword search across multiple related entities.
+     * Applique la recherche par mot-clé sur plusieurs entités liées.
      *
-     * @param  Builder  $query  Registration query.
-     * @param  string  $search  Search term.
+     * @param  Builder  $query  Requête d'inscription.
+     * @param  string  $search  Terme de recherche.
      */
     private function applySearch(Builder $query, string $search): void
     {

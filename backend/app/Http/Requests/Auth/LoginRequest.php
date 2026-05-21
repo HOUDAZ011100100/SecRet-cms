@@ -5,18 +5,18 @@ namespace App\Http\Requests\Auth;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Form request for user authentication (Login).
+ * Requête de formulaire pour l'authentification de l'utilisateur (Connexion).
  *
- * Validates the credentials required to establish a session or issue a token.
+ * Valide les identifiants requis pour établir une session ou émettre un jeton.
  */
 class LoginRequest extends FormRequest
 {
     /**
-     * Get the validation rules that apply to the request.
+     * Obtenir les règles de validation qui s'appliquent à la requête.
      *
-     * Rules:
-     * - email: Required and must be a valid email format.
-     * - password: Required string.
+     * Règles :
+     * - email : Requis et doit être au format email valide.
+     * - password : Chaîne de caractères requise.
      *
      * @return array<string, list<string>>
      */

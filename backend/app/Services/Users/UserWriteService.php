@@ -10,20 +10,20 @@ use Illuminate\Validation\ValidationException;
 use MongoDB\Driver\Exception\BulkWriteException;
 
 /**
- * Service for managing user creation, updates, and deletion.
+ * Service pour la gestion de la création, de la mise à jour et de la suppression des utilisateurs.
  *
- * It handles password hashing, email uniqueness validation, and MongoDB-specific duplicate key exceptions.
+ * Il gère le hachage des mots de passe, la validation de l'unicité des adresses e-mail et les exceptions de clés dupliquées spécifiques à MongoDB.
  */
 class UserWriteService
 {
     /**
-     * Creates a new user in the system.
+     * Crée un nouvel utilisateur dans le système.
      *
      * @param  array{name: string, email: string, password: string, role: string}  $data
-     * @return User The newly created user instance.
+     * @return User L'instance de l'utilisateur nouvellement créé.
      *
-     * @throws ValidationException If the email is already taken.
-     * @throws BulkWriteException If a database-level race condition occurs during creation.
+     * @throws ValidationException Si l'adresse e-mail est déjà utilisée.
+     * @throws BulkWriteException Si une condition de concurrence au niveau de la base de données survient lors de la création.
      */
     public function create(array $data): User
     {
@@ -48,13 +48,13 @@ class UserWriteService
     }
 
     /**
-     * Updates an existing user's profile.
+     * Met à jour le profil d'un utilisateur existant.
      *
-     * @param  User  $user  The user instance to update.
-     * @param  array<string, mixed>  $data  The data to update (may include name, email, password, etc.).
-     * @return User The updated user instance.
+     * @param  User  $user  L'instance de l'utilisateur à mettre à jour.
+     * @param  array<string, mixed>  $data  Les données à mettre à jour (peuvent inclure le nom, l'e-mail, le mot de passe, etc.).
+     * @return User L'instance de l'utilisateur mise à jour.
      *
-     * @throws ValidationException If the new email is already taken.
+     * @throws ValidationException Si la nouvelle adresse e-mail est déjà utilisée.
      */
     public function update(User $user, array $data): User
     {
@@ -80,12 +80,12 @@ class UserWriteService
     }
 
     /**
-     * Deletes a user account.
+     * Supprime un compte utilisateur.
      *
-     * @param  User  $actor  The user performing the deletion.
-     * @param  User  $user  The user to be deleted.
+     * @param  User  $actor  L'utilisateur effectuant la suppression.
+     * @param  User  $user  L'utilisateur à supprimer.
      *
-     * @throws UserManagementException If a user tries to delete their own account.
+     * @throws UserManagementException Si un utilisateur tente de supprimer son propre compte.
      */
     public function delete(User $actor, User $user): void
     {
@@ -97,10 +97,10 @@ class UserWriteService
     }
 
     /**
-     * Checks if an email is available in the database.
+     * Vérifie si une adresse e-mail est disponible dans la base de données.
      *
-     * @param  string  $email  The email to check.
-     * @param  User|null  $except  Optional user to exclude from the check (used during updates).
+     * @param  string  $email  L'adresse e-mail à vérifier.
+     * @param  User|null  $except  Utilisateur optionnel à exclure de la vérification (utilisé lors des mises à jour).
      *
      * @throws ValidationException
      */
@@ -118,7 +118,7 @@ class UserWriteService
     }
 
     /**
-     * Inspects a MongoDB exception for duplicate key errors.
+     * Inspecte une exception MongoDB pour les erreurs de clés dupliquées.
      *
      * @throws ValidationException
      */
@@ -130,7 +130,7 @@ class UserWriteService
     }
 
     /**
-     * Throws a standard Laravel ValidationException for duplicate email.
+     * Lance une ValidationException standard de Laravel pour un e-mail dupliqué.
      *
      * @throws ValidationException
      */

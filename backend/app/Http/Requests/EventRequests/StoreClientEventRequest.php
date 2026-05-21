@@ -7,18 +7,18 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Form request for clients to submit an event proposal/request.
+ * Requête de formulaire pour que les clients soumettent une proposition/demande d'événement.
  *
- * This request handles the initial submission of an event idea by a client,
- * including contact information and preferred scheduling.
+ * Cette requête gère la soumission initiale d'une idée d'événement par un client,
+ * y compris les informations de contact et la planification souhaitée.
  */
 class StoreClientEventRequest extends FormRequest
 {
     /**
-     * Prepare the data for validation.
+     * Préparer les données pour la validation.
      *
-     * Automatically populates contact information from the authenticated user
-     * if not explicitly provided in the request.
+     * Remplit automatiquement les informations de contact à partir de l'utilisateur authentifié
+     * si elles ne sont pas explicitement fournies dans la requête.
      */
     protected function prepareForValidation(): void
     {
@@ -34,9 +34,9 @@ class StoreClientEventRequest extends FormRequest
     }
 
     /**
-     * Determine if the user is authorized to make this request.
+     * Détermine si l'utilisateur est autorisé à effectuer cette requête.
      *
-     * Only users with the 'CLIENT' role are permitted to submit event requests.
+     * Seuls les utilisateurs ayant le rôle 'CLIENT' sont autorisés à soumettre des demandes d'événements.
      */
     public function authorize(): bool
     {
@@ -46,13 +46,13 @@ class StoreClientEventRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * Obtenir les règles de validation qui s'appliquent à la requête.
      *
-     * Rules:
-     * - title: Required string, max 255.
-     * - ticket_price: Required numeric, min 0.
-     * - contact_name/email: Required for communication.
-     * - image/image_data: Support for both binary file uploads and base64 encoded images.
+     * Règles :
+     * - title : Chaîne de caractères requise, max 255.
+     * - ticket_price : Numérique requis, min 0.
+     * - contact_name/email : Requis pour la communication.
+     * - image/image_data : Prise en charge des téléchargements de fichiers binaires et des images encodées en base64.
      *
      * @return array<string, mixed>
      */

@@ -1,137 +1,137 @@
-# Backend API Reference
+# Référence de l'API Backend
 
-VELORA exposes a Laravel Sanctum JSON API under `/api`. The backend is MongoDB-only and stores model relationships as Mongo ObjectId string values in API-facing fields.
+VELORA expose une API JSON Laravel Sanctum sous `/api`. Le backend est exclusivement MongoDB et stocke les relations de modèle sous forme de chaînes de caractères Mongo ObjectId dans les champs exposés par l'API.
 
-## Authentication
+## Authentification
 
-Public endpoints:
+Points de terminaison publics :
 
-| Method | Path | Purpose |
+| Méthode | Chemin | Objectif |
 | --- | --- | --- |
-| `GET` | `/api/health` | Readiness check for MongoDB and Redis. |
-| `POST` | `/api/register` | Register a participant or client account. |
-| `POST` | `/api/login` | Login and receive a Sanctum bearer token. |
+| `GET` | `/api/health` | Vérification de la disponibilité de MongoDB et Redis. |
+| `POST` | `/api/register` | Enregistrer un compte participant ou client. |
+| `POST` | `/api/login` | Se connecter et recevoir un jeton porteur (bearer token) Sanctum. |
 
-Authenticated requests use:
+Les requêtes authentifiées utilisent :
 
 ```http
 Authorization: Bearer <token>
 Accept: application/json
 ```
 
-All `/api/*` responses are JSON, including framework errors such as unauthenticated `401` responses. Clients may send `X-Request-Id`; safe values are echoed back, and otherwise the backend generates one. API responses include the security headers `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, and `X-Permitted-Cross-Domain-Policies`.
+Toutes les réponses de `/api/*` sont au format JSON, y compris les erreurs du framework telles que les réponses `401` non authentifiées. Les clients peuvent envoyer un `X-Request-Id` ; les valeurs sûres sont renvoyées, sinon le backend en génère une. Les réponses de l'API incluent les en-têtes de sécurité `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, et `X-Permitted-Cross-Domain-Policies`.
 
-Demo users after `php artisan migrate:fresh --seed --force`:
+Utilisateurs de démonstration après `php artisan migrate:fresh --seed --force` :
 
-| Role | Email | Password |
+| Rôle | Email | Mot de passe |
 | --- | --- | --- |
 | Admin | `admin@demo.local` | `password` |
-| Organizer | `organisateur@demo.local` | `password` |
+| Organisateur | `organisateur@demo.local` | `password` |
 | Participant | `participant@demo.local` | `password` |
 | Client | `client@demo.local` | `password` |
 
-## Role Route Groups
+## Groupes de Routes par Rôle
 
-### Shared Authenticated Routes
+### Routes Authentifiées Partagées
 
-| Method | Path | Notes |
+| Méthode | Chemin | Notes |
 | --- | --- | --- |
-| `POST` | `/api/logout` | Revokes the current token. |
-| `GET` | `/api/user` | Current authenticated user. |
-| `GET` | `/api/notifications` | Current user's notifications. |
-| `GET` | `/api/notifications/unread-count` | Unread notification count. |
-| `POST` | `/api/notifications/read-all` | Marks all current user's notifications as read. |
-| `POST` | `/api/notifications/{notification}/read` | Marks one notification as read. |
-| `GET` | `/api/events/browse` | Published event browser. Optional `q` search, max 120 chars. |
-| `GET` | `/api/events/{event}` | Event detail. Unpublished events are manager-only. |
-| `GET` | `/api/events/{event}/feedbacks` | Public feedback, with expanded visibility for admins. |
+| `POST` | `/api/logout` | Révoque le jeton actuel. |
+| `GET` | `/api/user` | Utilisateur authentifié actuel. |
+| `GET` | `/api/notifications` | Notifications de l'utilisateur actuel. |
+| `GET` | `/api/notifications/unread-count` | Nombre de notifications non lues. |
+| `POST` | `/api/notifications/read-all` | Marque toutes les notifications de l'utilisateur actuel comme lues. |
+| `POST` | `/api/notifications/{notification}/read` | Marque une notification comme lue. |
+| `GET` | `/api/events/browse` | Navigateur d'événements publiés. Recherche optionnelle `q`, max 120 caractères. |
+| `GET` | `/api/events/{event}` | Détail de l'événement. Les événements non publiés sont réservés aux gestionnaires. |
+| `GET` | `/api/events/{event}/feedbacks` | Commentaires publics, avec une visibilité élargie pour les administrateurs. |
 
 ### Participant
 
-| Method | Path | Notes |
+| Méthode | Chemin | Notes |
 | --- | --- | --- |
-| `POST` | `/api/events/{event}/register` | Register for a published event. Capacity and duplicate registration are guarded. |
-| `GET` | `/api/events/{event}/my-registration` | Participant registration for one event. |
-| `GET` | `/api/my-registrations` | Participant registration history. Optional `payment_status`: `pending` or `paid`. |
-| `POST` | `/api/registrations/{registration}/pay` | Mock payment for a pending registration. |
-| `DELETE` | `/api/registrations/{registration}` | Cancel an unpaid registration. |
-| `GET` | `/api/registrations/{registration}/ticket` | Returns ticket payload for a paid registration. |
-| `POST` | `/api/events/{event}/feedback` | Submit feedback for an attended paid event. |
+| `POST` | `/api/events/{event}/register` | S'inscrire à un événement publié. La capacité et les inscriptions en double sont contrôlées. |
+| `GET` | `/api/events/{event}/my-registration` | Inscription du participant pour un événement. |
+| `GET` | `/api/my-registrations` | Historique des inscriptions du participant. `payment_status` optionnel : `pending` ou `paid`. |
+| `POST` | `/api/registrations/{registration}/pay` | Simulation de paiement pour une inscription en attente. |
+| `DELETE` | `/api/registrations/{registration}` | Annuler une inscription non payée. |
+| `GET` | `/api/registrations/{registration}/ticket` | Renvoie le contenu du ticket pour une inscription payée. |
+| `POST` | `/api/events/{event}/feedback` | Soumettre un commentaire pour un événement payé auquel on a assisté. |
 
-### Organizer
+### Organisateur
 
-| Method | Path | Notes |
+| Méthode | Chemin | Notes |
 | --- | --- | --- |
-| `GET` | `/api/organizer/events` | Organizer-owned or created events. |
-| `POST` | `/api/organizer/events` | Create draft event. |
-| `PATCH` | `/api/organizer/events/{event}` | Update managed event. |
-| `PATCH` | `/api/organizer/events/{event}/capacity` | Update capacity, never below registered count. |
-| `POST` | `/api/organizer/events/{event}/request-publication` | Submit event for admin approval. |
-| `GET` | `/api/organizer/events/{event}/tasks` | List planning tasks. |
-| `POST` | `/api/organizer/events/{event}/tasks` | Create planning task. |
-| `PATCH` | `/api/organizer/events/{event}/tasks/{eventTask}` | Update planning task. |
-| `DELETE` | `/api/organizer/events/{event}/tasks/{eventTask}` | Delete planning task. |
-| `GET` | `/api/organizer/events/{event}/activities` | List event activities. |
-| `POST` | `/api/organizer/events/{event}/activities` | Create event activity. |
-| `PATCH` | `/api/organizer/events/{event}/activities/{eventActivity}` | Update event activity. |
-| `DELETE` | `/api/organizer/events/{event}/activities/{eventActivity}` | Delete event activity. |
-| `GET` | `/api/organizer/registrations/events` | Events with registration counts. |
-| `GET` | `/api/organizer/registrations` | Registrations for organizer-managed events. |
-| `DELETE` | `/api/organizer/registrations/{registration}` | Delete unpaid registration for managed event. |
+| `GET` | `/api/organizer/events` | Événements possédés ou créés par l'organisateur. |
+| `POST` | `/api/organizer/events` | Créer un projet d'événement (draft). |
+| `PATCH` | `/api/organizer/events/{event}` | Mettre à jour l'événement géré. |
+| `PATCH` | `/api/organizer/events/{event}/capacity` | Mettre à jour la capacité, jamais en dessous du nombre d'inscrits. |
+| `POST` | `/api/organizer/events/{event}/request-publication` | Soumettre l'événement pour approbation par un administrateur. |
+| `GET` | `/api/organizer/events/{event}/tasks` | Lister les tâches de planification. |
+| `POST` | `/api/organizer/events/{event}/tasks` | Créer une tâche de planification. |
+| `PATCH` | `/api/organizer/events/{event}/tasks/{eventTask}` | Mettre à jour une tâche de planification. |
+| `DELETE` | `/api/organizer/events/{event}/tasks/{eventTask}` | Supprimer une tâche de planification. |
+| `GET` | `/api/organizer/events/{event}/activities` | Lister les activités de l'événement. |
+| `POST` | `/api/organizer/events/{event}/activities` | Créer une activité d'événement. |
+| `PATCH` | `/api/organizer/events/{event}/activities/{eventActivity}` | Mettre à jour une activité d'événement. |
+| `DELETE` | `/api/organizer/events/{event}/activities/{eventActivity}` | Supprimer une activité d'événement. |
+| `GET` | `/api/organizer/registrations/events` | Événements avec le nombre d'inscriptions. |
+| `GET` | `/api/organizer/registrations` | Inscriptions pour les événements gérés par l'organisateur. |
+| `DELETE` | `/api/organizer/registrations/{registration}` | Supprimer une inscription non payée pour un événement géré. |
 
-### Admin
+### Administrateur
 
-Admins can use organizer event planning routes and also have these admin-only routes:
+Les administrateurs peuvent utiliser les routes de planification d'événements des organisateurs et disposent également de ces routes réservées aux administrateurs :
 
-| Method | Path | Notes |
+| Méthode | Chemin | Notes |
 | --- | --- | --- |
-| `GET` | `/api/admin/events` | All events. Optional `q` search, max 120 chars. |
-| `GET` | `/api/admin/organizer-events` | Events owned or created by organizers. |
-| `GET` | `/api/admin/my-events` | Events assigned to or created by the admin. |
-| `DELETE` | `/api/admin/events/{event}` | Delete event. |
-| `PATCH` | `/api/admin/events/{event}/assign-organizer` | Assign organizer. |
-| `PATCH` | `/api/admin/events/{event}` | Update event. |
-| `PATCH` | `/api/admin/events/{event}/capacity` | Update capacity. |
-| `POST` | `/api/admin/events/{event}/approve-publication` | Publish pending event. |
-| `GET` | `/api/admin/event-requests` | List client event requests. Optional `status`: `pending`, `approved`, or `rejected`. |
-| `POST` | `/api/admin/event-requests/{eventRequest}/review` | Approve or reject event request. |
-| `GET` | `/api/admin/users` | List users. Optional `role`: `admin`, `organizer`, `participant`, or `client`. |
-| `GET` | `/api/admin/organizers` | List organizers. |
-| `POST` | `/api/admin/users` | Create user. |
-| `PATCH` | `/api/admin/users/{user}` | Update user. |
-| `DELETE` | `/api/admin/users/{user}` | Delete user. Self-delete is blocked. |
-| `GET` | `/api/admin/stats` | Admin dashboard metrics. |
-| `GET` | `/api/admin/registrations/events` | Events with registration counts. |
-| `GET` | `/api/admin/registrations` | Registration management list. |
-| `DELETE` | `/api/admin/registrations/{registration}` | Delete unpaid registration. |
-| `POST` | `/api/admin/feedbacks/{feedback}/approve` | Approve feedback. |
-| `DELETE` | `/api/admin/feedbacks/{feedback}` | Delete feedback. |
+| `GET` | `/api/admin/events` | Tous les événements. Recherche optionnelle `q`, max 120 caractères. |
+| `GET` | `/api/admin/organizer-events` | Événements possédés ou créés par des organisateurs. |
+| `GET` | `/api/admin/my-events` | Événements assignés à ou créés par l'administrateur. |
+| `DELETE` | `/api/admin/events/{event}` | Supprimer un événement. |
+| `PATCH` | `/api/admin/events/{event}/assign-organizer` | Assigner un organisateur. |
+| `PATCH` | `/api/admin/events/{event}` | Mettre à jour un événement. |
+| `PATCH` | `/api/admin/events/{event}/capacity` | Mettre à jour la capacité. |
+| `POST` | `/api/admin/events/{event}/approve-publication` | Publier un événement en attente. |
+| `GET` | `/api/admin/event-requests` | Liste des demandes d'événements des clients. `status` optionnel : `pending`, `approved`, ou `rejected`. |
+| `POST` | `/api/admin/event-requests/{eventRequest}/review` | Approuver ou rejeter une demande d'événement. |
+| `GET` | `/api/admin/users` | Liste des utilisateurs. `role` optionnel : `admin`, `organizer`, `participant`, ou `client`. |
+| `GET` | `/api/admin/organizers` | Liste des organisateurs. |
+| `POST` | `/api/admin/users` | Créer un utilisateur. |
+| `PATCH` | `/api/admin/users/{user}` | Mettre à jour un utilisateur. |
+| `DELETE` | `/api/admin/users/{user}` | Supprimer un utilisateur. L'auto-suppression est bloquée. |
+| `GET` | `/api/admin/stats` | Métriques du tableau de bord administrateur. |
+| `GET` | `/api/admin/registrations/events` | Événements avec le nombre d'inscriptions. |
+| `GET` | `/api/admin/registrations` | Liste de gestion des inscriptions. |
+| `DELETE` | `/api/admin/registrations/{registration}` | Supprimer une inscription non payée. |
+| `POST` | `/api/admin/feedbacks/{feedback}/approve` | Approuver un commentaire. |
+| `DELETE` | `/api/admin/feedbacks/{feedback}` | Supprimer un commentaire. |
 
 ### Client
 
-| Method | Path | Notes |
+| Méthode | Chemin | Notes |
 | --- | --- | --- |
-| `POST` | `/api/event-requests` | Submit an event request. One pending request or active event blocks new submissions. |
-| `DELETE` | `/api/event-requests/{eventRequest}` | Delete own pending request. |
-| `GET` | `/api/client/stats` | Client dashboard data, request groups, event lists, and revenue. |
+| `POST` | `/api/event-requests` | Soumettre une demande d'événement. Une demande en attente ou un événement actif bloque toute nouvelle soumission. |
+| `DELETE` | `/api/event-requests/{eventRequest}` | Supprimer sa propre demande en attente. |
+| `GET` | `/api/client/stats` | Données du tableau de bord client, groupes de demandes, listes d'événements et revenus. |
 
-## Money and Dates
+## Argent et Dates
 
-- Money is stored internally in integer cents (`amount_cents`, `ticket_price_cents`).
-- API compatibility fields remain decimal-compatible strings or numbers, such as `amount` and `ticket_price`.
-- Dates should be sent as ISO-8601 strings.
-- Mongo stores dates as BSON dates through Laravel casts.
+- L'argent est stocké en interne en centimes entiers (`amount_cents`, `ticket_price_cents`).
+- Les champs de compatibilité de l'API restent des chaînes ou des nombres compatibles avec les décimales, tels que `amount` et `ticket_price`.
+- Les dates doivent être envoyées sous forme de chaînes ISO-8601.
+- Mongo stocke les dates sous forme de dates BSON via les casts Laravel.
 
-## Error Shape
+## Format des Erreurs
 
-Validation errors use Laravel's default `422` JSON response. Domain errors use:
+Les erreurs de validation utilisent la réponse JSON `422` par défaut de Laravel. Les erreurs de domaine utilisent :
 
 ```json
 {
-  "message": "Human readable error."
+  "message": "Message d'erreur lisible par l'homme."
 }
 ```
 
-Login and registration are rate limited. Rate-limit responses use HTTP `429` with the same message envelope.
+La connexion et l'inscription sont limitées en débit (rate limited). Les réponses de limite de débit utilisent HTTP `429` avec la même enveloppe de message.
 
-The OpenAPI contract in `openapi.yaml` documents the route inventory and main request/response schemas. It is intentionally frontend-facing; the generated class docs remain available for internal PHP implementation details.
+Le contrat OpenAPI dans `openapi.yaml` documente l'inventaire des routes et les principaux schémas de requête/réponse. Il est intentionnellement orienté vers le frontend ; la documentation de classe générée reste disponible pour les détails de l'implémentation PHP interne.

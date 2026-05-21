@@ -5,21 +5,21 @@ namespace App\Http\Requests\EventActivities;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Form request for creating a new event activity (agenda item).
+ * Requête de formulaire pour la création d'une nouvelle activité d'événement (élément du programme).
  *
- * Activities represent specific time-slots or sessions within a larger event.
+ * Les activités représentent des créneaux horaires ou des sessions spécifiques au sein d'un événement plus large.
  */
 class StoreEventActivityRequest extends FormRequest
 {
     /**
-     * Get the validation rules that apply to the request.
+     * Obtenir les règles de validation qui s'appliquent à la requête.
      *
-     * Rules:
-     * - title: Required string, max 255 chars.
-     * - description: Optional string.
-     * - starts_at: Optional date.
-     * - ends_at: Optional date, must be equal to or after starts_at if provided.
-     * - sort_order: Optional integer, used for displaying activities in a specific sequence.
+     * Règles :
+     * - title : Chaîne de caractères requise, max 255 caractères.
+     * - description : Chaîne de caractères optionnelle.
+     * - starts_at : Date optionnelle.
+     * - ends_at : Date optionnelle, doit être égale ou postérieure à starts_at si fournie.
+     * - sort_order : Entier optionnel, utilisé pour afficher les activités dans un ordre spécifique.
      *
      * @return array<string, list<string>>
      */

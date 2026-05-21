@@ -5,18 +5,18 @@ namespace App\Http\Requests\Events;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Form request for updating only the capacity of an event.
+ * Requête de formulaire pour mettre à jour uniquement la capacité d'un événement.
  *
- * This request is used for surgical updates to an event's maximum capacity,
- * often used by organizers to scale attendance limits.
+ * Cette requête est utilisée pour des mises à jour ciblées de la capacité maximale d'un événement,
+ * souvent utilisée par les organisateurs pour ajuster les limites de participation.
  */
 class UpdateEventCapacityRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Détermine si l'utilisateur est autorisé à effectuer cette requête.
      *
-     * Authenticated users can attempt this; ownership/role checks
-     * are usually handled in the controller or service layer.
+     * Les utilisateurs authentifiés peuvent tenter cela ; les vérifications de propriété/rôle
+     * sont généralement gérées dans la couche contrôleur ou service.
      */
     public function authorize(): bool
     {
@@ -24,10 +24,10 @@ class UpdateEventCapacityRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * Obtenir les règles de validation qui s'appliquent à la requête.
      *
-     * Rules:
-     * - capacity: Required, must be an integer of at least 1.
+     * Règles :
+     * - capacity : Requis, doit être un entier d'au moins 1.
      *
      * @return array<string, mixed>
      */

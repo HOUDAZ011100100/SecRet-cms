@@ -7,18 +7,18 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Form request for creating a new event.
+ * Requête de formulaire pour la création d'un nouvel événement.
  *
- * This request handles the initial creation of an event, including its
- * basic information, scheduling, capacity, and optional branding images.
+ * Cette requête gère la création initiale d'un événement, y compris ses
+ * informations de base, sa planification, sa capacité et ses images de marque optionnelles.
  */
 class StoreEventRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Détermine si l'utilisateur est autorisé à effectuer cette requête.
      *
-     * Any authenticated user can attempt to create an event,
-     * though specific role checks might be applied at the controller or service level.
+     * Tout utilisateur authentifié peut tenter de créer un événement,
+     * bien que des vérifications de rôle spécifiques puissent être appliquées au niveau du contrôleur ou du service.
      */
     public function authorize(): bool
     {
@@ -26,19 +26,19 @@ class StoreEventRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * Obtenir les règles de validation qui s'appliquent à la requête.
      *
-     * Rules:
-     * - title: Required string, max 255 chars.
-     * - description: Optional string.
-     * - location/room: Optional strings, max 255 chars.
-     * - start_at: Required date.
-     * - end_at: Required date, must be after start_at.
-     * - capacity: Required positive integer.
-     * - ticket_price: Optional numeric, min 0.
-     * - status: Optional, must be a valid event status (draft, published, etc.).
-     * - image_data: Optional base64 encoded image data.
-     * - image_mime: Optional image MIME type (jpeg, png, webp, gif).
+     * Règles :
+     * - title : Chaîne de caractères requise, max 255 caractères.
+     * - description : Chaîne de caractères optionnelle.
+     * - location/room : Chaînes de caractères optionnelles, max 255 caractères.
+     * - start_at : Date requise.
+     * - end_at : Date requise, doit être après start_at.
+     * - capacity : Entier positif requis.
+     * - ticket_price : Numérique optionnel, min 0.
+     * - status : Optionnel, doit être un statut d'événement valide (draft, published, etc.).
+     * - image_data : Données d'image encodées en base64 optionnelles.
+     * - image_mime : Type MIME de l'image optionnel (jpeg, png, webp, gif).
      *
      * @return array<string, mixed>
      */

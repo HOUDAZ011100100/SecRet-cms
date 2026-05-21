@@ -11,19 +11,19 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Controller for managing participant registrations from a staff (Organizer/Admin) perspective.
+ * Contrôleur pour la gestion des inscriptions des participants du point de vue du personnel (Organisateur/Administrateur).
  *
- * This controller allows staff to view, search, and manage registrations for the events they manage.
+ * Ce contrôleur permet au personnel de visualiser, rechercher et gérer les inscriptions pour les événements qu'ils gèrent.
  */
 class StaffRegistrationController extends Controller
 {
     /**
-     * @param  StaffRegistrationService  $registrations  Service for staff-level registration management.
+     * @param  StaffRegistrationService  $registrations  Service pour la gestion des inscriptions au niveau du personnel.
      */
     public function __construct(private readonly StaffRegistrationService $registrations) {}
 
     /**
-     * List events managed by the current Organizer that have at least one registration.
+     * Lister les événements gérés par l'organisateur actuel ayant au moins une inscription.
      *
      * @return JsonResponse
      */
@@ -33,7 +33,7 @@ class StaffRegistrationController extends Controller
     }
 
     /**
-     * List all events that have at least one registration (Admin view).
+     * Lister tous les événements ayant au moins une inscription (vue Administrateur).
      *
      * @return JsonResponse
      */
@@ -43,10 +43,10 @@ class StaffRegistrationController extends Controller
     }
 
     /**
-     * List registrations for an event managed by the Organizer.
+     * Lister les inscriptions pour un événement géré par l'organisateur.
      *
-     * @param  StaffRegistrationIndexRequest  $request  Validated filters (event_id, status, search).
-     * @return JsonResponse Paginated list of registrations.
+     * @param  StaffRegistrationIndexRequest  $request  Filtres validés (event_id, statut, recherche).
+     * @return JsonResponse Liste paginée des inscriptions.
      */
     public function indexForOrganizer(StaffRegistrationIndexRequest $request)
     {
@@ -57,10 +57,10 @@ class StaffRegistrationController extends Controller
     }
 
     /**
-     * List registrations for any event (Admin view).
+     * Lister les inscriptions pour n'importe quel événement (vue Administrateur).
      *
-     * @param  StaffRegistrationIndexRequest  $request  Validated filters (event_id, status, search).
-     * @return JsonResponse Paginated list of registrations.
+     * @param  StaffRegistrationIndexRequest  $request  Filtres validés (event_id, statut, recherche).
+     * @return JsonResponse Liste paginée des inscriptions.
      */
     public function indexForAdmin(StaffRegistrationIndexRequest $request)
     {
@@ -71,7 +71,7 @@ class StaffRegistrationController extends Controller
     }
 
     /**
-     * Delete/Cancel a registration as an Organizer.
+     * Supprimer/Annuler une inscription en tant qu'organisateur.
      *
      * @return JsonResponse 200 OK message.
      */
@@ -83,7 +83,7 @@ class StaffRegistrationController extends Controller
     }
 
     /**
-     * Delete/Cancel a registration as an Admin.
+     * Supprimer/Annuler une inscription en tant qu'administrateur.
      *
      * @return JsonResponse 200 OK message.
      */
@@ -95,7 +95,7 @@ class StaffRegistrationController extends Controller
     }
 
     /**
-     * Retrieve and validate the authenticated user.
+     * Récupérer et valider l'utilisateur authentifié.
      */
     private function actor(Request $request): User
     {

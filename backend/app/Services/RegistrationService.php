@@ -13,45 +13,46 @@ use Illuminate\Support\Str;
 use MongoDB\Driver\Exception\BulkWriteException;
 
 /**
- * Service managing the lifecycle of participant registrations for events.
+ * Service gérant le cycle de vie des inscriptions des participants aux événements.
  *
- * This service handles registration creation, payment processing, and cancellations.
- * The important rules live here because they must stay identical no matter which
- * controller or staff workflow triggers them:
- * - published events only;
- * - no overbooking;
- * - one registration per participant per event;
- * - paid registrations cannot be cancelled;
- * - money is persisted through the model as integer cents.
+ * Ce service gère la création des inscriptions, le traitement des paiements et les annulations.
+ * Les règles importantes résident ici car elles doivent rester identiques quel que soit le
+ * contrôleur ou le flux de travail du personnel qui les déclenche :
+ * - événements publiés uniquement ;
+ * - pas de surréservation ;
+ * - une seule inscription par participant et par événement ;
+ * - les inscriptions payées ne peuvent pas être annulées ;
+ * - l'argent est persisté dans le modèle sous forme de centimes entiers.
  */
 class RegistrationService
 {
     /**
-     * Registers a participant for an event.
+     * Inscrit un participant à un événement.
      *
-     * @param  User  $participant  The user who wants to register.
-     * @param  Event  $event  The event being registered for.
-     * @return Registration The newly created registration.
+     * @param  User  $participant  L'utilisateur qui souhaite s'inscrire.
+     * @param  Event  $event  L'événement auquel il s'inscrit.
+     * @return Registration La nouvelle inscription créée.
      *
-     * @throws RegistrationException If the event is closed, full, or the user is already registered.
+     * @throws RegistrationException Si l'événement est fermé, complet ou si l'utilisateur est déjà inscrit.
      */
     public function register(User $participant, Event $event): Registration
     {
-        // Participants can only register for events that are already visible and live.
+        // Les participants ne peuvent s'inscrire qu'à des événements déjà visibles et actifs.
         if ($event->status !== Event::STATUS_PUBLISHED) {
             throw new RegistrationException('Événement non ouvert aux inscriptions.');
         }
 
         try {
             return DB::transaction(function () use ($participant, $event) {
-                // Reload the event inside the transaction so capacity checks use the latest document state.
+                // Recharger l'événement à l'intérieur de la transaction pour que les vérifications de capacité
+                // utilisent l'état le plus récent du document.
                 $freshEvent = Event::query()->whereKey($event->id)->firstOrFail();
 
                 if ((int) $freshEvent->registered_count >= (int) $freshEvent->capacity) {
                     throw new RegistrationException('Événement complet.');
                 }
 
-                // Friendly pre-check for duplicates; the Mongo unique index remains the final guarantee.
+                // Vérification préalable conviviale pour les doublons ; l'index unique Mongo reste la garantie finale.
                 $existing = Registration::query()
                     ->where('event_id', $freshEvent->id)
                     ->where('user_id', $participant->id)
@@ -61,8 +62,8 @@ class RegistrationService
                     throw new RegistrationException('Déjà inscrit.', registration: $existing);
                 }
 
-                // The conditional increment is the overbooking guard under concurrent registrations.
-                // If another request fills the event first, this update affects zero documents.
+                // L'incrémentation conditionnelle est le garde-fou contre la surréservation lors d'inscriptions simultanées.
+                // Si une autre requête remplit l'événement en premier, cette mise à jour n'affecte aucun document.
                 $incremented = Event::query()
                     ->whereKey($freshEvent->id)
                     ->where('registered_count', '<', (int) $freshEvent->capacity)
@@ -75,7 +76,7 @@ class RegistrationService
                 $amountCents = Money::toCents($freshEvent->ticket_price);
                 $isFree = $amountCents <= 0;
 
-                // The model accepts the API-compatible decimal amount and persists amount_cents.
+                // Le modèle accepte le montant décimal compatible avec l'API et persiste amount_cents.
                 $registration = Registration::create([
                     'event_id' => $freshEvent->id,
                     'user_id' => $participant->id,
@@ -87,7 +88,8 @@ class RegistrationService
                     'registered_at' => now(),
                 ]);
 
-                // Free events still get a completed payment record so stats and ticket rules stay uniform.
+                // Les événements gratuits reçoivent tout de même un enregistrement de paiement complété
+                // afin que les statistiques et les règles relatives aux tickets restent uniformes.
                 if ($isFree) {
                     Payment::create([
                         'registration_id' => $registration->id,
@@ -100,13 +102,13 @@ class RegistrationService
                 }
 
                 $registration->load('event', 'user');
-                // Staff dashboards are notification-driven, so a successful registration fans out here.
+                // Les tableaux de bord du personnel sont basés sur les notifications, donc une inscription réussie est diffusée ici.
                 NotificationService::participantRegistered($registration);
 
                 return $registration;
             });
         } catch (BulkWriteException $exception) {
-            // Convert a Mongo duplicate-key race into the same domain error as the pre-check.
+            // Convertir un conflit de clé unique Mongo en la même erreur de domaine que la pré-vérification.
             $this->throwDuplicateRegistrationIfNeeded($exception, $participant, $event);
 
             throw $exception;
@@ -114,9 +116,9 @@ class RegistrationService
     }
 
     /**
-     * Processes a payment for a pending registration.
+     * Traite un paiement pour une inscription en attente.
      *
-     * @throws RegistrationException If the registration is already paid.
+     * @throws RegistrationException Si l'inscription est déjà payée.
      */
     public function pay(Registration $registration): Registration
     {
@@ -127,7 +129,7 @@ class RegistrationService
         return DB::transaction(function () use ($registration) {
             $amount = $registration->amount;
 
-            // Only a pending registration can move to paid, which prevents duplicate payment records.
+            // Seule une inscription en attente peut passer à l'état payé, ce qui évite les doublons de paiement.
             $updated = Registration::query()
                 ->whereKey($registration->id)
                 ->where('payment_status', 'pending')
@@ -141,13 +143,13 @@ class RegistrationService
                 throw new RegistrationException('Déjà payé.', 200, $registration);
             }
 
-            // This is a mock payment ledger entry, but it follows the same cents-based money storage.
+            // Il s'agit d'une entrée dans le registre des paiements simulés, mais elle suit le même stockage d'argent basé sur les centimes.
             Payment::create([
                 'registration_id' => $registration->id,
                 'amount' => $amount,
                 'currency' => 'EUR',
                 'status' => 'completed',
-                'method' => 'card_mock', // Mock payment method for simulation.
+                'method' => 'card_mock', // Méthode de paiement simulée.
                 'meta' => ['simulated' => true],
             ]);
 
@@ -158,7 +160,7 @@ class RegistrationService
                 'user',
             ]);
 
-            // Payment completion can unblock tickets and operational reporting.
+            // La finalisation du paiement peut débloquer les billets et le reporting opérationnel.
             NotificationService::participantPaid($registration);
 
             return $registration;
@@ -166,10 +168,10 @@ class RegistrationService
     }
 
     /**
-     * Cancels a pending registration.
-     * Only unpaid registrations can be cancelled via this method.
+     * Annule une inscription en attente.
+     * Seules les inscriptions non payées peuvent être annulées via cette méthode.
      *
-     * @throws RegistrationException If the registration is already paid.
+     * @throws RegistrationException Si l'inscription est déjà payée.
      */
     public function cancel(Registration $registration): void
     {
@@ -178,7 +180,7 @@ class RegistrationService
         }
 
         DB::transaction(function () use ($registration) {
-            // Delete only if the document is still pending; a simultaneous payment wins over cancellation.
+            // Supprimer uniquement si le document est toujours en attente ; un paiement simultané l'emporte sur l'annulation.
             $deleted = Registration::query()
                 ->whereKey($registration->id)
                 ->where('payment_status', 'pending')
@@ -188,7 +190,7 @@ class RegistrationService
                 throw new RegistrationException('Impossible d\'annuler une inscription déjà payée.');
             }
 
-            // Keep the denormalized event counter consistent with the removed registration.
+            // Maintenir la cohérence du compteur d'événements dénormalisé avec l'inscription supprimée.
             Event::query()
                 ->whereKey($registration->event_id)
                 ->where('registered_count', '>', 0)
@@ -198,8 +200,8 @@ class RegistrationService
 
     private function uniqueTicketCode(): string
     {
-        // UUID collisions are extremely unlikely, but the unique index makes them possible to detect.
-        // A few retries keep the API response clean without hiding a persistent storage problem.
+        // Les collisions d'UUID sont extrêmement peu probables, mais l'index unique permet de les détecter.
+        // Quelques tentatives permettent de garder une réponse API propre sans masquer un problème de stockage persistant.
         for ($attempt = 0; $attempt < 5; $attempt++) {
             $ticketCode = (string) Str::uuid();
 
@@ -212,7 +214,7 @@ class RegistrationService
     }
 
     /**
-     * Handles the race where two requests pass the duplicate pre-check before one wins the unique index.
+     * Gère le cas où deux requêtes passent la pré-vérification de doublon avant que l'une ne remporte l'index unique.
      *
      * @throws RegistrationException
      */

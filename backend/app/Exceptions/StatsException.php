@@ -6,16 +6,16 @@ use App\Exceptions\Contracts\ApiException;
 use RuntimeException;
 
 /**
- * Exception thrown when a failure occurs during statistics calculation or access.
+ * Exception levée lorsqu'une défaillance survient lors du calcul ou de l'accès aux statistiques.
  *
- * Typically used to report access denials to certain metrics or failures
- * in aggregating registration data.
+ * Généralement utilisée pour signaler des refus d'accès à certaines mesures ou des échecs
+ * dans l'agrégation des données d'inscription.
  */
 class StatsException extends RuntimeException implements ApiException
 {
     /**
-     * @param  string  $message  The error message.
-     * @param  int  $status  The HTTP status code (defaults to 403 Forbidden).
+     * @param  string  $message  Le message d'erreur.
+     * @param  int  $status  Le code de statut HTTP (par défaut 403 Forbidden).
      */
     public function __construct(
         string $message,
@@ -25,7 +25,7 @@ class StatsException extends RuntimeException implements ApiException
     }
 
     /**
-     * Get the HTTP status code for the response.
+     * Récupère le code de statut HTTP pour la réponse.
      */
     public function statusCode(): int
     {
@@ -33,7 +33,7 @@ class StatsException extends RuntimeException implements ApiException
     }
 
     /**
-     * Get the response payload representation of the exception.
+     * Récupère la représentation de la charge utile de réponse de l'exception.
      *
      * @return array<string, mixed>
      */

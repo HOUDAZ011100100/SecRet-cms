@@ -8,16 +8,16 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Form request for administrators to review and decide on an event request.
+ * Requête de formulaire pour que les administrateurs révisent et décident d'une demande d'événement.
  *
- * Admins can either approve or reject a client's proposal.
+ * Les administrateurs peuvent soit approuver soit rejeter la proposition d'un client.
  */
 class ReviewEventRequestRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Détermine si l'utilisateur est autorisé à effectuer cette requête.
      *
-     * Only administrators are authorized to review and decide on event requests.
+     * Seuls les administrateurs sont autorisés à réviser et à décider des demandes d'événements.
      */
     public function authorize(): bool
     {
@@ -27,11 +27,11 @@ class ReviewEventRequestRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * Obtenir les règles de validation qui s'appliquent à la requête.
      *
-     * Rules:
-     * - decision: Required, must be 'approved' or 'rejected'.
-     * - rejection_reason: Required only if the decision is 'rejected'.
+     * Règles :
+     * - decision : Requis, doit être 'approved' ou 'rejected'.
+     * - rejection_reason : Requis uniquement si la décision est 'rejected'.
      *
      * @return array<string, mixed>
      */

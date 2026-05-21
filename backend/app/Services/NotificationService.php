@@ -10,22 +10,22 @@ use App\Models\Registration;
 use App\Models\User;
 
 /**
- * Service responsible for managing and dispatching application-level notifications.
+ * Service responsable de la gestion et de l'envoi des notifications au niveau de l'application.
  *
- * This service centralizes all notification logic, ensuring consistent messaging
- * across the platform for different user roles (Admins, Organizers, Clients, and Participants).
- * It handles both internal system notifications and external-facing updates.
+ * Ce service centralise toute la logique de notification, garantissant une messagerie cohérente
+ * sur toute la plateforme pour les différents rôles d'utilisateurs (Administrateurs, Organisateurs, Clients et Participants).
+ * Il gère à la fois les notifications internes au système et les mises à jour destinées à l'extérieur.
  */
 class NotificationService
 {
     /**
-     * Dispatches a notification to one or multiple users.
+     * Envoie une notification à un ou plusieurs utilisateurs.
      *
-     * @param  string|int|array  $userIds  Single user ID or an array of user IDs to notify.
-     * @param  string  $type  The category/type of notification (e.g., 'admin_user_registered').
-     * @param  string  $title  The short, descriptive title of the notification.
-     * @param  string  $message  The main content body of the notification.
-     * @param  array  $data  Optional metadata (e.g., links, resource IDs) for frontend navigation or context.
+     * @param  string|int|array  $userIds  Un seul ID d'utilisateur ou un tableau d'IDs d'utilisateurs à notifier.
+     * @param  string  $type  La catégorie/le type de notification (ex: 'admin_user_registered').
+     * @param  string  $title  Le titre court et descriptif de la notification.
+     * @param  string  $message  Le corps du contenu principal de la notification.
+     * @param  array  $data  Métadonnées optionnelles (ex: liens, IDs de ressources) pour la navigation frontend ou le contexte.
      */
     public static function send(
         string|int|array $userIds,
@@ -34,7 +34,7 @@ class NotificationService
         string $message,
         array $data = [],
     ): void {
-        // Ensure we have a unique list of valid user IDs to prevent duplicate notifications.
+        // S'assurer d'avoir une liste unique d'IDs d'utilisateurs valides pour éviter les notifications en double.
         $ids = array_unique(array_filter(is_array($userIds) ? $userIds : [$userIds]));
 
         foreach ($ids as $userId) {
@@ -49,7 +49,7 @@ class NotificationService
     }
 
     /**
-     * Retrieves all user IDs with the Administrator role.
+     * Récupère tous les IDs d'utilisateurs ayant le rôle d'Administrateur.
      *
      * @return list<string>
      */
@@ -59,8 +59,8 @@ class NotificationService
     }
 
     /**
-     * Retrieves all user IDs with the Participant role.
-     * Used for broadcasting new events or general announcements.
+     * Récupère tous les IDs d'utilisateurs ayant le rôle de Participant.
+     * Utilisé pour diffuser de nouveaux événements ou des annonces générales.
      *
      * @return list<string>
      */
@@ -70,13 +70,13 @@ class NotificationService
     }
 
     /**
-     * Identifies the Client user associated with a specific event request.
+     * Identifie l'utilisateur Client associé à une demande d'événement spécifique.
      *
-     * @param  EventRequest  $request  The request to find the client for.
+     * @param  EventRequest  $request  La demande pour laquelle trouver le client.
      */
     public static function clientUserForRequest(EventRequest $request): ?User
     {
-        // Clients are matched by their contact email provided in the request.
+        // Les clients sont identifiés par leur e-mail de contact fourni dans la demande.
         return User::query()
             ->where('email', $request->contact_email)
             ->where('role', User::ROLE_CLIENT)
@@ -84,9 +84,9 @@ class NotificationService
     }
 
     /**
-     * Identifies the Client user associated with an existing Event.
+     * Identifie l'utilisateur Client associé à un événement existant.
      *
-     * @param  Event  $event  The event to find the client for.
+     * @param  Event  $event  L'événement pour lequel trouver le client.
      */
     public static function clientUserForEvent(Event $event): ?User
     {
@@ -99,22 +99,22 @@ class NotificationService
     }
 
     /**
-     * Gathers all relevant Organizer IDs for an event, including both the
-     * assigned organizer and the original creator if they are an organizer.
+     * Rassemble tous les IDs d'Organisateurs concernés par un événement, y compris
+     * l'organisateur assigné et le créateur original s'il est un organisateur.
      *
-     * @return list<string> Unique list of organizer user IDs.
+     * @return list<string> Liste unique d'IDs d'utilisateurs organisateurs.
      */
     public static function organizerIdsForEvent(Event $event): array
     {
         $event->loadMissing(['organizer', 'creator']);
         $ids = [];
 
-        // Add the currently assigned organizer if valid.
+        // Ajouter l'organisateur actuellement assigné s'il est valide.
         if ($event->organizer_id && $event->organizer?->role === User::ROLE_ORGANIZER) {
             $ids[] = $event->organizer_id;
         }
 
-        // Add the creator if they are also an organizer and different from the assigned one.
+        // Ajouter le créateur s'il est également un organisateur et différent de celui assigné.
         if (
             $event->created_by
             && $event->created_by !== $event->organizer_id
@@ -127,9 +127,9 @@ class NotificationService
     }
 
     /**
-     * Notifies admins when a new user joins the platform.
+     * Notifie les administrateurs lorsqu'un nouvel utilisateur rejoint la plateforme.
      *
-     * @param  User  $user  The newly registered user.
+     * @param  User  $user  L'utilisateur nouvellement inscrit.
      */
     public static function userRegistered(User $user): void
     {
@@ -143,7 +143,7 @@ class NotificationService
     }
 
     /**
-     * Notifies admins when a new event request is submitted by a client.
+     * Notifie les administrateurs lorsqu'une nouvelle demande d'événement est soumise par un client.
      */
     public static function eventRequestSubmitted(EventRequest $request): void
     {
@@ -157,9 +157,9 @@ class NotificationService
     }
 
     /**
-     * Notifies the client about the outcome (approval/rejection) of their event request.
+     * Notifie le client du résultat (approbation/rejet) de sa demande d'événement.
      *
-     * @param  string  $decision  Either 'approved' or 'rejected'.
+     * @param  string  $decision  Soit 'approved' soit 'rejected'.
      */
     public static function eventRequestReviewed(EventRequest $request, string $decision): void
     {
@@ -188,7 +188,7 @@ class NotificationService
     }
 
     /**
-     * Notifies admins when an organizer creates a new event manually.
+     * Notifie les administrateurs lorsqu'un organisateur crée manuellement un nouvel événement.
      */
     public static function organizerEventCreated(Event $event, User $creator): void
     {
@@ -206,7 +206,7 @@ class NotificationService
     }
 
     /**
-     * Notifies admins that an event is ready for publication and needs approval.
+     * Notifie les administrateurs qu'un événement est prêt pour la publication et nécessite une approbation.
      */
     public static function publicationRequested(Event $event, User $requester): void
     {
@@ -220,7 +220,7 @@ class NotificationService
     }
 
     /**
-     * Notifies an organizer when they have been assigned to manage an event.
+     * Notifie un organisateur lorsqu'il a été assigné à la gestion d'un événement.
      */
     public static function eventAssigned(Event $event, User $organizer): void
     {
@@ -234,7 +234,7 @@ class NotificationService
     }
 
     /**
-     * Notifies the assigned organizers when an admin modifies event details.
+     * Notifie les organisateurs assignés lorsqu'un administrateur modifie les détails d'un événement.
      */
     public static function eventUpdatedByAdmin(Event $event): void
     {
@@ -253,7 +253,7 @@ class NotificationService
     }
 
     /**
-     * Handles notifications when an admin approves an event for publication.
+     * Gère les notifications lorsqu'un administrateur approuve un événement pour la publication.
      */
     public static function publicationApproved(Event $event): void
     {
@@ -268,16 +268,16 @@ class NotificationService
             );
         }
 
-        // Trigger broad broadcast and client notification.
+        // Déclencher la diffusion générale et la notification au client.
         self::eventPublished($event);
     }
 
     /**
-     * Broadcasts that an event is now live to all participants and the original client.
+     * Diffuse que l'événement est maintenant en ligne à tous les participants et au client original.
      */
     public static function eventPublished(Event $event): void
     {
-        // Mass notification to all potential participants.
+        // Notification de masse à tous les participants potentiels.
         self::send(
             self::participantIds(),
             'participant_new_event',
@@ -286,7 +286,7 @@ class NotificationService
             ['event_id' => $event->id, 'link' => '/events/'.$event->id],
         );
 
-        // Notify the client who originally requested the event.
+        // Notifier le client qui a initialement demandé l'événement.
         $client = self::clientUserForEvent($event);
         if ($client) {
             self::send(
@@ -300,13 +300,13 @@ class NotificationService
     }
 
     /**
-     * Notifies admins and organizers when a participant registers for an event.
+     * Notifie les administrateurs et les organisateurs lorsqu'un participant s'inscrit à un événement.
      */
     public static function participantRegistered(Registration $registration): void
     {
         $registration->loadMissing(['event', 'user']);
         $event = $registration->event;
-        // Only notify for live events to avoid noise during setup or draft phases.
+        // Notifier uniquement pour les événements en ligne afin d'éviter le bruit pendant les phases de configuration ou de brouillon.
         if (! $event || $event->status !== 'published') {
             return;
         }
@@ -332,7 +332,7 @@ class NotificationService
     }
 
     /**
-     * Notifies admins and organizers when a participant completes payment for their registration.
+     * Notifie les administrateurs et les organisateurs lorsqu'un participant effectue le paiement de son inscription.
      */
     public static function participantPaid(Registration $registration): void
     {
@@ -363,8 +363,8 @@ class NotificationService
     }
 
     /**
-     * Notifies admins and organizers when a participant submits feedback for an event.
-     * Feedback usually requires moderation before public visibility.
+     * Notifie les administrateurs et les organisateurs lorsqu'un participant soumet un avis pour un événement.
+     * L'avis nécessite généralement une modération avant d'être visible publiquement.
      */
     public static function feedbackSubmitted(Feedback $feedback): void
     {
@@ -395,14 +395,14 @@ class NotificationService
     }
 
     /**
-     * Notifies the author and the event's client when a feedback is approved and published.
+     * Notifie l'auteur et le client de l'événement lorsqu'un avis est approuvé et publié.
      */
     public static function feedbackApproved(Feedback $feedback): void
     {
         $feedback->loadMissing(['event', 'user']);
         $event = $feedback->event;
 
-        // Notify the author that their feedback is now live.
+        // Notifier l'auteur que son avis est maintenant en ligne.
         if ($feedback->user_id) {
             self::send(
                 $feedback->user_id,
@@ -413,10 +413,10 @@ class NotificationService
             );
         }
 
-        // Notify the client about new public feedback on their event.
+        // Notifier le client du nouvel avis public sur son événement.
         if ($event && $event->status === 'published') {
             $client = self::clientUserForEvent($event);
-            // Don't notify the client if they are the one who wrote the feedback (unlikely but possible).
+            // Ne pas notifier le client s'il est celui qui a écrit l'avis (peu probable mais possible).
             if ($client && $client->id !== $feedback->user_id) {
                 $feedbackAuthor = $feedback->relationLoaded('user') ? $feedback->getRelation('user') : null;
                 $author = $feedbackAuthor instanceof User ? $feedbackAuthor->getAttribute('name') : 'Un participant';

@@ -8,14 +8,14 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Controller for managing in-app notifications for the authenticated user.
+ * Contrôleur pour la gestion des notifications dans l'application pour l'utilisateur authentifié.
  */
 class NotificationController extends Controller
 {
     /**
-     * List notifications for the authenticated user.
+     * Lister les notifications pour l'utilisateur authentifié.
      *
-     * @return JsonResponse Paginated notifications with unread count.
+     * @return JsonResponse Notifications paginées avec le nombre de messages non lus.
      */
     public function index(Request $request)
     {
@@ -23,7 +23,7 @@ class NotificationController extends Controller
             ->where('user_id', $request->user()->id)
             ->orderBy('created_at', 'desc');
 
-        // Optional filter to show only unread notifications
+        // Filtrage optionnel pour afficher uniquement les notifications non lues
         if ($request->boolean('unread_only')) {
             $query->whereNull('read_at');
         }
@@ -31,7 +31,7 @@ class NotificationController extends Controller
         $paginated = $query->paginate(30);
         $userId = $request->user()->id;
 
-        // Calculate the total unread count for the UI badge
+        // Calculer le nombre total de messages non lus pour le badge de l'interface utilisateur
         $unreadCount = AppNotification::query()
             ->where('user_id', $userId)
             ->whereNull('read_at')
@@ -50,7 +50,7 @@ class NotificationController extends Controller
     }
 
     /**
-     * Get the count of unread notifications for the current user.
+     * Obtenir le nombre de notifications non lues pour l'utilisateur actuel.
      *
      * @return JsonResponse
      */
@@ -65,13 +65,13 @@ class NotificationController extends Controller
     }
 
     /**
-     * Mark a specific notification as read.
+     * Marquer une notification spécifique comme lue.
      *
-     * @return JsonResponse The updated notification.
+     * @return JsonResponse La notification mise à jour.
      */
     public function markRead(Request $request, AppNotification $notification)
     {
-        // Authorization: ensure the notification belongs to the requester
+        // Autorisation : s'assurer que la notification appartient au demandeur
         abort_unless($notification->user_id === $request->user()->id, 403);
 
         if (! $notification->read_at) {
@@ -82,7 +82,7 @@ class NotificationController extends Controller
     }
 
     /**
-     * Mark all notifications for the current user as read.
+     * Marquer toutes les notifications de l'utilisateur actuel comme lues.
      *
      * @return JsonResponse 200 OK message.
      */

@@ -5,25 +5,25 @@ namespace App\Support;
 use InvalidArgumentException;
 
 /**
- * Utility class for handling monetary values and currency conversions.
+ * Classe utilitaire pour la gestion des valeurs monétaires et des conversions de devises.
  *
- * This class follows the "Cents" pattern to avoid floating-point precision issues
- * when performing calculations or storing values in the database.
+ * Cette classe suit le modèle "Cents" pour éviter les problèmes de précision des virgules flottantes
+ * lors des calculs ou du stockage des valeurs dans la base de données.
  */
 final class Money
 {
     /**
-     * Converts various numeric formats into an integer representation in cents.
+     * Convertit divers formats numériques en une représentation entière en centimes.
      *
-     * Supports:
-     * - Integers (multiplied by 100)
-     * - Floats (rounded to the nearest cent)
-     * - Numeric strings (e.g., "12.50", "-5.00")
+     * Supporte :
+     * - Entiers (multipliés par 100)
+     * - Flottants (arrondis au centime le plus proche)
+     * - Chaînes numériques (ex: "12.50", "-5.00")
      *
-     * @param  mixed  $amount  The value to convert.
-     * @return int The amount in cents.
+     * @param  mixed  $amount  La valeur à convertir.
+     * @return int Le montant en centimes.
      *
-     * @throws InvalidArgumentException If the provided string is not a valid numeric format.
+     * @throws InvalidArgumentException Si la chaîne fournie n'est pas un format numérique valide.
      */
     public static function toCents(mixed $amount): int
     {
@@ -62,12 +62,12 @@ final class Money
     }
 
     /**
-     * Converts a cents integer into a formatted decimal string.
+     * Convertit un entier en centimes en une chaîne décimale formatée.
      *
-     * Example: 1250 becomes "12.50".
+     * Exemple : 1250 devient "12.50".
      *
-     * @param  mixed  $cents  The amount in cents.
-     * @return string Formatted string "XX.YY".
+     * @param  mixed  $cents  Le montant en centimes.
+     * @return string Chaîne formatée "XX.YY".
      */
     public static function fromCents(mixed $cents): string
     {
@@ -79,10 +79,10 @@ final class Money
     }
 
     /**
-     * Converts a cents integer into a float for calculations or display.
+     * Convertit un entier en centimes en un flottant pour les calculs ou l'affichage.
      *
-     * @param  mixed  $cents  The amount in cents.
-     * @return float The amount as a float (e.g., 12.5).
+     * @param  mixed  $cents  Le montant en centimes.
+     * @return float Le montant sous forme de flottant (ex : 12.5).
      */
     public static function floatFromCents(mixed $cents): float
     {

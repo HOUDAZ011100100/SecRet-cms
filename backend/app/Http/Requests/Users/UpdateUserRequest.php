@@ -8,19 +8,19 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 /**
- * Form request for updating an existing user's information.
+ * Requête de formulaire pour mettre à jour les informations d'un utilisateur existant.
  *
- * Supports partial updates of name, email, password, and role.
+ * Prend en charge les mises à jour partielles du nom, de l'email, du mot de passe et du rôle.
  */
 class UpdateUserRequest extends FormRequest
 {
     /**
-     * Get the validation rules that apply to the request.
+     * Obtenir les règles de validation qui s'appliquent à la requête.
      *
-     * Rules use 'sometimes' to allow partial updates:
-     * - email: Valid email if provided.
-     * - password: Optional, must meet security defaults if provided.
-     * - role: Optional, must be a valid system role if provided.
+     * Les règles utilisent 'sometimes' pour permettre des mises à jour partielles :
+     * - email : Email valide si fourni.
+     * - password : Optionnel, doit respecter les paramètres de sécurité par défaut si fourni.
+     * - role : Optionnel, doit être un rôle système valide si fourni.
      *
      * @return array<string, mixed>
      */

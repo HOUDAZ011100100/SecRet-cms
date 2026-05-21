@@ -1,35 +1,35 @@
-# Merise Documentation
+# Documentation Merise
 
-This document describes the backend with Merise-style views:
+Ce document décrit le backend avec des vues de style Merise :
 
-- MCD: conceptual data model, focused on entities and business relationships.
-- MLD: logical data model, focused on Mongo collections, fields, and indexes.
-- MCT: conceptual treatment model, focused on events, operations, rules, and results.
+- MCD : modèle conceptuel de données, axé sur les entités et les relations métier.
+- MLD : modèle logique de données, axé sur les collections Mongo, les champs et les index.
+- MCT : modèle conceptuel de traitement, axé sur les événements, les opérations, les règles et les résultats.
 
-The implementation is MongoDB-only, so the MLD uses collections instead of SQL tables. Relationship fields are stored as Mongo ObjectId strings in fields such as `event_id`, `user_id`, and `registration_id`.
+L'implémentation est exclusivement MongoDB, donc le MLD utilise des collections au lieu de tables SQL. Les champs de relation sont stockés sous forme de chaînes Mongo ObjectId dans des champs tels que `event_id`, `user_id` et `registration_id`.
 
-## MCD - Conceptual Data Model
+## MCD - Modèle Conceptuel de Données
 
 ```mermaid
 erDiagram
-    USER ||--o{ PERSONAL_ACCESS_TOKEN : owns
-    USER ||--o{ EVENT_REQUEST : submits
-    USER ||--o{ EVENT_REQUEST : reviews
-    USER ||--o{ EVENT : creates
-    USER ||--o{ EVENT : organizes
-    USER ||--o{ REGISTRATION : registers
-    USER ||--o{ FEEDBACK : writes
-    USER ||--o{ APP_NOTIFICATION : receives
-    USER ||--o{ EVENT_TASK : may_be_assigned
+    USER ||--o{ PERSONAL_ACCESS_TOKEN : possède
+    USER ||--o{ EVENT_REQUEST : soumet
+    USER ||--o{ EVENT_REQUEST : révise
+    USER ||--o{ EVENT : crée
+    USER ||--o{ EVENT : organise
+    USER ||--o{ REGISTRATION : s'inscrit
+    USER ||--o{ FEEDBACK : écrit
+    USER ||--o{ APP_NOTIFICATION : reçoit
+    USER ||--o{ EVENT_TASK : peut_être_assigné
 
-    EVENT_REQUEST ||--o| EVENT : becomes
-    EVENT ||--o{ EVENT_TASK : contains
-    EVENT ||--o{ EVENT_ACTIVITY : schedules
-    EVENT ||--o{ REGISTRATION : receives
-    EVENT ||--o{ FEEDBACK : receives
+    EVENT_REQUEST ||--o| EVENT : devient
+    EVENT ||--o{ EVENT_TASK : contient
+    EVENT ||--o{ EVENT_ACTIVITY : planifie
+    EVENT ||--o{ REGISTRATION : reçoit
+    EVENT ||--o{ FEEDBACK : reçoit
 
-    REGISTRATION ||--o{ PAYMENT : has
-    REGISTRATION ||--o| FEEDBACK : allows
+    REGISTRATION ||--o{ PAYMENT : a
+    REGISTRATION ||--o| FEEDBACK : autorise
 
     USER {
         ObjectId id
@@ -154,215 +154,215 @@ erDiagram
     }
 ```
 
-## MCD Cardinalities
+## Cardinalités du MCD
 
-| Association | Cardinality | Meaning |
+| Association | Cardinalité | Signification |
 | --- | --- | --- |
-| User - PersonalAccessToken | one user to zero or many tokens | A user can have many API tokens. A token belongs to one user. |
-| User - EventRequest | one client to zero or many requests | A client can submit requests. A request has one submitting client. |
-| User - EventRequest review | one admin to zero or many reviewed requests | A reviewed request can reference the admin who reviewed it. |
-| EventRequest - Event | one request to zero or one event | Approval creates one draft event. Rejection creates no event. |
-| User - Event creator | one user to zero or many created events | An admin or organizer can create events. |
-| User - Event organizer | one organizer to zero or many assigned events | An event may be unassigned until an admin assigns an organizer. |
-| Event - EventTask | one event to zero or many tasks | Tasks belong to one event. |
-| Event - EventActivity | one event to zero or many activities | Activities belong to one event timeline. |
-| Event - Registration | one event to zero or many registrations | Registrations count toward event capacity. |
-| User - Registration | one participant to zero or many registrations | A participant can register once per event. |
-| Registration - Payment | one registration to zero or many payments | Free events create a completed free payment; paid events create a payment when paid. |
-| Event - Feedback | one event to zero or many feedbacks | Feedback is attached to an event. |
-| User - Feedback | one participant to zero or many feedbacks | A participant can leave one feedback per event. |
-| Registration - Feedback | one paid attended registration enables zero or one feedback | Feedback is only accepted from eligible participants. |
-| User - AppNotification | one user to zero or many notifications | Notifications are stored per recipient. |
+| Utilisateur - PersonalAccessToken | un utilisateur pour zéro ou plusieurs jetons | Un utilisateur peut avoir plusieurs jetons d'API. Un jeton appartient à un utilisateur. |
+| Utilisateur - EventRequest | un client pour zéro ou plusieurs demandes | Un client peut soumettre des demandes. Une demande a un client émetteur. |
+| Utilisateur - Révision EventRequest | un administrateur pour zéro ou plusieurs demandes révisées | Une demande révisée peut référencer l'administrateur qui l'a révisée. |
+| EventRequest - Event | une demande pour zéro ou un événement | L'approbation crée un projet d'événement. Le rejet ne crée aucun événement. |
+| Utilisateur - Créateur Event | un utilisateur pour zéro ou plusieurs événements créés | Un administrateur ou un organisateur peut créer des événements. |
+| Utilisateur - Organisateur Event | un organisateur pour zéro ou plusieurs événements assignés | Un événement peut ne pas être assigné jusqu'à ce qu'un administrateur assigne un organisateur. |
+| Événement - EventTask | un événement pour zéro ou plusieurs tâches | Les tâches appartiennent à un seul événement. |
+| Événement - EventActivity | un événement pour zéro ou plusieurs activités | Les activités appartiennent à une seule chronologie d'événement. |
+| Événement - Registration | un événement pour zéro ou plusieurs inscriptions | Les inscriptions comptent pour la capacité de l'événement. |
+| Utilisateur - Registration | un participant pour zéro ou plusieurs inscriptions | Un participant peut s'inscrire une seule fois par événement. |
+| Inscription - Payment | une inscription pour zéro ou plusieurs paiements | Les événements gratuits créent un paiement gratuit complété ; les événements payants créent un paiement lors du règlement. |
+| Événement - Feedback | un événement pour zéro ou plusieurs commentaires | Les commentaires sont attachés à un événement. |
+| Utilisateur - Feedback | un participant pour zéro ou plusieurs commentaires | Un participant peut laisser un seul commentaire par événement. |
+| Inscription - Feedback | une inscription payée et assistée permet zéro ou un commentaire | Les commentaires ne sont acceptés que de la part des participants éligibles. |
+| Utilisateur - AppNotification | un utilisateur pour zéro ou plusieurs notifications | Les notifications sont stockées par destinataire. |
 
-## MLD - Logical Mongo Collections
+## MLD - Collections Mongo Logiques
 
 ### `users`
 
-Purpose: authentication identity and role ownership.
+Objectif : identité d'authentification et propriété des rôles.
 
-Fields:
+Champs :
 
-- `_id`: Mongo ObjectId.
-- `name`: user display name.
-- `email`: unique login email.
-- `password`: hashed password.
-- `role`: one of `admin`, `organizer`, `participant`, `client`.
+- `_id` : Mongo ObjectId.
+- `name` : nom d'affichage de l'utilisateur.
+- `email` : email de connexion unique.
+- `password` : mot de passe haché.
+- `role` : l'un de `admin`, `organizer`, `participant`, `client`.
 - `email_verified_at`, `remember_token`, `created_at`, `updated_at`.
 
-Indexes:
+Index :
 
-- `users_email_unique`: unique email lookup for login and duplicate prevention.
-- `users_role_idx`: role filtering for admin user management.
+- `users_email_unique` : recherche d'email unique pour la connexion et la prévention des doublons.
+- `users_role_idx` : filtrage par rôle pour la gestion des utilisateurs par l'administrateur.
 
 ### `personal_access_tokens`
 
-Purpose: Sanctum bearer tokens stored in MongoDB.
+Objectif : jetons porteurs (bearer tokens) Sanctum stockés dans MongoDB.
 
-Fields:
+Champs :
 
-- `_id`: Mongo ObjectId.
-- `tokenable_type`, `tokenable_id`: token owner.
-- `name`: token label, currently `spa`.
-- `token`: hashed token value.
-- `abilities`: token abilities.
+- `_id` : Mongo ObjectId.
+- `tokenable_type`, `tokenable_id` : propriétaire du jeton.
+- `name` : étiquette du jeton, actuellement `spa`.
+- `token` : valeur du jeton hachée.
+- `abilities` : capacités du jeton.
 - `last_used_at`, `expires_at`, `created_at`, `updated_at`.
 
-Indexes:
+Index :
 
-- `tokens_token_unique`: token lookup.
-- `tokens_tokenable_idx`: token owner lookup.
-- `tokens_expires_at_idx`: token expiration cleanup support.
+- `tokens_token_unique` : recherche de jeton.
+- `tokens_tokenable_idx` : recherche du propriétaire du jeton.
+- `tokens_expires_at_idx` : support pour le nettoyage des jetons expirés.
 
 ### `event_requests`
 
-Purpose: client proposals before they become managed events.
+Objectif : propositions de clients avant qu'elles ne deviennent des événements gérés.
 
-Fields:
+Champs :
 
 - `_id`.
-- `user_id`: client.
+- `user_id` : client.
 - `title`, `description`, `image_path`, `location`.
 - `preferred_start`, `preferred_end`.
 - `ticket_price_cents`.
 - `contact_name`, `contact_email`, `contact_phone`.
-- `status`: `pending`, `approved`, `rejected`.
+- `status` : `pending`, `approved`, `rejected`.
 - `rejection_reason`.
 - `reviewed_by_id`, `reviewed_at`.
-- timestamps.
+- horodatages.
 
-Indexes:
+Index :
 
-- `event_requests_contact_status_idx`: client request lookup by contact/status.
-- `event_requests_status_created_idx`: admin moderation list.
+- `event_requests_contact_status_idx` : recherche de demande client par contact/statut.
+- `event_requests_status_created_idx` : liste de modération administrateur.
 
 ### `events`
 
-Purpose: concrete events managed by organizers and admins.
+Objectif : événements concrets gérés par les organisateurs et les administrateurs.
 
-Fields:
+Champs :
 
 - `_id`.
-- `event_request_id`: nullable source request.
-- `organizer_id`: nullable assigned organizer.
-- `created_by`: user who created the event.
+- `event_request_id` : demande source (nullable).
+- `organizer_id` : organisateur assigné (nullable).
+- `created_by` : utilisateur ayant créé l'événement.
 - `title`, `description`, `image_path`, `location`, `room`.
 - `start_at`, `end_at`.
 - `capacity`, `registered_count`.
 - `ticket_price_cents`.
-- `status`: `draft`, `pending_publication`, `published`, `cancelled`, `completed`.
-- timestamps.
+- `status` : `draft`, `pending_publication`, `published`, `cancelled`, `completed`.
+- horodatages.
 
-Indexes:
+Index :
 
-- `events_event_request_unique`: one event per approved request.
-- `events_status_start_idx`: public browsing and active event checks.
-- `events_organizer_status_idx`: organizer dashboards.
-- `events_creator_status_idx`: admin/organizer "created by me" dashboards.
+- `events_event_request_unique` : un événement par demande approuvée.
+- `events_status_start_idx` : navigation publique et vérifications d'événements actifs.
+- `events_organizer_status_idx` : tableaux de bord des organisateurs.
+- `events_creator_status_idx` : tableaux de bord "créés par moi" des administrateurs/organisateurs.
 
 ### `event_tasks`
 
-Purpose: internal preparation tasks for managed events.
+Objectif : tâches de préparation internes pour les événements gérés.
 
-Fields:
+Champs :
 
 - `_id`.
 - `event_id`.
-- `assigned_to`: optional user assignment.
+- `assigned_to` : assignation optionnelle à un utilisateur.
 - `title`, `description`.
 - `is_done`, `due_at`.
 - `status`, `priority`.
-- timestamps.
+- horodatages.
 
-Index:
+Index :
 
-- `event_tasks_event_due_idx`: event task lists ordered by due date.
+- `event_tasks_event_due_idx` : listes de tâches d'événements ordonnées par date d'échéance.
 
 ### `event_activities`
 
-Purpose: public or internal event timeline items.
+Objectif : éléments de la chronologie de l'événement publics ou internes.
 
-Fields:
+Champs :
 
 - `_id`.
 - `event_id`.
 - `title`, `description`.
 - `starts_at`, `ends_at`.
 - `sort_order`, `location`.
-- timestamps.
+- horodatages.
 
-Index:
+Index :
 
-- `event_activities_event_order_idx`: event schedule ordering.
+- `event_activities_event_order_idx` : ordonnancement du programme de l'événement.
 
 ### `registrations`
 
-Purpose: participant booking and ticket state.
+Objectif : réservation des participants et état des tickets.
 
-Fields:
+Champs :
 
 - `_id`.
 - `event_id`.
 - `user_id`.
 - `ticket_type`.
-- `status`: currently `registered`.
-- `payment_status`: `pending` or `paid`.
-- `ticket_code`: unique ticket identifier.
+- `status` : actuellement `registered`.
+- `payment_status` : `pending` ou `paid`.
+- `ticket_code` : identifiant unique du ticket.
 - `amount_cents`.
 - `paid_at`, `registered_at`.
-- timestamps.
+- horodatages.
 
-Indexes:
+Index :
 
-- `registrations_event_user_unique`: prevents duplicate event registration.
-- `registrations_user_payment_idx`: participant history filtering.
-- `registrations_event_payment_idx`: event registration management.
-- `registrations_ticket_code_unique`: ticket uniqueness.
+- `registrations_event_user_unique` : empêche les inscriptions en double à un événement.
+- `registrations_user_payment_idx` : filtrage de l'historique des participants.
+- `registrations_event_payment_idx` : gestion des inscriptions aux événements.
+- `registrations_ticket_code_unique` : unicité du ticket.
 
 ### `payments`
 
-Purpose: payment ledger for registrations.
+Objectif : registre des paiements pour les inscriptions.
 
-Fields:
+Champs :
 
 - `_id`.
 - `registration_id`.
 - `amount_cents`.
 - `currency`.
-- `status`: `completed` for current mock/free flows.
+- `status` : `completed` pour les flux actuels simulés/gratuits.
 - `transaction_id`.
-- `method`: `free` or `card_mock`.
+- `method` : `free` ou `card_mock`.
 - `meta`.
-- timestamps.
+- horodatages.
 
-Indexes:
+Index :
 
-- `payments_registration_idx`: lookup by registration.
-- `payments_status_idx`: revenue/statistics queries.
+- `payments_registration_idx` : recherche par inscription.
+- `payments_status_idx` : requêtes de revenus/statistiques.
 
 ### `feedbacks`
 
-Purpose: moderated participant feedback.
+Objectif : commentaires modérés des participants.
 
-Fields:
+Champs :
 
 - `_id`.
 - `event_id`.
 - `user_id`.
 - `rating`.
 - `comment`.
-- `status`: `pending` or `approved`.
-- timestamps.
+- `status` : `pending` ou `approved`.
+- horodatages.
 
-Indexes:
+Index :
 
-- `feedbacks_event_user_unique`: one feedback per user per event.
-- `feedbacks_event_status_idx`: public approved feedback lists.
+- `feedbacks_event_user_unique` : un commentaire par utilisateur et par événement.
+- `feedbacks_event_status_idx` : listes de commentaires publics approuvés.
 
 ### `app_notifications`
 
-Purpose: in-app notification inbox.
+Objectif : boîte de réception des notifications dans l'application.
 
-Fields:
+Champs :
 
 - `_id`.
 - `user_id`.
@@ -371,95 +371,95 @@ Fields:
 - `message`.
 - `data`.
 - `read_at`.
-- timestamps.
+- horodatages.
 
-Index:
+Index :
 
-- `notifications_user_read_created_idx`: unread counts and notification lists.
+- `notifications_user_read_created_idx` : décomptes des messages non lus et listes de notifications.
 
-## MCT - Conceptual Treatment Model
+## MCT - Modèle Conceptuel de Traitement
 
-### Auth And Identity
+### Auth et Identité
 
-| External Event | Operation | Business Rules | Result |
+| Événement Externe | Opération | Règles Métier | Résultat |
 | --- | --- | --- | --- |
-| User submits registration form | Create account | Role must be `participant` or `client`; email must be unique; password is hashed | User and bearer token are created |
-| User submits login form | Authenticate | Email and password must match a stored user; login is rate limited | Bearer token is created |
-| User requests `/api/user` | Identify token owner | Bearer token must be valid | Current user is returned |
-| User logs out | Revoke token | Request must be authenticated | Current token is deleted |
+| L'utilisateur soumet le formulaire d'inscription | Créer un compte | Le rôle doit être `participant` ou `client` ; l'email doit être unique ; le mot de passe est haché | L'utilisateur et le jeton porteur sont créés |
+| L'utilisateur soumet le formulaire de connexion | Authentifier | L'email et le mot de passe doivent correspondre à un utilisateur stocké ; la connexion est limitée en débit | Le jeton porteur est créé |
+| L'utilisateur demande `/api/user` | Identifier le propriétaire du jeton | Le jeton porteur doit être valide | L'utilisateur actuel est renvoyé |
+| L'utilisateur se déconnecte | Révoquer le jeton | La requête doit être authentifiée | Le jeton actuel est supprimé |
 
-### Client Event Request
+### Demande d'Événement Client
 
-| External Event | Operation | Business Rules | Result |
+| Événement Externe | Opération | Règles Métier | Résultat |
 | --- | --- | --- | --- |
-| Client submits event request | Validate and store request | Client cannot already have a pending request or active event; image must be valid if supplied | Pending request is created |
-| Client deletes request | Delete pending request | Client must own the request; reviewed requests cannot be deleted | Request and image are removed |
-| Admin lists requests | Filter moderation queue | Optional status filter must be valid | Requests are returned newest first |
+| Le client soumet une demande d'événement | Valider et stocker la demande | Le client ne peut pas avoir déjà une demande en attente ou un événement actif ; l'image doit être valide si fournie | Une demande en attente est créée |
+| Le client supprime la demande | Supprimer la demande en attente | Le client doit posséder la demande ; les demandes révisées ne peuvent pas être supprimées | La demande et l'image sont supprimées |
+| L'admin liste les demandes | Filtrer la file de modération | Le filtre de statut optionnel doit être valide | Les demandes sont renvoyées de la plus récente à la plus ancienne |
 
-### Event Request Review
+### Révision de la Demande d'Événement
 
-| External Event | Operation | Business Rules | Result |
+| Événement Externe | Opération | Règles Métier | Résultat |
 | --- | --- | --- | --- |
-| Admin approves request | Mark request approved and create event | Request must still be pending; operation is transactional | Request becomes approved and a draft event is created |
-| Admin rejects request | Mark request rejected | Request must still be pending; rejection reason required for rejection | Request becomes rejected |
+| L'admin approuve la demande | Marquer la demande approuvée et créer l'événement | La demande doit être toujours en attente ; l'opération est transactionnelle | La demande devient approuvée et un projet d'événement est créé |
+| L'admin rejette la demande | Marquer la demande rejetée | La demande doit être toujours en attente ; un motif de rejet est requis | La demande devient rejetée |
 
-### Event Management
+### Gestion d'Événement
 
-| External Event | Operation | Business Rules | Result |
+| Événement Externe | Opération | Règles Métier | Résultat |
 | --- | --- | --- | --- |
-| Organizer creates event | Create draft event | Organizer cannot directly publish | Draft event is created |
-| Admin creates event | Create event | Admin may create published event | Event is created with requested status |
-| Organizer updates event | Update managed event | Organizer must own or have created the event; organizer cannot publish directly | Event is updated |
-| Admin assigns organizer | Assign event owner | Assigned user must be organizer | Event organizer changes |
-| Organizer requests publication | Move event to pending publication | Event must be manageable by organizer | Admin approval becomes required |
-| Admin approves publication | Publish event | Event must be pending publication or draft according to service rules | Event becomes published |
-| Manager changes capacity | Update capacity | Capacity cannot be lower than `registered_count` | Capacity changes |
+| L'organisateur crée l'événement | Créer un projet d'événement | L'organisateur ne peut pas publier directement | Un projet d'événement est créé |
+| L'admin crée l'événement | Créer un événement | L'admin peut créer un événement publié | L'événement est créé avec le statut demandé |
+| L'organisateur met à jour l'événement | Mettre à jour l'événement géré | L'organisateur doit posséder ou avoir créé l'événement ; l'organisateur ne peut pas publier directement | L'événement est mis à jour |
+| L'admin assigne un organisateur | Assigner un propriétaire d'événement | L'utilisateur assigné doit être un organisateur | L'organisateur de l'événement change |
+| L'organisateur demande la publication | Passer l'événement en attente de publication | L'événement doit être gérable par l'organisateur | L'approbation de l'administrateur devient requise |
+| L'admin approuve la publication | Publier l'événement | L'événement doit être en attente de publication ou en projet selon les règles du service | L'événement devient publié |
+| Le gestionnaire change la capacité | Mettre à jour la capacité | La capacité ne peut pas être inférieure à `registered_count` | La capacité change |
 
-### Event Planning
+### Planification d'Événement
 
-| External Event | Operation | Business Rules | Result |
+| Événement Externe | Opération | Règles Métier | Résultat |
 | --- | --- | --- | --- |
-| Manager creates task | Add preparation task | Actor must manage event | Task is stored |
-| Manager updates task | Modify task | Task must belong to route event | Task is updated |
-| Manager deletes task | Remove task | Task must belong to route event | Task is deleted |
-| Manager creates activity | Add schedule item | Start/end dates must be valid | Activity is stored |
-| Manager updates activity | Modify schedule item | Activity must belong to route event | Activity is updated |
-| Manager deletes activity | Remove schedule item | Activity must belong to route event | Activity is deleted |
+| Le gestionnaire crée une tâche | Ajouter une tâche de préparation | L'acteur doit gérer l'événement | La tâche est stockée |
+| Le gestionnaire met à jour une tâche | Modifier la tâche | La tâche doit appartenir à l'événement de la route | La tâche est mise à jour |
+| Le gestionnaire supprime une tâche | Supprimer la tâche | La tâche doit appartenir à l'événement de la route | La tâche est supprimée |
+| Le gestionnaire crée une activité | Ajouter un élément au programme | Les dates de début/fin doivent être valides | L'activité est stockée |
+| Le gestionnaire met à jour une activité | Modifier l'élément du programme | L'activité doit appartenir à l'événement de la route | L'activité est mise à jour |
+| Le gestionnaire supprime une activité | Supprimer l'élément du programme | L'activité doit appartenir à l'événement de la route | L'activité est supprimée |
 
-### Registration And Payment
+### Inscription et Paiement
 
-| External Event | Operation | Business Rules | Result |
+| Événement Externe | Opération | Règles Métier | Résultat |
 | --- | --- | --- | --- |
-| Participant registers | Create registration | Event must be published; capacity must remain available; participant cannot duplicate registration | Registration is created and event count increments |
-| Free event registration succeeds | Create free payment | Amount is zero or less | Registration is immediately paid and free payment is stored |
-| Participant pays | Mock payment | Registration must be pending | Registration becomes paid and payment is stored |
-| Participant cancels | Delete own registration | Registration must be unpaid | Registration is removed and event count decrements |
-| Participant downloads ticket | Build ticket payload | Registration must be paid and owned by participant | JSON ticket is returned |
-| Staff deletes registration | Delete unpaid registration | Staff must manage event; registration must be unpaid | Registration is removed and count decrements |
+| Le participant s'inscrit | Créer une inscription | L'événement doit être publié ; la capacité doit rester disponible ; le participant ne peut pas s'inscrire en double | L'inscription est créée et le compteur de l'événement augmente |
+| L'inscription à un événement gratuit réussit | Créer un paiement gratuit | Le montant est nul ou négatif | L'inscription est immédiatement payée et le paiement gratuit est stocké |
+| Le participant paie | Simulation de paiement | L'inscription doit être en attente | L'inscription devient payée et le paiement est stocké |
+| Le participant annule | Supprimer sa propre inscription | L'inscription ne doit pas être payée | L'inscription est supprimée et le compteur de l'événement diminue |
+| Le participant télécharge son ticket | Construire le contenu du ticket | L'inscription doit être payée et appartenir au participant | Le ticket JSON est renvoyé |
+| Le personnel supprime une inscription | Supprimer une inscription non payée | Le personnel doit gérer l'événement ; l'inscription ne doit pas être payée | L'inscription est supprimée et le compteur diminue |
 
-### Feedback And Notifications
+### Commentaires et Notifications
 
-| External Event | Operation | Business Rules | Result |
+| Événement Externe | Opération | Règles Métier | Résultat |
 | --- | --- | --- | --- |
-| Participant submits feedback | Store pending feedback | Participant must have paid registration; one feedback per event | Pending feedback is created |
-| Admin approves feedback | Publish feedback | Admin only | Feedback becomes approved and notifications are sent |
-| Admin deletes feedback | Remove feedback | Admin only | Feedback is deleted |
-| User opens notifications | List inbox | User sees only own notifications | Notifications are returned |
-| User marks notification read | Update read state | Notification must belong to user | `read_at` is set |
+| Le participant soumet un commentaire | Stocker le commentaire en attente | Le participant doit avoir une inscription payée ; un commentaire par événement | Un commentaire en attente est créé |
+| L'admin approuve le commentaire | Publier le commentaire | Administrateur uniquement | Le commentaire devient approuvé et des notifications sont envoyées |
+| L'admin supprime le commentaire | Supprimer le commentaire | Administrateur uniquement | Le commentaire est supprimé |
+| L'utilisateur ouvre les notifications | Lister la boîte de réception | L'utilisateur ne voit que ses propres notifications | Les notifications sont renvoyées |
+| L'utilisateur marque une notification comme lue | Mettre à jour l'état de lecture | La notification doit appartenir à l'utilisateur | `read_at` est défini |
 
 ### Stats
 
-| External Event | Operation | Business Rules | Result |
+| Événement Externe | Opération | Règles Métier | Résultat |
 | --- | --- | --- | --- |
-| Admin opens dashboard | Aggregate global stats | Admin only | Counts, revenue, pending work, and event data are returned |
-| Client opens stats | Aggregate client stats | Client only; only owned/requested events are included | Request groups, event lists, and revenue are returned |
+| L'admin ouvre le tableau de bord | Agréger les statistiques globales | Administrateur uniquement | Les décomptes, revenus, travaux en attente et données d'événements sont renvoyés |
+| Le client ouvre les stats | Agréger les statistiques du client | Client uniquement ; seuls les événements possédés/demandés sont inclus | Les groupes de demandes, listes d'événements et revenus sont renvoyés |
 
-## Merise Notes For This Mongo Implementation
+## Notes Merise pour cette Implémentation Mongo
 
-Classic Merise often assumes a relational database. This backend keeps the Merise analysis but maps the MLD to Mongo collections:
+Le modèle Merise classique suppose souvent une base de données relationnelle. Ce backend conserve l'analyse Merise mais mappe le MLD à des collections Mongo :
 
-- primary keys are Mongo ObjectIds;
-- foreign keys are ObjectId string fields;
-- referential integrity is enforced by services and tests, not SQL constraints;
-- uniqueness and query performance are enforced by Mongo indexes;
-- transactions are used for workflows where several documents must change together.
+- les clés primaires sont des ObjectIds Mongo ;
+- les clés étrangères sont des champs de chaîne ObjectId ;
+- l'intégrité référentielle est assurée par les services et les tests, et non par des contraintes SQL ;
+- l'unicité et la performance des requêtes sont assurées par des index Mongo ;
+- des transactions sont utilisées pour les flux de travail où plusieurs documents doivent changer ensemble.

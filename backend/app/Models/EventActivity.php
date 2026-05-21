@@ -7,41 +7,41 @@ use Illuminate\Support\Carbon;
 use MongoDB\Laravel\Eloquent\Model;
 
 /**
- * EventActivity Model
+ * Modèle EventActivity
  *
- * Represents a specific activity or schedule item within an event.
- * Activities help break down an event into a timeline for participants.
+ * Représente une activité spécifique ou un élément du programme au sein d'un événement.
+ * Les activités aident à diviser un événement en une chronologie pour les participants.
  *
- * @property string $_id MongoDB document ID
- * @property string $event_id ID of the parent event
- * @property string $title Title of the activity
- * @property string|null $description Detailed description of the activity
- * @property Carbon $starts_at Start time of the activity
- * @property Carbon|null $ends_at End time of the activity
- * @property int $sort_order Priority order for displaying the activity
- * @property string|null $location Specific location within the venue for this activity
+ * @property string $_id ID du document MongoDB
+ * @property string $event_id ID de l'événement parent
+ * @property string $title Titre de l'activité
+ * @property string|null $description Description détaillée de l'activité
+ * @property Carbon $starts_at Heure de début de l'activité
+ * @property Carbon|null $ends_at Heure de fin de l'activité
+ * @property int $sort_order Ordre de priorité pour l'affichage de l'activité
+ * @property string|null $location Emplacement spécifique au sein du lieu pour cette activité
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read Event $event Parent event this activity belongs to
+ * @property-read Event $event Événement parent auquel cette activité appartient
  */
 class EventActivity extends Model
 {
     /**
-     * The database connection used by the model.
+     * La connexion à la base de données utilisée par le modèle.
      *
      * @var string
      */
     protected $connection = 'mongodb';
 
     /**
-     * The table/collection associated with the model.
+     * La table/collection associée au modèle.
      *
      * @var string
      */
     protected $table = 'event_activities';
 
     /**
-     * Attributes that are mass assignable.
+     * Attributs qui sont assignables en masse.
      *
      * @var list<string>
      */
@@ -56,7 +56,7 @@ class EventActivity extends Model
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * Récupère les attributs qui doivent être castés.
      *
      * @return array<string, string>
      */
@@ -69,7 +69,7 @@ class EventActivity extends Model
     }
 
     /**
-     * Define the relationship for the parent event.
+     * Définit la relation pour l'événement parent.
      */
     public function event(): BelongsTo
     {

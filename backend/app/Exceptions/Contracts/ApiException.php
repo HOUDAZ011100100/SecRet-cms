@@ -3,20 +3,20 @@
 namespace App\Exceptions\Contracts;
 
 /**
- * Interface for exceptions that should be rendered as JSON API responses.
+ * Interface pour les exceptions qui doivent être rendues sous forme de réponses JSON API.
  *
- * Exceptions implementing this contract provide their own HTTP status codes
- * and response payloads, allowing for consistent error reporting across the API.
+ * Les exceptions implémentant ce contrat fournissent leurs propres codes de statut HTTP
+ * et charges utiles de réponse, permettant un reporting d'erreurs cohérent dans toute l'API.
  */
 interface ApiException
 {
     /**
-     * Get the HTTP status code for the error response.
+     * Récupère le code de statut HTTP pour la réponse d'erreur.
      */
     public function statusCode(): int;
 
     /**
-     * Get the data structure to be returned in the JSON response body.
+     * Récupère la structure de données à renvoyer dans le corps de la réponse JSON.
      *
      * @return array<string, mixed>
      */

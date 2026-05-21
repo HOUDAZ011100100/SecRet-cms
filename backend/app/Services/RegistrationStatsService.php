@@ -8,24 +8,24 @@ use Illuminate\Support\Facades\DB;
 use MongoDB\Laravel\Connection as MongoConnection;
 
 /**
- * Service for aggregating and managing registration statistics.
+ * Service pour l'agrégation et la gestion des statistiques d'inscription.
  *
- * This service leverages MongoDB's aggregation framework to efficiently count
- * registrations across multiple events, optionally filtering by payment status.
- * It is primarily used to hydrate event lists with real-time participation data.
+ * Ce service utilise le framework d'agrégation de MongoDB pour compter efficacement
+ * les inscriptions sur plusieurs événements, avec la possibilité de filtrer par statut de paiement.
+ * Il est principalement utilisé pour hydrater les listes d'événements avec des données de participation en temps réel.
  */
 class RegistrationStatsService
 {
     /**
-     * Retrieves registration counts for a list of event IDs.
+     * Récupère les nombres d'inscriptions pour une liste d'identifiants d'événements.
      *
-     * @param  iterable<mixed>  $eventIds  List of event identifiers.
-     * @param  string|null  $paymentStatus  Optional filter (e.g., 'paid', 'pending').
-     * @return array<string, int> Map of event ID to registration count.
+     * @param  iterable<mixed>  $eventIds  Liste des identifiants d'événements.
+     * @param  string|null  $paymentStatus  Filtre optionnel (ex: 'paid', 'pending').
+     * @return array<string, int> Carte de l'ID de l'événement par rapport au nombre d'inscriptions.
      */
     public function countsByEvent(iterable $eventIds, ?string $paymentStatus = null): array
     {
-        // Normalize event IDs to a clean array of strings.
+        // Normalise les IDs d'événements en un tableau propre de chaînes de caractères.
         $eventIds = collect($eventIds)
             ->filter()
             ->map(fn (mixed $eventId): string => (string) $eventId)
@@ -37,7 +37,7 @@ class RegistrationStatsService
             return [];
         }
 
-        // Build the MongoDB match criteria.
+        // Construit les critères de correspondance MongoDB.
         $match = ['event_id' => ['$in' => $eventIds]];
 
         if ($paymentStatus !== null) {
@@ -47,8 +47,8 @@ class RegistrationStatsService
         /** @var MongoConnection $connection */
         $connection = DB::connection('mongodb');
 
-        // Execute MongoDB aggregation for high performance across large datasets.
-        // We group by event_id and sum the occurrences.
+        // Exécute l'agrégation MongoDB pour une performance élevée sur de grands ensembles de données.
+        // Nous groupons par event_id et sommons les occurrences.
         $rows = $connection
             ->getDatabase()
             ->selectCollection((new Registration)->getTable())
@@ -57,7 +57,7 @@ class RegistrationStatsService
                 ['$group' => ['_id' => '$event_id', 'count' => ['$sum' => 1]]],
             ]);
 
-        // Transform the raw MongoDB cursor into a PHP associative array.
+        // Transforme le curseur MongoDB brut en un tableau associatif PHP.
         return collect(iterator_to_array($rows))
             ->mapWithKeys(fn (mixed $row): array => [
                 (string) data_get($row, '_id') => (int) data_get($row, 'count', 0),
@@ -66,18 +66,18 @@ class RegistrationStatsService
     }
 
     /**
-     * Attaches registration counts to a collection of event models as a dynamic attribute.
+     * Attache les nombres d'inscriptions à une collection de modèles d'événements en tant qu'attribut dynamique.
      *
-     * @param  Collection<int, mixed>  $events  The collection of Event models to hydrate.
-     * @param  string  $attribute  The name of the virtual attribute to set (e.g., 'paid_registrations_count').
-     * @param  string|null  $paymentStatus  Optional status filter for the counts.
+     * @param  Collection<int, mixed>  $events  La collection de modèles Event à hydrater.
+     * @param  string  $attribute  Le nom de l'attribut virtuel à définir (ex: 'paid_registrations_count').
+     * @param  string|null  $paymentStatus  Filtre de statut optionnel pour les comptages.
      */
     public function attachCount(Collection $events, string $attribute, ?string $paymentStatus = null): void
     {
-        // Fetch all counts in a single query to avoid N+1 issues.
+        // Récupère tous les comptages en une seule requête pour éviter les problèmes N+1.
         $counts = $this->countsByEvent($events->pluck('id'), $paymentStatus);
 
-        // Inject the counts into each event instance.
+        // Injecte les comptages dans chaque instance d'événement.
         $events->each(function (mixed $event) use ($attribute, $counts): void {
             $event->setAttribute($attribute, $counts[(string) $event->id] ?? 0);
         });

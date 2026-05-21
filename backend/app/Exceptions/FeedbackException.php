@@ -6,16 +6,16 @@ use App\Exceptions\Contracts\ApiException;
 use RuntimeException;
 
 /**
- * Exception thrown for errors related to the feedback system.
+ * Exception levée pour les erreurs liées au système de feedback.
  *
- * Examples include attempting to submit feedback for an event the user didn't attend,
- * or trying to modify feedback that is already locked.
+ * Des exemples incluent la tentative de soumission d'un feedback pour un événement auquel l'utilisateur n'a pas participé,
+ * ou la tentative de modification d'un feedback qui est déjà verrouillé.
  */
 class FeedbackException extends RuntimeException implements ApiException
 {
     /**
-     * @param  string  $message  The error message.
-     * @param  int  $status  The HTTP status code.
+     * @param  string  $message  Le message d'erreur.
+     * @param  int  $status  Le code de statut HTTP.
      */
     public function __construct(
         string $message,
@@ -25,7 +25,7 @@ class FeedbackException extends RuntimeException implements ApiException
     }
 
     /**
-     * Get the HTTP status code for the response.
+     * Récupère le code de statut HTTP pour la réponse.
      */
     public function statusCode(): int
     {
@@ -33,7 +33,7 @@ class FeedbackException extends RuntimeException implements ApiException
     }
 
     /**
-     * Get the response payload representation of the exception.
+     * Récupère la représentation de la charge utile de réponse de l'exception.
      *
      * @return array<string, mixed>
      */

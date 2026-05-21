@@ -14,20 +14,20 @@ use Illuminate\Support\Facades\DB;
 use MongoDB\Laravel\Connection as MongoConnection;
 
 /**
- * Service providing high-level statistics and dashboard data for Administrators.
+ * Service fournissant des statistiques de haut niveau et des données de tableau de bord pour les Administrateurs.
  *
- * It aggregates data across users, events, payments, and requests, providing a
- * comprehensive overview of the platform's activity.
+ * Il agrège les données concernant les utilisateurs, les événements, les paiements et les demandes, offrant une
+ * vue d'ensemble complète de l'activité de la plateforme.
  */
 class AdminStatsService
 {
     /**
-     * @param  RegistrationStatsService  $registrationStats  Service to attach registration counts to event models.
+     * @param  RegistrationStatsService  $registrationStats  Service pour attacher les nombres d'inscriptions aux modèles d'événements.
      */
     public function __construct(private readonly RegistrationStatsService $registrationStats) {}
 
     /**
-     * Aggregates various metrics into a single payload for the admin dashboard.
+     * Agrège divers indicateurs dans une seule charge utile pour le tableau de bord d'administration.
      *
      * @return array<string, mixed>
      */
@@ -39,7 +39,7 @@ class AdminStatsService
             'events_total' => Event::count(),
             'events_published' => Event::where('status', Event::STATUS_PUBLISHED)->count(),
             'registrations_total' => Registration::count(),
-            // Revenue is calculated from successfully completed payments only.
+            // Le revenu est calculé uniquement à partir des paiements terminés avec succès.
             'revenue' => Money::floatFromCents(Payment::where('status', 'completed')->sum('amount_cents')),
             'pending_requests' => EventRequest::where('status', EventRequest::STATUS_PENDING)->count(),
             'pending_publications' => Event::where('status', Event::STATUS_PENDING_PUBLICATION)->count(),
@@ -48,11 +48,11 @@ class AdminStatsService
     }
 
     /**
-     * Retrieves a breakdown of user counts grouped by their roles.
+     * Récupère une ventilation du nombre d'utilisateurs groupés par leurs rôles.
      *
-     * Uses MongoDB's aggregation framework for efficient counting across the collection.
+     * Utilise le framework d'agrégation de MongoDB pour un comptage efficace sur l'ensemble de la collection.
      *
-     * @return array<string, int> Map of role names to user counts.
+     * @return array<string, int> Carte des noms de rôles par rapport aux nombres d'utilisateurs.
      */
     private function usersByRole(): array
     {
@@ -76,7 +76,7 @@ class AdminStatsService
     }
 
     /**
-     * Retrieves and formats a list of events that have already finished.
+     * Récupère et formate une liste d'événements déjà terminés.
      *
      * @return list<array<string, mixed>>
      */
@@ -101,7 +101,7 @@ class AdminStatsService
     }
 
     /**
-     * Custom comparison logic to sort events: latest end date first.
+     * Logique de comparaison personnalisée pour trier les événements : date de fin la plus récente en premier.
      */
     private function comparePastEvents(Event $a, Event $b): int
     {
@@ -116,7 +116,7 @@ class AdminStatsService
     }
 
     /**
-     * Normalizes various date formats into a Unix timestamp.
+     * Normalise divers formats de date en un timestamp Unix.
      */
     private function timestamp(mixed $value): int
     {
@@ -130,7 +130,7 @@ class AdminStatsService
     }
 
     /**
-     * Formats an Event model into a serialized array for API responses.
+     * Formate un modèle Event en un tableau sérialisé pour les réponses API.
      *
      * @return array<string, mixed>
      */

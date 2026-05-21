@@ -6,17 +6,17 @@ use App\Exceptions\Contracts\ApiException;
 use RuntimeException;
 
 /**
- * Exception thrown when a failure occurs during the review of an event request.
+ * Exception levée lorsqu'une défaillance survient lors de la révision d'une demande d'événement.
  *
- * This exception is typically raised when an administrator attempts to approve
- * or reject an event request but violates a business rule (e.g., trying to approve
- * a request that is already processed).
+ * Cette exception est généralement soulevée lorsqu'un administrateur tente d'approuver
+ * ou de rejeter une demande d'événement mais viole une règle métier (par exemple, tenter d'approuver
+ * une demande qui est déjà traitée).
  */
 class EventRequestReviewException extends RuntimeException implements ApiException
 {
     /**
-     * @param  string  $message  The error message.
-     * @param  int  $status  The HTTP status code (defaults to 422 Unprocessable Entity).
+     * @param  string  $message  Le message d'erreur.
+     * @param  int  $status  Le code de statut HTTP (par défaut 422 Unprocessable Entity).
      */
     public function __construct(
         string $message,
@@ -26,7 +26,7 @@ class EventRequestReviewException extends RuntimeException implements ApiExcepti
     }
 
     /**
-     * Get the HTTP status code for the response.
+     * Récupère le code de statut HTTP pour la réponse.
      */
     public function statusCode(): int
     {
@@ -34,7 +34,7 @@ class EventRequestReviewException extends RuntimeException implements ApiExcepti
     }
 
     /**
-     * Get the response payload representation of the exception.
+     * Récupère la représentation de la charge utile de réponse de l'exception.
      *
      * @return array<string, mixed>
      */

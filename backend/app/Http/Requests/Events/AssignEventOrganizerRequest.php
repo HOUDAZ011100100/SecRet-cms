@@ -6,17 +6,17 @@ use App\Rules\MongoObjectId;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Form request for assigning an organizer to an event.
+ * Requête de formulaire pour l'assignation d'un organisateur à un événement.
  *
- * This request handles the validation and authorization for updating
- * the primary organizer responsible for a specific event.
+ * Cette requête gère la validation et l'autorisation pour la mise à jour
+ * de l'organisateur principal responsable d'un événement spécifique.
  */
 class AssignEventOrganizerRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Détermine si l'utilisateur est autorisé à effectuer cette requête.
      *
-     * Only users with administrative privileges are allowed to reassign event organizers.
+     * Seuls les utilisateurs disposant de privilèges administratifs sont autorisés à réassigner les organisateurs d'événements.
      */
     public function authorize(): bool
     {
@@ -24,10 +24,10 @@ class AssignEventOrganizerRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * Obtenir les règles de validation qui s'appliquent à la requête.
      *
-     * Rules:
-     * - organizer_id: Required, must be a valid MongoDB ObjectId string.
+     * Règles :
+     * - organizer_id : Requis, doit être une chaîne ObjectId MongoDB valide.
      *
      * @return array<string, mixed>
      */

@@ -8,20 +8,20 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 /**
- * Form request for administrators to create a new user manually.
+ * Requête de formulaire pour que les administrateurs créent un nouvel utilisateur manuellement.
  *
- * Unlike registration, this allows assigning any system role (Admin, Organizer, etc.).
+ * Contrairement à l'inscription publique, cela permet d'assigner n'importe quel rôle système (Admin, Organisateur, etc.).
  */
 class StoreUserRequest extends FormRequest
 {
     /**
-     * Get the validation rules that apply to the request.
+     * Obtenir les règles de validation qui s'appliquent à la requête.
      *
-     * Rules:
-     * - name: Required string, max 255.
-     * - email: Required email format.
-     * - password: Required string, follows security defaults.
-     * - role: Required, must be a valid system role.
+     * Règles :
+     * - name : Chaîne de caractères requise, max 255.
+     * - email : Format email requis.
+     * - password : Chaîne de caractères requise, suit les paramètres de sécurité par défaut.
+     * - role : Requis, doit être un rôle système valide.
      *
      * @return array<string, mixed>
      */

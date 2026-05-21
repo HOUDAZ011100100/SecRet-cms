@@ -12,63 +12,63 @@ use Illuminate\Support\Carbon;
 use MongoDB\Laravel\Eloquent\Model;
 
 /**
- * Registration Model
+ * Modèle Registration
  *
- * Represents a participant's registration for a specific event.
- * It tracks the ticket details, payment status, and attendance information.
+ * Représente l'inscription d'un participant à un événement spécifique.
+ * Il suit les détails du billet, le statut du paiement et les informations de présence.
  *
- * @property string $_id MongoDB document ID
- * @property string $event_id ID of the event
- * @property string $user_id ID of the participant user
- * @property string $ticket_type Type of ticket (e.g., early_bird, general, vip)
- * @property string $status Registration status (e.g., pending, confirmed, cancelled)
- * @property string $payment_status Payment status (e.g., unpaid, paid, refunded)
- * @property string|null $ticket_code Unique code assigned to the ticket
- * @property int $amount_cents Total amount for the registration in cents
- * @property Carbon|null $paid_at Timestamp when the registration was fully paid
- * @property Carbon $registered_at Timestamp when the registration was created
+ * @property string $_id ID du document MongoDB
+ * @property string $event_id ID de l'événement
+ * @property string $user_id ID de l'utilisateur participant
+ * @property string $ticket_type Type de billet (ex: early_bird, general, vip)
+ * @property string $status Statut de l'inscription (ex: pending, confirmed, cancelled)
+ * @property string $payment_status Statut du paiement (ex: unpaid, paid, refunded)
+ * @property string|null $ticket_code Code unique assigné au billet
+ * @property int $amount_cents Montant total de l'inscription en centimes
+ * @property Carbon|null $paid_at Horodatage du paiement complet de l'inscription
+ * @property Carbon $registered_at Horodatage de la création de l'inscription
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read float $amount Computed registration amount in main currency units
- * @property-read Event|null $event Event associated with this registration
- * @property-read User|null $user Participant who registered
- * @property-read Payment|null $payment The primary payment record
- * @property-read Collection|Payment[] $payments All payment records associated with this registration
+ * @property-read float $amount Montant calculé de l'inscription dans l'unité monétaire principale
+ * @property-read Event|null $event Événement associé à cette inscription
+ * @property-read User|null $user Participant qui s'est inscrit
+ * @property-read Payment|null $payment L'enregistrement de paiement principal
+ * @property-read Collection|Payment[] $payments Tous les enregistrements de paiement associés à cette inscription
  */
 class Registration extends Model
 {
     use StoresMoneyAsCents;
 
     /**
-     * The database connection used by the model.
+     * La connexion à la base de données utilisée par le modèle.
      *
      * @var string
      */
     protected $connection = 'mongodb';
 
     /**
-     * The table/collection associated with the model.
+     * La table/collection associée au modèle.
      *
      * @var string
      */
     protected $table = 'registrations';
 
     /**
-     * Accessors to append to the model's array form.
+     * Accesseurs à ajouter à la forme tableau du modèle.
      *
      * @var list<string>
      */
     protected $appends = ['amount'];
 
     /**
-     * Attributes that should be hidden for serialization.
+     * Attributs qui doivent être cachés pour la sérialisation.
      *
      * @var list<string>
      */
     protected $hidden = ['amount_cents'];
 
     /**
-     * Attributes that are mass assignable.
+     * Attributs qui sont assignables en masse.
      *
      * @var list<string>
      */
@@ -86,7 +86,7 @@ class Registration extends Model
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * Récupère les attributs qui doivent être castés.
      *
      * @return array<string, string>
      */
@@ -99,7 +99,7 @@ class Registration extends Model
     }
 
     /**
-     * Accessor for the registration amount, converting cents to decimal.
+     * Accesseur pour le montant de l'inscription, convertissant les centimes en décimal.
      */
     protected function amount(): Attribute
     {
@@ -107,7 +107,7 @@ class Registration extends Model
     }
 
     /**
-     * Define the relationship for the associated event.
+     * Définit la relation pour l'événement associé.
      */
     public function event(): BelongsTo
     {
@@ -115,7 +115,7 @@ class Registration extends Model
     }
 
     /**
-     * Define the relationship for the registered participant.
+     * Définit la relation pour le participant inscrit.
      */
     public function user(): BelongsTo
     {
@@ -123,7 +123,7 @@ class Registration extends Model
     }
 
     /**
-     * Define the relationship for the primary payment record.
+     * Définit la relation pour l'enregistrement de paiement principal.
      */
     public function payment(): HasOne
     {
@@ -131,7 +131,7 @@ class Registration extends Model
     }
 
     /**
-     * Define the relationship for all associated payment records.
+     * Définit la relation pour tous les enregistrements de paiement associés.
      */
     public function payments(): HasMany
     {

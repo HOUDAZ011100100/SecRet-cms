@@ -13,36 +13,36 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Controller for managing event tasks.
+ * Contrôleur pour la gestion des tâches d'événement.
  *
- * Tasks are internal to-do items for organizers to manage the event preparation.
- * This controller delegates all business logic and authorization to the EventTaskService.
+ * Les tâches sont des éléments internes de la liste de choses à faire pour que les organisateurs gèrent la préparation de l'événement.
+ * Ce contrôleur délègue toute la logique métier et l'autorisation à l'EventTaskService.
  */
 class EventTaskController extends Controller
 {
     /**
-     * @param  EventTaskService  $tasks  Service for task management.
+     * @param  EventTaskService  $tasks  Service pour la gestion des tâches.
      */
     public function __construct(private readonly EventTaskService $tasks) {}
 
     /**
-     * List all tasks for a specific event.
+     * Lister toutes les tâches pour un événement spécifique.
      *
-     * @param  Event  $event  Parent event.
-     * @return JsonResponse List of tasks.
+     * @param  Event  $event  Événement parent.
+     * @return JsonResponse Liste des tâches.
      */
     public function index(Request $request, Event $event)
     {
-        // Service ensures only authorized users (Admin/Organizer) can see tasks
+        // Le service garantit que seuls les utilisateurs autorisés (Administrateur/Organisateur) peuvent voir les tâches
         return response()->json($this->tasks->list($this->actor($request), $event));
     }
 
     /**
-     * Create a new task for an event.
+     * Créer une nouvelle tâche pour un événement.
      *
-     * @param  StoreEventTaskRequest  $request  Validated task data.
-     * @param  Event  $event  Parent event.
-     * @return JsonResponse 201 Created with the new task.
+     * @param  StoreEventTaskRequest  $request  Données de tâche validées.
+     * @param  Event  $event  Événement parent.
+     * @return JsonResponse 201 Created avec la nouvelle tâche.
      */
     public function store(StoreEventTaskRequest $request, Event $event)
     {
@@ -52,14 +52,14 @@ class EventTaskController extends Controller
     }
 
     /**
-     * Update an existing task.
+     * Mettre à jour une tâche existante.
      *
-     * Used for changing title, status (completed/pending), etc.
+     * Utilisé pour changer le titre, le statut (terminé/en attente), etc.
      *
-     * @param  UpdateEventTaskRequest  $request  Validated task updates.
-     * @param  Event  $event  Parent event.
-     * @param  EventTask  $eventTask  Task to update.
-     * @return JsonResponse Updated task.
+     * @param  UpdateEventTaskRequest  $request  Mises à jour de tâche validées.
+     * @param  Event  $event  Événement parent.
+     * @param  EventTask  $eventTask  Tâche à mettre à jour.
+     * @return JsonResponse Tâche mise à jour.
      */
     public function update(UpdateEventTaskRequest $request, Event $event, EventTask $eventTask)
     {
@@ -67,10 +67,10 @@ class EventTaskController extends Controller
     }
 
     /**
-     * Delete a task.
+     * Supprimer une tâche.
      *
-     * @param  Event  $event  Parent event.
-     * @param  EventTask  $eventTask  Task to delete.
+     * @param  Event  $event  Événement parent.
+     * @param  EventTask  $eventTask  Tâche à supprimer.
      * @return JsonResponse 204 No Content.
      */
     public function destroy(Request $request, Event $event, EventTask $eventTask)
@@ -81,7 +81,7 @@ class EventTaskController extends Controller
     }
 
     /**
-     * Retrieve and validate the authenticated user.
+     * Récupérer et valider l'utilisateur authentifié.
      */
     private function actor(Request $request): User
     {

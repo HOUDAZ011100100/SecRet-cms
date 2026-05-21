@@ -14,36 +14,36 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
- * Controller for managing event activities (program/schedule).
+ * Contrôleur pour la gestion des activités d'événement (programme/calendrier).
  *
- * Activities are specific items in an event's schedule (e.g., workshops, speeches).
- * This controller delegates business logic and authorization checks to the EventActivityService.
+ * Les activités sont des éléments spécifiques dans le programme d'un événement (ex : ateliers, discours).
+ * Ce contrôleur délègue la logique métier et les vérifications d'autorisation à l'EventActivityService.
  */
 class EventActivityController extends Controller
 {
     /**
-     * @param  EventActivityService  $activities  Service for activity management.
+     * @param  EventActivityService  $activities  Service pour la gestion des activités.
      */
     public function __construct(private readonly EventActivityService $activities) {}
 
     /**
-     * List all activities for a specific event.
+     * Lister toutes les activités pour un événement spécifique.
      *
-     * @param  Event  $event  The event parent of these activities.
-     * @return JsonResponse List of activities.
+     * @param  Event  $event  L'événement parent de ces activités.
+     * @return JsonResponse Liste des activités.
      */
     public function index(Request $request, Event $event)
     {
-        // Service handles authorization: usually only organizers or admins can see all details
+        // Le service gère l'autorisation : généralement seuls les organisateurs ou les administrateurs peuvent voir tous les détails
         return response()->json($this->activities->list($this->actor($request), $event));
     }
 
     /**
-     * Create a new activity for an event.
+     * Créer une nouvelle activité pour un événement.
      *
-     * @param  StoreEventActivityRequest  $request  Validated activity data.
-     * @param  Event  $event  The event to which the activity will be added.
-     * @return JsonResponse 201 Created with the new activity.
+     * @param  StoreEventActivityRequest  $request  Données d'activité validées.
+     * @param  Event  $event  L'événement auquel l'activité sera ajoutée.
+     * @return JsonResponse 201 Created avec la nouvelle activité.
      */
     public function store(StoreEventActivityRequest $request, Event $event)
     {
@@ -53,12 +53,12 @@ class EventActivityController extends Controller
     }
 
     /**
-     * Update an existing activity.
+     * Mettre à jour une activité existante.
      *
-     * @param  UpdateEventActivityRequest  $request  Validated activity updates.
-     * @param  Event  $event  The parent event.
-     * @param  EventActivity  $eventActivity  The activity to update.
-     * @return JsonResponse The updated activity.
+     * @param  UpdateEventActivityRequest  $request  Mises à jour d'activité validées.
+     * @param  Event  $event  L'événement parent.
+     * @param  EventActivity  $eventActivity  L'activité à mettre à jour.
+     * @return JsonResponse L'activité mise à jour.
      */
     public function update(UpdateEventActivityRequest $request, Event $event, EventActivity $eventActivity)
     {
@@ -66,10 +66,10 @@ class EventActivityController extends Controller
     }
 
     /**
-     * Remove an activity from an event.
+     * Supprimer une activité d'un événement.
      *
-     * @param  Event  $event  The parent event.
-     * @param  EventActivity  $eventActivity  The activity to delete.
+     * @param  Event  $event  L'événement parent.
+     * @param  EventActivity  $eventActivity  L'activité à supprimer.
      * @return JsonResponse 204 No Content.
      */
     public function destroy(Request $request, Event $event, EventActivity $eventActivity)
@@ -80,11 +80,11 @@ class EventActivityController extends Controller
     }
 
     /**
-     * Retrieve and validate the authenticated user from the request.
+     * Récupérer et valider l'utilisateur authentifié à partir de la requête.
      *
-     * @return User The authenticated user.
+     * @return User L'utilisateur authentifié.
      *
-     * @throws HttpException 401 if not authenticated.
+     * @throws HttpException 401 si non authentifié.
      */
     private function actor(Request $request): User
     {

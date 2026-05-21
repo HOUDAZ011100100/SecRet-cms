@@ -15,28 +15,28 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Controller for managing events.
+ * Contrôleur pour la gestion des événements.
  *
- * This controller handles the lifecycle of events, including creation, updates,
- * publication workflows, and participant browsing.
- * Access control is a mix of controller-level checks and service-level logic.
+ * Ce contrôleur gère le cycle de vie des événements, y compris la création, les mises à jour,
+ * les flux de publication et la navigation des participants.
+ * Le contrôle d'accès est un mélange de vérifications au niveau du contrôleur et de logique au niveau du service.
  */
 class EventController extends Controller
 {
     public const STATUS_PENDING_PUBLICATION = Event::STATUS_PENDING_PUBLICATION;
 
     /**
-     * @param  EventManagementService  $events  Service for event business logic.
+     * @param  EventManagementService  $events  Service pour la logique métier des événements.
      */
     public function __construct(private readonly EventManagementService $events) {}
 
     /**
-     * List all events (Admin view).
+     * Lister tous les événements (vue Administrateur).
      *
-     * Provides a paginated list of all events with their organizers and creators.
-     * Supports searching by title, description, or location.
+     * Fournit une liste paginée de tous les événements avec leurs organisateurs et créateurs.
+     * Prend en charge la recherche par titre, description ou lieu.
      *
-     * @return JsonResponse Paginated list of events.
+     * @return JsonResponse Liste paginée d'événements.
      */
     public function indexAll(EventIndexRequest $request)
     {
@@ -56,9 +56,9 @@ class EventController extends Controller
     }
 
     /**
-     * List events managed by or created by the current user.
+     * Lister les événements gérés ou créés par l'utilisateur actuel.
      *
-     * @return JsonResponse Paginated list of user-related events.
+     * @return JsonResponse Liste paginée des événements liés à l'utilisateur.
      */
     public function indexMine(Request $request)
     {
@@ -76,7 +76,7 @@ class EventController extends Controller
     }
 
     /**
-     * List events assigned to or created by any Organizer (Admin view).
+     * Lister les événements assignés à ou créés par n'importe quel organisateur (vue Administrateur).
      *
      * @return JsonResponse
      */
@@ -97,7 +97,7 @@ class EventController extends Controller
     }
 
     /**
-     * List events specifically assigned to the current Admin.
+     * Lister les événements spécifiquement assignés à l'administrateur actuel.
      *
      * @return JsonResponse
      */
@@ -119,12 +119,12 @@ class EventController extends Controller
     }
 
     /**
-     * Browse published events (Public view).
+     * Parcourir les événements publiés (vue publique).
      *
-     * Only returns events with STATUS_PUBLISHED that haven't ended more than a day ago.
-     * Supports searching.
+     * Renvoie uniquement les événements avec le statut STATUS_PUBLISHED qui ne sont pas terminés depuis plus d'un jour.
+     * Prend en charge la recherche.
      *
-     * @return JsonResponse Paginated list of published events.
+     * @return JsonResponse Liste paginée des événements publiés.
      */
     public function browsePublished(EventIndexRequest $request)
     {
@@ -146,11 +146,11 @@ class EventController extends Controller
     }
 
     /**
-     * Get details for a single event.
+     * Obtenir les détails d'un seul événement.
      *
-     * Non-published events are only visible to their managers or admins.
+     * Les événements non publiés ne sont visibles que par leurs gestionnaires ou les administrateurs.
      *
-     * @return JsonResponse Event details with relations.
+     * @return JsonResponse Détails de l'événement avec les relations.
      */
     public function show(Request $request, Event $event)
     {
@@ -162,9 +162,9 @@ class EventController extends Controller
     }
 
     /**
-     * Create a new event.
+     * Créer un nouvel événement.
      *
-     * @param  StoreEventRequest  $request  Validated event data.
+     * @param  StoreEventRequest  $request  Données d'événement validées.
      * @return JsonResponse 201 Created.
      */
     public function store(StoreEventRequest $request)
@@ -175,10 +175,10 @@ class EventController extends Controller
     }
 
     /**
-     * Update event details.
+     * Mettre à jour les détails de l'événement.
      *
-     * @param  UpdateEventRequest  $request  Validated event updates.
-     * @return JsonResponse Updated event.
+     * @param  UpdateEventRequest  $request  Mises à jour d'événement validées.
+     * @return JsonResponse Événement mis à jour.
      */
     public function update(UpdateEventRequest $request, Event $event)
     {
@@ -188,10 +188,10 @@ class EventController extends Controller
     }
 
     /**
-     * Update the participant capacity of an event.
+     * Mettre à jour la capacité de participants d'un événement.
      *
-     * @param  UpdateEventCapacityRequest  $request  Validated capacity.
-     * @return JsonResponse Updated event.
+     * @param  UpdateEventCapacityRequest  $request  Capacité validée.
+     * @return JsonResponse Événement mis à jour.
      */
     public function updateCapacity(UpdateEventCapacityRequest $request, Event $event)
     {
@@ -201,10 +201,10 @@ class EventController extends Controller
     }
 
     /**
-     * Assign a specific organizer to manage an event.
+     * Assigner un organisateur spécifique pour gérer un événement.
      *
-     * @param  AssignEventOrganizerRequest  $request  Validated organizer_id.
-     * @return JsonResponse Updated event.
+     * @param  AssignEventOrganizerRequest  $request  organizer_id validé.
+     * @return JsonResponse Événement mis à jour.
      */
     public function assignOrganizer(AssignEventOrganizerRequest $request, Event $event)
     {
@@ -214,7 +214,7 @@ class EventController extends Controller
     }
 
     /**
-     * Delete an event. (Admin only)
+     * Supprimer un événement (Administrateur uniquement).
      *
      * @return JsonResponse 204 No Content.
      */
@@ -227,12 +227,12 @@ class EventController extends Controller
     }
 
     /**
-     * Request event publication.
+     * Demander la publication d'un événement.
      *
-     * Typically called by an Organizer when they finish planning.
-     * Changes status to PENDING_PUBLICATION.
+     * Typiquement appelé par un organisateur lorsqu'il a terminé la planification.
+     * Change le statut en PENDING_PUBLICATION.
      *
-     * @return JsonResponse Updated event.
+     * @return JsonResponse Événement mis à jour.
      */
     public function requestPublication(Request $request, Event $event)
     {
@@ -242,11 +242,11 @@ class EventController extends Controller
     }
 
     /**
-     * Approve event publication. (Admin only)
+     * Approuver la publication d'un événement (Administrateur uniquement).
      *
-     * Changes status to PUBLISHED, making it visible to everyone.
+     * Change le statut en PUBLISHED, le rendant visible par tout le monde.
      *
-     * @return JsonResponse Updated event.
+     * @return JsonResponse Événement mis à jour.
      */
     public function approvePublication(Request $request, Event $event)
     {
@@ -256,9 +256,9 @@ class EventController extends Controller
     }
 
     /**
-     * Internal helper to check if the current user can manage a specific event.
+     * Aide interne pour vérifier si l'utilisateur actuel peut gérer un événement spécifique.
      *
-     * @return bool True if Admin or the assigned Organizer.
+     * @return bool True si Administrateur ou l'organisateur assigné.
      */
     private function canManage(Request $request, Event $event): bool
     {

@@ -6,17 +6,17 @@ use App\Rules\MongoObjectId;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Form request for listing and filtering registrations by staff members.
+ * Requête de formulaire pour lister et filtrer les inscriptions par les membres du personnel.
  *
- * This request provides filtering capabilities for staff to view attendee registrations,
- * allowing for specific event lookup, payment status filtering, and keyword search.
+ * Cette requête fournit des capacités de filtrage pour que le personnel puisse visualiser les inscriptions des participants,
+ * permettant la recherche d'événements spécifiques, le filtrage par statut de paiement et la recherche par mots-clés.
  */
 class StaffRegistrationIndexRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Détermine si l'utilisateur est autorisé à effectuer cette requête.
      *
-     * Authenticated users (typically staff/admin) can make this request.
+     * Les utilisateurs authentifiés (généralement le personnel/administrateur) peuvent effectuer cette requête.
      */
     public function authorize(): bool
     {
@@ -24,12 +24,12 @@ class StaffRegistrationIndexRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * Obtenir les règles de validation qui s'appliquent à la requête.
      *
-     * Rules:
-     * - event_id: Optional, must be a valid MongoDB ObjectId.
-     * - payment_status: Optional, one of 'pending', 'paid', or 'all'.
-     * - q: Optional search query string, max 120 chars.
+     * Règles :
+     * - event_id : Optionnel, doit être un ObjectId MongoDB valide.
+     * - payment_status : Optionnel, parmi 'pending', 'paid', ou 'all'.
+     * - q : Chaîne de recherche optionnelle, max 120 caractères.
      *
      * @return array<string, mixed>
      */

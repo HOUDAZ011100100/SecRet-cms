@@ -9,58 +9,58 @@ use Illuminate\Support\Carbon;
 use MongoDB\Laravel\Eloquent\Model;
 
 /**
- * Payment Model
+ * Modèle Payment
  *
- * Represents a financial transaction associated with an event registration.
- * This model tracks the payment status, amount, and transaction details.
+ * Représente une transaction financière associée à une inscription d'événement.
+ * Ce modèle suit le statut du paiement, le montant et les détails de la transaction.
  *
- * @property string $_id MongoDB document ID
- * @property string $registration_id ID of the associated registration
- * @property int $amount_cents Payment amount in cents
- * @property string $currency Currency code (e.g., USD, EUR)
- * @property string $status Payment status (e.g., pending, completed, failed, refunded)
- * @property string|null $transaction_id External transaction ID from the payment provider
- * @property string|null $method Payment method used (e.g., credit_card, paypal)
- * @property array|null $meta Additional metadata from the payment provider
+ * @property string $_id ID du document MongoDB
+ * @property string $registration_id ID de l'inscription associée
+ * @property int $amount_cents Montant du paiement en centimes
+ * @property string $currency Code de la devise (ex: USD, EUR)
+ * @property string $status Statut du paiement (ex: pending, completed, failed, refunded)
+ * @property string|null $transaction_id ID de transaction externe du fournisseur de paiement
+ * @property string|null $method Méthode de paiement utilisée (ex: credit_card, paypal)
+ * @property array|null $meta Métadonnées supplémentaires du fournisseur de paiement
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read float $amount Computed payment amount in main currency units
- * @property-read Registration $registration Registration associated with this payment
+ * @property-read float $amount Montant calculé du paiement dans l'unité monétaire principale
+ * @property-read Registration $registration Inscription associée à ce paiement
  */
 class Payment extends Model
 {
     use StoresMoneyAsCents;
 
     /**
-     * The database connection used by the model.
+     * La connexion à la base de données utilisée par le modèle.
      *
      * @var string
      */
     protected $connection = 'mongodb';
 
     /**
-     * The table/collection associated with the model.
+     * La table/collection associée au modèle.
      *
      * @var string
      */
     protected $table = 'payments';
 
     /**
-     * Accessors to append to the model's array form.
+     * Accesseurs à ajouter à la forme tableau du modèle.
      *
      * @var list<string>
      */
     protected $appends = ['amount'];
 
     /**
-     * Attributes that should be hidden for serialization.
+     * Attributs qui doivent être cachés pour la sérialisation.
      *
      * @var list<string>
      */
     protected $hidden = ['amount_cents'];
 
     /**
-     * Attributes that are mass assignable.
+     * Attributs qui sont assignables en masse.
      *
      * @var list<string>
      */
@@ -76,7 +76,7 @@ class Payment extends Model
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * Récupère les attributs qui doivent être castés.
      *
      * @return array<string, string>
      */
@@ -88,7 +88,7 @@ class Payment extends Model
     }
 
     /**
-     * Accessor for the payment amount, converting cents to decimal.
+     * Accesseur pour le montant du paiement, convertissant les centimes en décimal.
      */
     protected function amount(): Attribute
     {
@@ -96,7 +96,7 @@ class Payment extends Model
     }
 
     /**
-     * Define the relationship for the associated registration.
+     * Définit la relation pour l'inscription associée.
      */
     public function registration(): BelongsTo
     {

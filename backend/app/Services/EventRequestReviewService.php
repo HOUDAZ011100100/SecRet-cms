@@ -10,30 +10,30 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Service handling the moderation workflow for Event Requests.
+ * Service gérant le flux de modération des demandes d'événements (Event Requests).
  *
- * This service manages the transition of a request from 'pending' to either 'approved' or 'rejected'.
- * Approved requests automatically trigger the creation of a corresponding Event draft.
- * The review operation is intentionally centralized here because approval changes two collections:
- * the original request and, when approved, the new event.
+ * Ce service gère la transition d'une demande de l'état "en attente" (pending) vers "approuvée" (approved)
+ * ou "rejetée" (rejected). Les demandes approuvées déclenchent automatiquement la création d'un projet d'événement
+ * (Event draft) correspondant. L'opération de révision est intentionnellement centralisée ici car l'approbation
+ * modifie deux collections : la demande originale et, en cas d'approbation, le nouvel événement.
  */
 class EventRequestReviewService
 {
     /**
-     * Rejects an event request with an optional reason.
+     * Rejette une demande d'événement avec un motif optionnel.
      *
-     * @param  EventRequest  $eventRequest  The request to be rejected.
-     * @param  User  $reviewer  The admin user performing the review.
-     * @param  string|null  $reason  Optional feedback explaining why the request was rejected.
-     * @return EventRequest The updated request instance.
+     * @param  EventRequest  $eventRequest  La demande à rejeter.
+     * @param  User  $reviewer  L'administrateur effectuant la révision.
+     * @param  string|null  $reason  Commentaire optionnel expliquant pourquoi la demande a été rejetée.
+     * @return EventRequest L'instance de la demande mise à jour.
      *
-     * @throws EventRequestReviewException If the reviewer is not authorized or request was already handled.
+     * @throws EventRequestReviewException Si le réviseur n'est pas autorisé ou si la demande a déjà été traitée.
      */
     public function reject(EventRequest $eventRequest, User $reviewer, ?string $reason): EventRequest
     {
         $this->ensureReviewerIsAdmin($reviewer);
 
-        // Rejection keeps the request as audit history and records who made the decision.
+        // Le rejet conserve la demande comme historique d'audit et enregistre qui a pris la décision.
         $reviewedRequest = $this->markReviewed($eventRequest, [
             'status' => EventRequest::STATUS_REJECTED,
             'rejection_reason' => $reason,
@@ -41,28 +41,28 @@ class EventRequestReviewService
             'reviewed_by_id' => $reviewer->getKey(),
         ]);
 
-        // The client needs a notification because rejected requests do not create an event record.
+        // Le client doit être notifié car les demandes rejetées ne créent pas d'enregistrement d'événement.
         NotificationService::eventRequestReviewed($reviewedRequest, EventRequest::STATUS_REJECTED);
 
         return $reviewedRequest;
     }
 
     /**
-     * Approves an event request and spawns a new Event draft.
+     * Approuve une demande d'événement et génère un nouveau projet d'événement.
      *
-     * @param  EventRequest  $eventRequest  The request to be approved.
-     * @param  User  $reviewer  The admin user performing the review.
+     * @param  EventRequest  $eventRequest  La demande à approuver.
+     * @param  User  $reviewer  L'administrateur effectuant la révision.
      * @return array{event_request: EventRequest, event: Event}
      *
-     * @throws EventRequestReviewException If the reviewer is not authorized or request was already handled.
+     * @throws EventRequestReviewException Si le réviseur n'est pas autorisé ou si la demande a déjà été traitée.
      */
     public function approve(EventRequest $eventRequest, User $reviewer): array
     {
         $this->ensureReviewerIsAdmin($reviewer);
 
-        // Approval updates the request and creates an event; both changes must commit together.
+        // L'approbation met à jour la demande et crée un événement ; les deux changements doivent être validés ensemble.
         return DB::transaction(function () use ($eventRequest, $reviewer) {
-            // The conditional update inside markReviewed prevents double approval/rejection races.
+            // La mise à jour conditionnelle dans markReviewed empêche les conflits de double approbation/rejet.
             $reviewedRequest = $this->markReviewed($eventRequest, [
                 'status' => EventRequest::STATUS_APPROVED,
                 'rejection_reason' => null,
@@ -70,7 +70,8 @@ class EventRequestReviewService
                 'reviewed_by_id' => $reviewer->getKey(),
             ]);
 
-            // Client preferred dates are optional in older/demo data, so approval has safe defaults.
+            // Les dates préférées du client sont optionnelles dans les anciennes données/données de démo,
+            // l'approbation a donc des valeurs par défaut sûres.
             $start = $reviewedRequest->getAttribute('preferred_start');
             if (! $start instanceof Carbon) {
                 $start = now()->addWeek();
@@ -81,10 +82,11 @@ class EventRequestReviewService
                 $end = $start->copy()->addHours(4);
             }
 
-            // Approved requests become draft events so staff can still assign an organizer and refine details.
+            // Les demandes approuvées deviennent des projets d'événements afin que le personnel puisse encore
+            // assigner un organisateur et affiner les détails.
             $event = Event::create([
                 'event_request_id' => $reviewedRequest->getKey(),
-                'organizer_id' => null, // To be assigned later by an admin.
+                'organizer_id' => null, // À assigner plus tard par un administrateur.
                 'created_by' => $reviewer->getKey(),
                 'title' => $reviewedRequest->getAttribute('title'),
                 'description' => $reviewedRequest->getAttribute('description'),
@@ -92,13 +94,13 @@ class EventRequestReviewService
                 'location' => $reviewedRequest->getAttribute('location'),
                 'start_at' => $start,
                 'end_at' => $end,
-                'capacity' => 100, // Default capacity, can be adjusted.
+                'capacity' => 100, // Capacité par défaut, peut être ajustée.
                 'registered_count' => 0,
                 'ticket_price' => $reviewedRequest->getAttribute('ticket_price') ?? 0,
                 'status' => Event::STATUS_DRAFT,
             ]);
 
-            // Notify after the event exists so frontend links can point to the created record when needed.
+            // Notifier après que l'événement existe pour que les liens frontend puissent pointer vers l'enregistrement créé si nécessaire.
             NotificationService::eventRequestReviewed($reviewedRequest, EventRequest::STATUS_APPROVED);
 
             return [
@@ -109,15 +111,15 @@ class EventRequestReviewService
     }
 
     /**
-     * Atomically marks a request as reviewed if it is still in pending status.
+     * Marque atomiquement une demande comme révisée si elle est toujours en statut "en attente" (pending).
      *
      * @param  array<string, mixed>  $attributes
      *
-     * @throws EventRequestReviewException If the request was already processed by someone else.
+     * @throws EventRequestReviewException Si la demande a déjà été traitée par quelqu'un d'autre.
      */
     private function markReviewed(EventRequest $eventRequest, array $attributes): EventRequest
     {
-        // This is the workflow lock: only a still-pending request can be reviewed.
+        // C'est le verrou du flux de travail : seule une demande toujours en attente peut être révisée.
         $updated = EventRequest::query()
             ->whereKey($eventRequest->getKey())
             ->where('status', EventRequest::STATUS_PENDING)
@@ -133,7 +135,7 @@ class EventRequestReviewService
     }
 
     /**
-     * Enforces administrative authorization.
+     * Applique l'autorisation administrative.
      *
      * @throws EventRequestReviewException
      */

@@ -14,16 +14,16 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Controller for managing event requests from clients.
+ * Contrôleur pour la gestion des demandes d'événements des clients.
  *
- * Clients use this to propose new events. Admins use this to review (approve/reject) those requests.
- * Approved requests usually lead to the creation of an Event.
+ * Les clients utilisent ce contrôleur pour proposer de nouveaux événements. Les administrateurs l'utilisent pour
+ * examiner (approuver/rejeter) ces demandes. Les demandes approuvées mènent généralement à la création d'un Événement.
  */
 class EventRequestController extends Controller
 {
     /**
-     * @param  EventRequestSubmissionService  $submissions  Service for submitting and managing requests.
-     * @param  EventRequestReviewService  $reviews  Service for reviewing (approving/rejecting) requests.
+     * @param  EventRequestSubmissionService  $submissions  Service pour la soumission et la gestion des demandes.
+     * @param  EventRequestReviewService  $reviews  Service pour la révision (approbation/rejet) des demandes.
      */
     public function __construct(
         private readonly EventRequestSubmissionService $submissions,
@@ -31,11 +31,11 @@ class EventRequestController extends Controller
     ) {}
 
     /**
-     * Submit a new event request.
+     * Soumettre une nouvelle demande d'événement.
      *
-     * Typically called by a Client.
+     * Typiquement appelé par un client.
      *
-     * @param  StoreClientEventRequest  $request  Validated request data.
+     * @param  StoreClientEventRequest  $request  Données de demande validées.
      * @return JsonResponse 201 Created.
      */
     public function store(StoreClientEventRequest $request)
@@ -46,7 +46,7 @@ class EventRequestController extends Controller
     }
 
     /**
-     * Delete an event request.
+     * Supprimer une demande d'événement.
      *
      * @return JsonResponse 200 OK message.
      */
@@ -58,9 +58,9 @@ class EventRequestController extends Controller
     }
 
     /**
-     * List event requests (Admin view).
+     * Lister les demandes d'événements (vue Administrateur).
      *
-     * @return JsonResponse Paginated list of requests.
+     * @return JsonResponse Liste paginée des demandes.
      */
     public function index(EventRequestIndexRequest $request)
     {
@@ -68,7 +68,7 @@ class EventRequestController extends Controller
             ->with('event')
             ->orderBy('created_at', 'desc');
 
-        // Optional filtering by status (pending, approved, rejected)
+        // Filtrage optionnel par statut (pending, approved, rejected)
         if ($status = $request->validated('status')) {
             $query->where('status', $status);
         }
@@ -77,18 +77,19 @@ class EventRequestController extends Controller
     }
 
     /**
-     * Review an event request (Approve or Reject).
+     * Réviser une demande d'événement (Approuver ou Rejeter).
      *
-     * Only Admins should access this endpoint (enforced via middleware usually).
+     * Seuls les administrateurs doivent accéder à ce point de terminaison (généralement appliqué via un middleware).
      *
-     * @param  ReviewEventRequestRequest  $request  Validated decision and optional reason.
-     * @return JsonResponse Updated request or created event.
+     * @param  ReviewEventRequestRequest  $request  Décision validée et motif optionnel.
+     * @param  EventRequest  $eventRequest  La demande d'événement à réviser.
+     * @return JsonResponse Demande mise à jour ou événement créé.
      */
     public function review(ReviewEventRequestRequest $request, EventRequest $eventRequest)
     {
         $data = $request->validated();
 
-        // Handle rejection
+        // Gérer le rejet
         if ($data['decision'] === EventRequest::STATUS_REJECTED) {
             return response()->json($this->reviews->reject(
                 $eventRequest,
@@ -97,12 +98,12 @@ class EventRequestController extends Controller
             ));
         }
 
-        // Handle approval (this usually triggers event creation)
+        // Gérer l'approbation (cela déclenche généralement la création de l'événement)
         return response()->json($this->reviews->approve($eventRequest, $this->actor($request)));
     }
 
     /**
-     * Retrieve and validate the authenticated user.
+     * Récupérer et valider l'utilisateur authentifié.
      */
     private function actor(Request $request): User
     {

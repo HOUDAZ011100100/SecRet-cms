@@ -1,12 +1,12 @@
-# VELORA Backend Documentation
+# Documentation du Backend VELORA
 
-This directory contains three documentation layers:
+Ce répertoire contient trois couches de documentation :
 
-- Generated phpDocumentor class reference pages for backend internals.
-- `api/` contains authored API documentation for routes, roles, request bodies, and frontend-facing contracts.
-- `architecture/`, `merise/`, and `uml/` contain authored backend explanation, Merise analysis, and workflow diagrams.
+- Pages de référence de classe phpDocumentor générées pour les composants internes du backend.
+- `api/` contient la documentation de l'API rédigée pour les routes, les rôles, les corps de requête et les contrats destinés au frontend.
+- `architecture/`, `merise/`, et `uml/` contiennent des explications sur le backend, l'analyse Merise et les diagrammes de flux de travail.
 
-Only the authored docs in this folder are versioned:
+Seule la documentation rédigée dans ce dossier est versionnée :
 
 - `README.md`
 - `api/README.md`
@@ -15,36 +15,36 @@ Only the authored docs in this folder are versioned:
 - `merise/README.md`
 - `uml/workflows.md`
 
-The generated class-doc output and the `backend/.phpdoc/` cache are local build artifacts and should not be committed.
+La sortie générée de la documentation de classe et le cache `backend/.phpdoc/` sont des artefacts de construction locale et ne doivent pas être commités.
 
-## API Docs
+## Documentation de l'API
 
-- Human-readable route guide: `api/README.md`
-- OpenAPI 3.1 contract: `api/openapi.yaml`
+- Guide des routes lisible par l'homme : `api/README.md`
+- Contrat OpenAPI 3.1 : `api/openapi.yaml`
 
-## Architecture And Diagrams
+## Architecture et Diagrammes
 
-- Backend reading map and commenting standard: `architecture/backend-map.md`
-- Merise documentation with MCD, MLD, and MCT: `merise/README.md`
-- UML-style workflow diagrams for application flows: `uml/workflows.md`
+- Carte de lecture du backend et standard de commentaires : `architecture/backend-map.md`
+- Documentation Merise avec MCD, MLD et MCT : `merise/README.md`
+- Diagrammes de flux de travail de style UML pour les flux de l'application : `uml/workflows.md`
 
-## Commenting Standard
+## Standard de Commentaires
 
-Code comments and docblocks should stay. They are part of the backend's readability layer. Improve them when touching a file, especially around business rules, Mongo transactions, atomic updates, role checks, money/date representation, and frontend response compatibility.
+Les commentaires de code et les blocs de documentation (docblocks) doivent rester. Ils font partie de la couche de lisibilité du backend. Améliorez-les lors de la modification d'un fichier, en particulier autour des règles métier, des transactions Mongo, des mises à jour atomiques, des vérifications de rôle, de la représentation de l'argent/des dates et de la compatibilité des réponses frontend.
 
-## Regenerating Class Docs
+## Régénération de la Documentation de Classe
 
-From the repository root:
+Depuis la racine du dépôt :
 
 ```bash
 docker run --rm -v "$PWD/backend:/data" phpdoc/phpdoc:3 \
   -d /data/app \
   -t /data/docs \
-  --title "VELORA API Documentation" \
+  --title "Documentation de l'API VELORA" \
   --cache-folder /data/.phpdoc/cache
 ```
 
-After regenerating, run the backend checks before committing:
+Après régénération, exécutez les vérifications du backend avant de commiter :
 
 ```bash
 docker compose run --rm backend composer test

@@ -13,19 +13,19 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Controller for managing participant registrations to events.
+ * Contrôleur pour la gestion des inscriptions des participants aux événements.
  */
 class RegistrationController extends Controller
 {
     /**
-     * @param  ParticipantRegistrationService  $registrations  Service for participant registration workflows.
+     * @param  ParticipantRegistrationService  $registrations  Service pour les flux de travail d'inscription des participants.
      */
     public function __construct(private readonly ParticipantRegistrationService $registrations) {}
 
     /**
-     * Register the authenticated user for an event.
+     * Inscrire l'utilisateur authentifié à un événement.
      *
-     * @return JsonResponse 201 Created with registration details.
+     * @return JsonResponse 201 Created avec les détails de l'inscription.
      */
     public function store(Request $request, Event $event)
     {
@@ -35,11 +35,11 @@ class RegistrationController extends Controller
     }
 
     /**
-     * Mark a registration as paid.
+     * Marquer une inscription comme payée.
      *
-     * In a real app, this would be triggered by a payment provider callback.
+     * Dans une application réelle, cela serait déclenché par un rappel (callback) du fournisseur de paiement.
      *
-     * @return JsonResponse Updated registration.
+     * @return JsonResponse Inscription mise à jour.
      */
     public function pay(Request $request, Registration $registration)
     {
@@ -49,7 +49,7 @@ class RegistrationController extends Controller
     }
 
     /**
-     * Cancel a registration.
+     * Annuler une inscription.
      *
      * @return JsonResponse 200 OK message.
      */
@@ -61,9 +61,9 @@ class RegistrationController extends Controller
     }
 
     /**
-     * Get the registration details for the current user for a specific event.
+     * Récupérer les détails de l'inscription de l'utilisateur actuel pour un événement spécifique.
      *
-     * Used by the UI to show "Already Registered" status or ticket download link.
+     * Utilisé par l'interface utilisateur pour afficher le statut "Déjà inscrit" ou le lien de téléchargement du billet.
      *
      * @return JsonResponse
      */
@@ -75,9 +75,9 @@ class RegistrationController extends Controller
     }
 
     /**
-     * List all registrations for the authenticated user.
+     * Lister toutes les inscriptions de l'utilisateur authentifié.
      *
-     * @return JsonResponse List of registrations.
+     * @return JsonResponse Liste des inscriptions.
      */
     public function myRegistrations(ParticipantRegistrationIndexRequest $request)
     {
@@ -88,16 +88,16 @@ class RegistrationController extends Controller
     }
 
     /**
-     * Download the ticket for a registration.
+     * Télécharger le billet pour une inscription.
      *
-     * Returns a JSON-formatted ticket file.
+     * Renvoie un fichier de billet au format JSON.
      */
     public function ticket(Request $request, Registration $registration): StreamedResponse
     {
         $ticket = $this->registrations->ticketFor($this->actor($request), $registration);
 
         return response()->streamDownload(function () use ($ticket): void {
-            // Encode the ticket payload as JSON for the download
+            // Encoder la charge utile du billet en JSON pour le téléchargement
             echo json_encode($ticket->payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
         }, $ticket->filename, [
             'Content-Type' => 'application/json',
@@ -105,7 +105,7 @@ class RegistrationController extends Controller
     }
 
     /**
-     * Retrieve and validate the authenticated user.
+     * Récupérer et valider l'utilisateur authentifié.
      */
     private function actor(Request $request): User
     {

@@ -6,16 +6,16 @@ use App\Exceptions\Contracts\ApiException;
 use RuntimeException;
 
 /**
- * Exception thrown for general event management errors.
+ * Exception levée pour les erreurs générales de gestion d'événements.
  *
- * Used when performing operations on events that fail business logic checks,
- * such as updating a completed event or invalid status transitions.
+ * Utilisée lors de l'exécution d'opérations sur des événements qui échouent aux vérifications de la logique métier,
+ * comme la mise à jour d'un événement terminé ou des transitions de statut invalides.
  */
 class EventManagementException extends RuntimeException implements ApiException
 {
     /**
-     * @param  string  $message  The error message.
-     * @param  int  $status  The HTTP status code.
+     * @param  string  $message  Le message d'erreur.
+     * @param  int  $status  Le code de statut HTTP.
      */
     public function __construct(
         string $message,
@@ -25,7 +25,7 @@ class EventManagementException extends RuntimeException implements ApiException
     }
 
     /**
-     * Get the HTTP status code for the response.
+     * Récupère le code de statut HTTP pour la réponse.
      */
     public function statusCode(): int
     {
@@ -33,7 +33,7 @@ class EventManagementException extends RuntimeException implements ApiException
     }
 
     /**
-     * Get the response payload representation of the exception.
+     * Récupère la représentation de la charge utile de réponse de l'exception.
      *
      * @return array<string, mixed>
      */

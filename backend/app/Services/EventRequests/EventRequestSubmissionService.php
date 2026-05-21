@@ -9,15 +9,15 @@ use App\Services\NotificationService;
 use Illuminate\Http\UploadedFile;
 
 /**
- * Service orchestrating the submission and deletion of event requests by clients.
+ * Service orchestrant la soumission et la suppression des demandes d'événements par les clients.
  *
- * It coordinates eligibility checks, image processing, database persistence, and notifications.
+ * Il coordonne les vérifications d'éligibilité, le traitement des images, la persistance en base de données et les notifications.
  */
 class EventRequestSubmissionService
 {
     /**
-     * @param  EventRequestEligibilityService  $eligibility  Service to check if the user is allowed to submit.
-     * @param  EventRequestImageStorage  $images  Service to handle image persistence.
+     * @param  EventRequestEligibilityService  $eligibility  Service pour vérifier si l'utilisateur est autorisé à soumettre une demande.
+     * @param  EventRequestImageStorage  $images  Service pour gérer la persistance des images.
      */
     public function __construct(
         private readonly EventRequestEligibilityService $eligibility,
@@ -25,22 +25,22 @@ class EventRequestSubmissionService
     ) {}
 
     /**
-     * Submits a new event request on behalf of a client.
+     * Soumet une nouvelle demande d'événement au nom d'un client.
      *
-     * @param  User  $client  The user submitting the request (must have ROLE_CLIENT).
-     * @param  array<string, mixed>  $data  Validated request data (event details, image data, etc.).
-     * @return EventRequest The newly created event request instance.
+     * @param  User  $client  L'utilisateur soumettant la demande (doit avoir le rôle ROLE_CLIENT).
+     * @param  array<string, mixed>  $data  Données de demande validées (détails de l'événement, données d'image, etc.).
+     * @return EventRequest L'instance de la demande d'événement nouvellement créée.
      *
-     * @throws EventRequestException If the user is not a client or is ineligible due to active requests/events.
+     * @throws EventRequestException Si l'utilisateur n'est pas un client ou est inéligible en raison de demandes/événements actifs.
      */
     public function submit(User $client, array $data): EventRequest
     {
-        // Security check: Only clients can request event organization services.
+        // Vérification de sécurité : seuls les clients peuvent demander des services d'organisation d'événements.
         if ($client->getAttribute('role') !== User::ROLE_CLIENT) {
             throw new EventRequestException('This action is unauthorized.', 403);
         }
 
-        // Business rule: A client can only have one active request or event at a time.
+        // Règle métier : un client ne peut avoir qu'une seule demande ou un seul événement actif à la fois.
         $blockReason = $this->eligibility->blockingReasonFor($client);
         if ($blockReason !== null) {
             throw new EventRequestException(
@@ -50,7 +50,7 @@ class EventRequestSubmissionService
             );
         }
 
-        // Handle image attachment (could be UploadedFile from form-data or base64 from JSON).
+        // Gérer la pièce jointe de l'image (peut être un UploadedFile provenant de form-data ou du base64 provenant du JSON).
         $image = $data['image'] ?? null;
         $imagePath = $this->images->store(
             $image instanceof UploadedFile ? $image : null,
@@ -58,10 +58,10 @@ class EventRequestSubmissionService
             isset($data['image_mime']) ? (string) $data['image_mime'] : null,
         );
 
-        // Remove ephemeral image data before saving to DB.
+        // Supprimer les données d'image éphémères avant de sauvegarder en base de données.
         unset($data['image'], $data['image_data'], $data['image_mime']);
 
-        // Persist the request in PENDING state.
+        // Persister la demande dans l'état PENDING.
         $eventRequest = EventRequest::create([
             ...$data,
             'user_id' => $client->getKey(),
@@ -69,35 +69,35 @@ class EventRequestSubmissionService
             'status' => EventRequest::STATUS_PENDING,
         ]);
 
-        // Notify admins about the new submission.
+        // Notifier les administrateurs de la nouvelle soumission.
         NotificationService::eventRequestSubmitted($eventRequest);
 
         return $eventRequest->fresh() ?? $eventRequest;
     }
 
     /**
-     * Deletes an existing event request.
+     * Supprime une demande d'événement existante.
      *
-     * Only pending requests can be deleted by their owner.
+     * Seules les demandes en attente peuvent être supprimées par leur propriétaire.
      *
-     * @param  User  $client  The user attempting to delete the request.
-     * @param  EventRequest  $eventRequest  The request to be deleted.
+     * @param  User  $client  L'utilisateur tentant de supprimer la demande.
+     * @param  EventRequest  $eventRequest  La demande à supprimer.
      *
-     * @throws EventRequestException If the request is not owned by the client or is not in PENDING state.
+     * @throws EventRequestException Si la demande n'appartient pas au client ou n'est pas dans l'état PENDING.
      */
     public function delete(User $client, EventRequest $eventRequest): void
     {
-        // Ownership check based on contact email (clients might not always be logged in during some flows).
+        // Vérification de la propriété basée sur l'e-mail de contact (les clients peuvent ne pas toujours être connectés lors de certains flux).
         if (strcasecmp((string) $eventRequest->getAttribute('contact_email'), (string) $client->getAttribute('email')) !== 0) {
             throw new EventRequestException('Demande introuvable.', 404);
         }
 
-        // Business rule: Once a request is approved or rejected, it cannot be deleted by the client.
+        // Règle métier : une fois qu'une demande est approuvée ou rejetée, elle ne peut plus être supprimée par le client.
         if ($eventRequest->getAttribute('status') !== EventRequest::STATUS_PENDING) {
             throw new EventRequestException('Seules les demandes en attente peuvent être supprimées.');
         }
 
-        // Cleanup: Delete the associated image from storage.
+        // Nettoyage : supprimer l'image associée du stockage.
         $imagePath = $eventRequest->getAttribute('image_path');
         $this->images->delete(is_string($imagePath) ? $imagePath : null);
 
@@ -105,10 +105,10 @@ class EventRequestSubmissionService
     }
 
     /**
-     * Translates internal blocking reasons into user-friendly error messages.
+     * Traduit les raisons de blocage internes en messages d'erreur conviviaux pour l'utilisateur.
      *
-     * @param  string  $blockReason  The reason identifier from EligibilityService.
-     * @return string Human-readable message in French.
+     * @param  string  $blockReason  L'identifiant de la raison provenant d'EligibilityService.
+     * @return string Message compréhensible par l'homme en français.
      */
     private function blockingMessage(string $blockReason): string
     {

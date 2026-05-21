@@ -1,122 +1,122 @@
-# Backend Architecture Map
+# Carte de l'Architecture du Backend
 
-This backend is intentionally organized around thin HTTP controllers and business services. The goal is not to make each file tiny; the goal is to make each file responsible for one clear layer.
+Ce backend est intentionnellement organisé autour de contrôleurs HTTP légers et de services métier. L'objectif n'est pas de rendre chaque fichier minuscule, mais de faire en sorte que chaque fichier soit responsable d'une couche claire.
 
-## Reading Order
+## Ordre de Lecture
 
-Use this order when trying to understand or debug a feature:
+Utilisez cet ordre pour essayer de comprendre ou de déboguer une fonctionnalité :
 
 1. `routes/api.php`
-   Maps the URL, role middleware, and controller method.
+   Définit l'URL, le middleware de rôle et la méthode du contrôleur.
 2. `app/Http/Requests/...`
-   Validates input and role-specific authorization before the controller runs.
+   Valide les entrées et l'autorisation spécifique au rôle avant l'exécution du contrôleur.
 3. `app/Http/Controllers/Api/...`
-   Converts the HTTP request into a service call and returns JSON.
+   Convertit la requête HTTP en un appel de service et renvoie du JSON.
 4. `app/Services/...`
-   Holds business rules, workflow decisions, transactions, and domain errors.
+   Contient les règles métier, les décisions de flux de travail, les transactions et les erreurs de domaine.
 5. `app/Models/...`
-   Defines Mongo collections, fillable fields, casts, accessors, and relationships.
+   Définit les collections Mongo, les champs remplissables (fillable), les casts, les accesseurs et les relations.
 6. `database/migrations/2026_05_18_000000_create_mongo_indexes.php`
-   Defines the Mongo indexes that make the workflows safe and fast.
+   Définit les index Mongo qui rendent les flux de travail sûrs et rapides.
 7. `tests/Feature/...`
-   Shows expected behavior from the API consumer point of view.
+   Présente le comportement attendu du point de vue du consommateur de l'API.
 
-## Commenting Standard
+## Standard de Commentaires
 
-Comments and docblocks are part of the codebase documentation style and should stay. They should be useful to a developer reading the system for the first time.
+Les commentaires et les blocs de documentation (docblocks) font partie du style de documentation de la base de code et doivent rester. Ils doivent être utiles à un développeur lisant le système pour la première fois.
 
-Good comments explain:
+Les bons commentaires expliquent :
 
-- why a business rule exists;
-- what a Mongo transaction, atomic update, or unique index is protecting;
-- what role is allowed to perform an action;
-- how money, dates, images, and ObjectId strings are represented;
-- what response shape the frontend depends on.
+- pourquoi une règle métier existe ;
+- ce qu'une transaction Mongo, une mise à jour atomique ou un index unique protège ;
+- quel rôle est autorisé à effectuer une action ;
+- comment l'argent, les dates, les images et les chaînes ObjectId sont représentés ;
+- quelle forme de réponse le frontend attend.
 
-Avoid comments that only repeat the PHP syntax. For example, a comment saying "return response as JSON" is less useful than a comment explaining why the response keeps an existing frontend shape.
+Évitez les commentaires qui ne font que répéter la syntaxe PHP. Par exemple, un commentaire disant "renvoyer la réponse au format JSON" est moins utile qu'un commentaire expliquant pourquoi la réponse conserve une forme existante pour le frontend.
 
-## Feature Map
+## Carte des Fonctionnalités
 
-| Feature | Routes | Controller | Requests | Services | Models | Main Tests |
+| Fonctionnalité | Routes | Contrôleur | Requêtes | Services | Modèles | Tests Principaux |
 | --- | --- | --- | --- | --- | --- | --- |
-| Health | `/api/health` | `HealthController` | none | `HealthCheckService` | none | `MongoOnlyConfigurationTest`, `ApiMiddlewareTest` |
+| Santé | `/api/health` | `HealthController` | aucune | `HealthCheckService` | aucun | `MongoOnlyConfigurationTest`, `ApiMiddlewareTest` |
 | Auth | `/register`, `/login`, `/logout`, `/user` | `AuthController` | `RegisterRequest`, `LoginRequest` | `UserWriteService` | `User`, `PersonalAccessToken` | `AuthAndUserManagementFlowTest` |
-| User admin | `/admin/users`, `/admin/organizers` | `UserAdminController` | `UserIndexRequest`, `StoreUserRequest`, `UpdateUserRequest` | `UserWriteService` | `User` | `AuthAndUserManagementFlowTest`, `QueryValidationTest` |
-| Event browsing | `/events/browse`, `/events/{event}` | `EventController` | `EventIndexRequest` | `EventManagementService` | `Event`, `Feedback` | `EventManagementFlowTest`, `QueryValidationTest` |
-| Organizer event management | `/organizer/events...` | `EventController` | `StoreEventRequest`, `UpdateEventRequest`, `UpdateEventCapacityRequest` | `EventManagementService`, `EventImageStorage` | `Event` | `EventManagementFlowTest` |
-| Admin event management | `/admin/events...` | `EventController` | `AssignEventOrganizerRequest`, event write requests | `EventManagementService`, `EventImageStorage` | `Event`, `User` | `EventManagementFlowTest` |
-| Client event requests | `/event-requests` | `EventRequestController` | `StoreClientEventRequest` | `EventRequestSubmissionService`, `EventRequestEligibilityService`, `EventRequestImageStorage` | `EventRequest`, `Event` | `EventRequestClientFlowTest` |
-| Event request review | `/admin/event-requests...` | `EventRequestController` | `EventRequestIndexRequest`, `ReviewEventRequestRequest` | `EventRequestReviewService` | `EventRequest`, `Event` | `EventRequestReviewFlowTest` |
-| Planning tasks | `/organizer/events/{event}/tasks`, `/admin/events/{event}/tasks` | `EventTaskController` | `StoreEventTaskRequest`, `UpdateEventTaskRequest` | `EventTaskService` | `EventTask`, `Event` | `EventPlanningFlowTest` |
-| Event activities | `/organizer/events/{event}/activities`, `/admin/events/{event}/activities` | `EventActivityController` | `StoreEventActivityRequest`, `UpdateEventActivityRequest` | `EventActivityService` | `EventActivity`, `Event` | `EventPlanningFlowTest` |
-| Participant registrations | `/events/{event}/register`, `/my-registrations`, `/registrations/{registration}` | `RegistrationController` | `ParticipantRegistrationIndexRequest` | `ParticipantRegistrationService`, `RegistrationService` | `Registration`, `Payment`, `Event` | `RegistrationFlowTest`, `MoneyStorageTest` |
-| Staff registration management | `/organizer/registrations...`, `/admin/registrations...` | `StaffRegistrationController` | `StaffRegistrationIndexRequest` | `StaffRegistrationService`, `RegistrationStatsService` | `Registration`, `Event` | `StaffRegistrationFlowTest` |
-| Feedback | `/events/{event}/feedback`, `/admin/feedbacks...` | `FeedbackController` | `StoreFeedbackRequest` | `FeedbackService` | `Feedback`, `Registration`, `Event` | `FeedbackFlowTest` |
-| Notifications | `/notifications...` | `NotificationController` | none | `NotificationService` | `AppNotification` | covered through workflow tests |
-| Stats | `/admin/stats`, `/client/stats` | `StatsController` | none | `AdminStatsService`, `ClientStatsService` | `Event`, `Registration`, `Payment`, `EventRequest`, `Feedback` | `StatsFlowTest`, `MoneyStorageTest` |
+| Admin Utilisateurs | `/admin/users`, `/admin/organizers` | `UserAdminController` | `UserIndexRequest`, `StoreUserRequest`, `UpdateUserRequest` | `UserWriteService` | `User` | `AuthAndUserManagementFlowTest`, `QueryValidationTest` |
+| Navigation Événements | `/events/browse`, `/events/{event}` | `EventController` | `EventIndexRequest` | `EventManagementService` | `Event`, `Feedback` | `EventManagementFlowTest`, `QueryValidationTest` |
+| Gestion Événements Organisateur | `/organizer/events...` | `EventController` | `StoreEventRequest`, `UpdateEventRequest`, `UpdateEventCapacityRequest` | `EventManagementService`, `EventImageStorage` | `Event` | `EventManagementFlowTest` |
+| Gestion Événements Admin | `/admin/events...` | `EventController` | `AssignEventOrganizerRequest`, requêtes d'écriture d'événement | `EventManagementService`, `EventImageStorage` | `Event`, `User` | `EventManagementFlowTest` |
+| Demandes d'Événements Client | `/event-requests` | `EventRequestController` | `StoreClientEventRequest` | `EventRequestSubmissionService`, `EventRequestEligibilityService`, `EventRequestImageStorage` | `EventRequest`, `Event` | `EventRequestClientFlowTest` |
+| Révision Demande Événement | `/admin/event-requests...` | `EventRequestController` | `EventRequestIndexRequest`, `ReviewEventRequestRequest` | `EventRequestReviewService` | `EventRequest`, `Event` | `EventRequestReviewFlowTest` |
+| Tâches de Planification | `/organizer/events/{event}/tasks`, `/admin/events/{event}/tasks` | `EventTaskController` | `StoreEventTaskRequest`, `UpdateEventTaskRequest` | `EventTaskService` | `EventTask`, `Event` | `EventPlanningFlowTest` |
+| Activités d'Événement | `/organizer/events/{event}/activities`, `/admin/events/{event}/activities` | `EventActivityController` | `StoreEventActivityRequest`, `UpdateEventActivityRequest` | `EventActivityService` | `EventActivity`, `Event` | `EventPlanningFlowTest` |
+| Inscriptions Participants | `/events/{event}/register`, `/my-registrations`, `/registrations/{registration}` | `RegistrationController` | `ParticipantRegistrationIndexRequest` | `ParticipantRegistrationService`, `RegistrationService` | `Registration`, `Payment`, `Event` | `RegistrationFlowTest`, `MoneyStorageTest` |
+| Gestion Inscriptions Staff | `/organizer/registrations...`, `/admin/registrations...` | `StaffRegistrationController` | `StaffRegistrationIndexRequest` | `StaffRegistrationService`, `RegistrationStatsService` | `Registration`, `Event` | `StaffRegistrationFlowTest` |
+| Commentaires (Feedback) | `/events/{event}/feedback`, `/admin/feedbacks...` | `FeedbackController` | `StoreFeedbackRequest` | `FeedbackService` | `Feedback`, `Registration`, `Event` | `FeedbackFlowTest` |
+| Notifications | `/notifications...` | `NotificationController` | aucune | `NotificationService` | `AppNotification` | couvert par les tests de flux |
+| Stats | `/admin/stats`, `/client/stats` | `StatsController` | aucune | `AdminStatsService`, `ClientStatsService` | `Event`, `Registration`, `Payment`, `EventRequest`, `Feedback` | `StatsFlowTest`, `MoneyStorageTest` |
 
-## Layer Responsibilities
+## Responsabilités des Couches
 
-### Controllers
+### Contrôleurs
 
-Controllers should stay short. They are responsible for:
+Les contrôleurs doivent rester courts. Ils sont responsables de :
 
-- receiving already-authenticated requests;
-- extracting the authenticated actor;
-- passing validated data into a service;
-- preserving the API response shape expected by the frontend.
+- recevoir des requêtes déjà authentifiées ;
+- extraire l'acteur authentifié ;
+- passer les données validées à un service ;
+- préserver la forme de réponse de l'API attendue par le frontend.
 
-Controllers should not hold multi-step business workflows, capacity logic, approval rules, or Mongo transaction details.
+Les contrôleurs ne doivent pas contenir de flux de travail métier en plusieurs étapes, de logique de capacité, de règles d'approbation ou de détails sur les transactions Mongo.
 
 ### Form Requests
 
-Form Requests are the first explicit boundary for input safety. They are responsible for:
+Les Form Requests sont la première frontière explicite pour la sécurité des entrées. Elles sont responsables de :
 
-- validating strings, dates, numbers, ObjectId values, and enum values;
-- applying simple role authorization when the role is enough to decide access;
-- keeping query-string filters out of controllers.
+- valider les chaînes, les dates, les nombres, les valeurs ObjectId et les énumérations ;
+- appliquer une autorisation de rôle simple lorsque le rôle suffit à décider de l'accès ;
+- maintenir les filtres de chaîne de requête (query-string) hors des contrôleurs.
 
 ### Services
 
-Services are the backend's business layer. They are responsible for:
+Les services constituent la couche métier du backend. Ils sont responsables de :
 
-- event lifecycle rules;
-- registration and payment rules;
-- feedback moderation rules;
-- client request eligibility;
-- admin review decisions;
-- notification fan-out;
-- Mongo transactions and atomic updates.
+- règles de cycle de vie des événements ;
+- règles d'inscription et de paiement ;
+- règles de modération des commentaires ;
+- éligibilité des demandes des clients ;
+- décisions de révision des administrateurs ;
+- diffusion des notifications ;
+- transactions Mongo et mises à jour atomiques.
 
-### Models
+### Modèles (Models)
 
-Models describe Mongo documents and API serialization behavior. They are responsible for:
+Les modèles décrivent les documents Mongo et le comportement de sérialisation de l'API. Ils sont responsables de :
 
-- collection names;
-- fillable fields;
-- casts for BSON dates and arrays;
-- computed public fields such as `image_url`, `ticket_price`, and `amount`;
-- relationships between ObjectId string fields.
+- noms de collections ;
+- champs remplissables (fillable) ;
+- casts pour les dates BSON et les tableaux ;
+- champs publics calculés tels que `image_url`, `ticket_price` et `amount` ;
+- relations entre les champs de chaîne ObjectId.
 
-## Mongo-Only Data Rules
+## Règles de Données MongoDB Exclusivement
 
-- `DB_CONNECTION` must stay `mongodb`.
-- Public relationship IDs are Mongo ObjectId strings.
-- Money is stored as integer cents and exposed through decimal-compatible API fields.
-- Dates are stored as Mongo BSON dates and serialized as ISO-8601 through Laravel.
-- Duplicate prevention belongs in Mongo unique indexes, with service-level checks for user-friendly errors.
+- `DB_CONNECTION` doit rester `mongodb`.
+- Les identifiants de relation publics sont des chaînes Mongo ObjectId.
+- L'argent est stocké en centimes entiers et exposé via des champs d'API compatibles avec les décimales.
+- Les dates sont stockées sous forme de dates BSON Mongo et sérialisées en ISO-8601 via Laravel.
+- La prévention des doublons est assurée par des index uniques Mongo, avec des vérifications au niveau du service pour des erreurs conviviales.
 
-## Most Important Safety Rules
+## Règles de Sécurité les Plus Importantes
 
-| Rule | Where Enforced |
+| Règle | Lieu d'Application |
 | --- | --- |
-| No duplicate user email | `users_email_unique` index and user validation |
-| No duplicate registration for same event and participant | `registrations_event_user_unique` index and `RegistrationService` |
-| No duplicate feedback for same event and participant | `feedbacks_event_user_unique` index and `FeedbackService` |
-| No event overbooking | conditional atomic increment in `RegistrationService` |
-| No reducing capacity below current registrations | `EventManagementService` |
-| No direct organizer publish | `EventManagementService` |
-| No repeated event request review | conditional status update in `EventRequestReviewService` |
-| No paid registration deletion | `RegistrationService` and `StaffRegistrationService` |
-| No unauthenticated API access | `auth:sanctum` middleware |
-| No wrong-role route access | `role` middleware and Form Requests |
+| Pas d'email utilisateur en double | Index `users_email_unique` et validation utilisateur |
+| Pas d'inscription en double pour le même événement et participant | Index `registrations_event_user_unique` et `RegistrationService` |
+| Pas de commentaire en double pour le même événement et participant | Index `feedbacks_event_user_unique` et `FeedbackService` |
+| Pas de surréservation d'événement | Incrémentation atomique conditionnelle dans `RegistrationService` |
+| Pas de réduction de capacité en dessous des inscriptions actuelles | `EventManagementService` |
+| Pas de publication directe par l'organisateur | `EventManagementService` |
+| Pas de révision répétée d'une demande d'événement | Mise à jour conditionnelle du statut dans `EventRequestReviewService` |
+| Pas de suppression d'inscription payée | `RegistrationService` et `StaffRegistrationService` |
+| Pas d'accès à l'API non authentifié | Middleware `auth:sanctum` |
+| Pas d'accès à une route avec le mauvais rôle | Middleware `role` et Form Requests |

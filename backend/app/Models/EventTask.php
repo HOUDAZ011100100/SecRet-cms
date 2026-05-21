@@ -7,43 +7,43 @@ use Illuminate\Support\Carbon;
 use MongoDB\Laravel\Eloquent\Model;
 
 /**
- * EventTask Model
+ * Modèle EventTask
  *
- * Represents a planning or execution task associated with an event.
- * Tasks are assigned to organizers or staff members to ensure event preparation.
+ * Représente une tâche de planification ou d'exécution associée à un événement.
+ * Les tâches sont assignées aux organisateurs ou aux membres du personnel pour assurer la préparation de l'événement.
  *
- * @property string $_id MongoDB document ID
- * @property string $event_id ID of the associated event
- * @property string|null $assigned_to ID of the user assigned to this task
- * @property string $title Task title
- * @property string|null $description Detailed task description
- * @property bool $is_done Whether the task has been completed
- * @property Carbon|null $due_at Task deadline
- * @property string $status Current status of the task
- * @property string $priority Task priority level (low, medium, high)
+ * @property string $_id ID du document MongoDB
+ * @property string $event_id ID de l'événement associé
+ * @property string|null $assigned_to ID de l'utilisateur assigné à cette tâche
+ * @property string $title Titre de la tâche
+ * @property string|null $description Description détaillée de la tâche
+ * @property bool $is_done Indique si la tâche a été accomplie
+ * @property Carbon|null $due_at Date d'échéance de la tâche
+ * @property string $status Statut actuel de la tâche
+ * @property string $priority Niveau de priorité de la tâche (low, medium, high)
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read Event $event Event this task belongs to
- * @property-read User|null $assignee User responsible for the task
+ * @property-read Event $event Événement auquel cette tâche appartient
+ * @property-read User|null $assignee Utilisateur responsable de la tâche
  */
 class EventTask extends Model
 {
     /**
-     * The database connection used by the model.
+     * La connexion à la base de données utilisée par le modèle.
      *
      * @var string
      */
     protected $connection = 'mongodb';
 
     /**
-     * The table/collection associated with the model.
+     * La table/collection associée au modèle.
      *
      * @var string
      */
     protected $table = 'event_tasks';
 
     /**
-     * Attributes that are mass assignable.
+     * Attributs qui sont assignables en masse.
      *
      * @var list<string>
      */
@@ -59,7 +59,7 @@ class EventTask extends Model
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * Récupère les attributs qui doivent être castés.
      *
      * @return array<string, string>
      */
@@ -72,7 +72,7 @@ class EventTask extends Model
     }
 
     /**
-     * Define the relationship for the parent event.
+     * Définit la relation pour l'événement parent.
      */
     public function event(): BelongsTo
     {
@@ -80,7 +80,7 @@ class EventTask extends Model
     }
 
     /**
-     * Define the relationship for the assigned user.
+     * Définit la relation pour l'utilisateur assigné.
      */
     public function assignee(): BelongsTo
     {

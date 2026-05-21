@@ -9,16 +9,16 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
- * Service for managing the public-facing program or agenda of an event.
+ * Service pour la gestion du programme ou de l'agenda public d'un événement.
  *
- * Activities represent specific segments of an event (e.g., keynote, coffee break, workshop).
- * This service handles the chronological ordering and management of these activities
- * by authorized organizers and admins.
+ * Les activités représentent des segments spécifiques d'un événement (ex: discours d'ouverture, pause café, atelier).
+ * Ce service gère l'ordre chronologique et la gestion de ces activités
+ * par les organisateurs et administrateurs autorisés.
  */
 class EventActivityService
 {
     /**
-     * Retrieves the full program for an event.
+     * Récupère le programme complet d'un événement.
      *
      * @return Collection<int, EventActivity>
      */
@@ -28,7 +28,7 @@ class EventActivityService
 
         /** @var Collection<int, EventActivity> $activities */
         $activities = $event->activities()
-            // First sort by manually defined order, then by start time.
+            // Trier d'abord par l'ordre défini manuellement, puis par l'heure de début.
             ->orderBy('sort_order', 'asc')
             ->orderBy('starts_at', 'asc')
             ->get();
@@ -37,9 +37,9 @@ class EventActivityService
     }
 
     /**
-     * Adds a new activity to the event's program.
+     * Ajoute une nouvelle activité au programme de l'événement.
      *
-     * @param  array<string, mixed>  $data  Activity details (title, type, starts_at, ends_at, etc.).
+     * @param  array<string, mixed>  $data  Détails de l'activité (titre, type, starts_at, ends_at, etc.).
      */
     public function create(User $actor, Event $event, array $data): EventActivity
     {
@@ -54,7 +54,7 @@ class EventActivityService
     }
 
     /**
-     * Updates an existing activity.
+     * Met à jour une activité existante.
      *
      * @param  array<string, mixed>  $data
      */
@@ -69,7 +69,7 @@ class EventActivityService
     }
 
     /**
-     * Removes an activity from the program.
+     * Supprime une activité du programme.
      */
     public function delete(User $actor, Event $event, EventActivity $activity): void
     {
@@ -80,7 +80,7 @@ class EventActivityService
     }
 
     /**
-     * Enforces that only assigned organizers or admins can manage the event program.
+     * Impose que seuls les organisateurs assignés ou les administrateurs puissent gérer le programme de l'événement.
      */
     private function ensureCanManage(User $actor, Event $event): void
     {
@@ -90,7 +90,7 @@ class EventActivityService
     }
 
     /**
-     * Validates that an activity actually belongs to the specified event.
+     * Valide qu'une activité appartient réellement à l'événement spécifié.
      */
     private function ensureActivityBelongsToEvent(EventActivity $activity, Event $event): void
     {

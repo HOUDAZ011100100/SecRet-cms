@@ -5,20 +5,20 @@ namespace App\Http\Requests\EventTasks;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Form request for updating an existing event task.
+ * Requête de formulaire pour la mise à jour d'une tâche d'événement existante.
  *
- * Used to modify task details or mark them as completed.
+ * Utilisé pour modifier les détails de la tâche ou les marquer comme terminées.
  */
 class UpdateEventTaskRequest extends FormRequest
 {
     /**
-     * Get the validation rules that apply to the request.
+     * Obtenir les règles de validation qui s'appliquent à la requête.
      *
-     * Rules:
-     * - title: Optional string, max 255 chars.
-     * - description: Optional string.
-     * - is_done: Optional boolean to toggle task completion status.
-     * - due_at: Optional date for deadline updates.
+     * Règles :
+     * - title : Chaîne de caractères optionnelle, max 255 caractères.
+     * - description : Chaîne de caractères optionnelle.
+     * - is_done : Booléen optionnel pour basculer l'état d'accomplissement de la tâche.
+     * - due_at : Date optionnelle pour la mise à jour de l'échéance.
      *
      * @return array<string, list<string>>
      */

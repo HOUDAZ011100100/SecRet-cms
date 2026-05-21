@@ -12,33 +12,33 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * Controller handling authentication and registration.
+ * Contrôleur gérant l'authentification et l'inscription.
  *
- * This controller manages user lifecycle events such as registration, login, and logout
- * using Laravel Sanctum for token-based authentication.
+ * Ce contrôleur gère les événements du cycle de vie des utilisateurs tels que l'inscription,
+ * la connexion et la déconnexion en utilisant Laravel Sanctum pour l'authentification par jeton.
  */
 class AuthController extends Controller
 {
     /**
-     * @param  UserWriteService  $users  Service for handling user creation and updates.
+     * @param  UserWriteService  $users  Service pour la gestion de la création et des mises à jour d'utilisateurs.
      */
     public function __construct(private readonly UserWriteService $users) {}
 
     /**
-     * Register a new user.
+     * Enregistrer un nouvel utilisateur.
      *
-     * This endpoint is public. It validates the registration request,
-     * creates a new user via the UserWriteService, and returns an authentication token.
+     * Ce point de terminaison est public. Il valide la requête d'inscription,
+     * crée un nouvel utilisateur via le UserWriteService, et renvoie un jeton d'authentification.
      *
-     * @param  RegisterRequest  $request  Validated registration data (name, email, password, role).
-     * @return JsonResponse 201 Created with the user and SPA token.
+     * @param  RegisterRequest  $request  Données d'inscription validées (nom, email, mot de passe, rôle).
+     * @return JsonResponse 201 Created avec l'utilisateur et le jeton SPA.
      */
     public function register(RegisterRequest $request)
     {
-        // Delegate user creation to the service
+        // Déléguer la création de l'utilisateur au service
         $user = $this->users->create($request->validated());
 
-        // Create a Sanctum token for the new user
+        // Créer un jeton Sanctum pour le nouvel utilisateur
         $token = $user->createToken('spa')->plainTextToken;
 
         return response()->json([
@@ -48,26 +48,26 @@ class AuthController extends Controller
     }
 
     /**
-     * Authenticate a user and return a token.
+     * Authentifier un utilisateur et renvoyer un jeton.
      *
-     * This endpoint is public. It attempts to authenticate the user using the provided credentials.
-     * If successful, it returns a new SPA token.
+     * Ce point de terminaison est public. Il tente d'authentifier l'utilisateur en utilisant les identifiants fournis.
+     * En cas de succès, il renvoie un nouveau jeton SPA.
      *
-     * @param  LoginRequest  $request  Validated login credentials (email, password).
-     * @return JsonResponse 200 OK with token or 422 on failure.
+     * @param  LoginRequest  $request  Identifiants de connexion validés (email, mot de passe).
+     * @return JsonResponse 200 OK avec le jeton ou 422 en cas d'échec.
      */
     public function login(LoginRequest $request)
     {
         $credentials = $request->validated();
 
-        // Attempt authentication using Laravel's Auth facade
+        // Tentative d'authentification en utilisant la façade Auth de Laravel
         if (! Auth::attempt($credentials)) {
             return response()->json(['message' => 'Identifiants invalides.'], 422);
         }
 
         /** @var User $user */
         $user = User::where('email', $credentials['email'])->firstOrFail();
-        // Issue a new Sanctum token for the session
+        // Émettre un nouveau jeton Sanctum pour la session
         $token = $user->createToken('spa')->plainTextToken;
 
         return response()->json([
@@ -77,30 +77,30 @@ class AuthController extends Controller
     }
 
     /**
-     * Log out the user by revoking their current token.
+     * Déconnecter l'utilisateur en révoquant son jeton actuel.
      *
-     * This endpoint requires authentication.
+     * Ce point de terminaison nécessite une authentification.
      *
      * @return JsonResponse 200 OK message.
      */
     public function logout(Request $request)
     {
-        // Delete the token that was used for this request
+        // Supprimer le jeton qui a été utilisé pour cette requête
         $request->user()?->currentAccessToken()?->delete();
 
         return response()->json(['message' => 'Déconnexion réussie.']);
     }
 
     /**
-     * Get the authenticated user's information.
+     * Récupérer les informations de l'utilisateur authentifié.
      *
-     * This endpoint requires authentication.
+     * Ce point de terminaison nécessite une authentification.
      *
-     * @return JsonResponse 200 OK with user object.
+     * @return JsonResponse 200 OK avec l'objet utilisateur.
      */
     public function user(Request $request)
     {
-        // Return the user associated with the authentication token
+        // Renvoyer l'utilisateur associé au jeton d'authentification
         return response()->json($request->user());
     }
 }

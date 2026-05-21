@@ -1,32 +1,32 @@
-# UML Workflow Documentation
+# Documentation des Flux de Travail UML
 
-This file documents the main application workflows with UML-style Mermaid diagrams. It is intended for developers who need to understand the behavior before reading the PHP files.
+Ce fichier documente les principaux flux de travail de l'application avec des diagrammes Mermaid de style UML. Il est destiné aux développeurs qui ont besoin de comprendre le comportement avant de lire les fichiers PHP.
 
-Mermaid is used so the diagrams remain versionable in Git. Most diagrams use sequence or activity-style flowcharts because the backend is workflow-heavy.
+Mermaid est utilisé pour que les diagrammes restent versionnables dans Git. La plupart des diagrammes utilisent des diagrammes de séquence ou d'activité car le backend est riche en flux de travail.
 
-## Global Use-Case View
+## Vue Globale des Cas d'Utilisation
 
 ```mermaid
 flowchart LR
     Admin[Admin]
-    Organizer[Organizer]
+    Organizer[Organisateur]
     Participant[Participant]
     Client[Client]
 
-    Auth((Authenticate))
-    Browse((Browse events))
-    Notifications((Manage notifications))
-    ClientRequest((Request event))
-    ReviewRequest((Review event request))
-    ManageEvents((Manage events))
-    PlanEvent((Manage tasks and activities))
-    RegisterEvent((Register for event))
-    PayTicket((Pay registration))
-    Ticket((Download ticket))
-    Feedback((Submit feedback))
-    ModerateFeedback((Moderate feedback))
-    UserAdmin((Manage users))
-    Stats((View stats))
+    Auth((S'authentifier))
+    Browse((Parcourir les événements))
+    Notifications((Gérer les notifications))
+    ClientRequest((Demander un événement))
+    ReviewRequest((Réviser une demande d'événement))
+    ManageEvents((Gérer les événements))
+    PlanEvent((Gérer les tâches et activités))
+    RegisterEvent((S'inscrire à un événement))
+    PayTicket((Payer l'inscription))
+    Ticket((Télécharger le ticket))
+    Feedback((Soumettre un commentaire))
+    ModerateFeedback((Modérer les commentaires))
+    UserAdmin((Gérer les utilisateurs))
+    Stats((Voir les stats))
 
     Admin --> Auth
     Organizer --> Auth
@@ -59,7 +59,7 @@ flowchart LR
     Client --> Stats
 ```
 
-## 1. Registration Workflow
+## 1. Flux d'Inscription
 
 ```mermaid
 sequenceDiagram
@@ -67,60 +67,60 @@ sequenceDiagram
     participant API as AuthController
     participant Request as RegisterRequest
     participant Users as UserWriteService
-    participant User as User model
+    participant User as Modèle User
     participant Token as PersonalAccessToken
 
     Visitor->>API: POST /api/register
-    API->>Request: validate name, email, password, role
-    Request-->>API: validated payload
+    API->>Request: valide le nom, l'email, le mot de passe, le rôle
+    Request-->>API: charge utile validée
     API->>Users: create(payload)
-    Users->>User: create user with hashed password
-    User-->>Users: user
-    Users-->>API: user
+    Users->>User: crée l'utilisateur avec le mot de passe haché
+    User-->>Users: utilisateur
+    Users-->>API: utilisateur
     API->>Token: createToken("spa")
-    Token-->>API: plain text bearer token
+    Token-->>API: jeton porteur en texte brut
     API-->>Visitor: 201 { token, user }
 ```
 
-Rules:
+Règles :
 
-- Public users can register only as `participant` or `client`.
-- Admin and organizer accounts are created by an admin or by seed data.
-- The `users_email_unique` Mongo index prevents duplicate emails.
+- Les utilisateurs publics ne peuvent s'inscrire qu'en tant que `participant` ou `client`.
+- Les comptes d'administrateur et d'organisateur sont créés par un administrateur ou par des données de semence (seeds).
+- L'index Mongo `users_email_unique` empêche les emails en double.
 
-## 2. Login And Token Authentication Workflow
+## 2. Flux de Connexion et d'Authentification par Jeton
 
 ```mermaid
 sequenceDiagram
     actor User
     participant API as AuthController
     participant Request as LoginRequest
-    participant Auth as Laravel Auth
+    participant Auth as Auth Laravel
     participant Token as PersonalAccessToken
-    participant Protected as Protected API route
+    participant Protected as Route API protégée
 
     User->>API: POST /api/login
-    API->>Request: validate email and password
-    Request-->>API: credentials
+    API->>Request: valide l'email et le mot de passe
+    Request-->>API: identifiants
     API->>Auth: attempt(credentials)
-    alt invalid credentials
+    alt identifiants invalides
         API-->>User: 422 { message: "Identifiants invalides." }
-    else valid credentials
+    else identifiants valides
         API->>Token: createToken("spa")
-        Token-->>API: bearer token
+        Token-->>API: jeton porteur
         API-->>User: 200 { token, user }
         User->>Protected: Authorization: Bearer token
-        Protected-->>User: authenticated JSON response
+        Protected-->>User: réponse JSON authentifiée
     end
 ```
 
-Rules:
+Règles :
 
-- Login is rate limited.
-- Tokens are stored in the Mongo `personal_access_tokens` collection.
-- API consumers must send `Authorization: Bearer <token>`.
+- La connexion est limitée en débit (rate limited).
+- Les jetons sont stockés dans la collection Mongo `personal_access_tokens`.
+- Les consommateurs de l'API doivent envoyer `Authorization: Bearer <token>`.
 
-## 3. Logout Workflow
+## 3. Flux de Déconnexion
 
 ```mermaid
 sequenceDiagram
@@ -128,72 +128,72 @@ sequenceDiagram
     participant API as AuthController
     participant Token as CurrentAccessToken
 
-    User->>API: POST /api/logout with bearer token
-    API->>Token: delete current token
-    Token-->>API: deleted
+    User->>API: POST /api/logout avec le jeton porteur
+    API->>Token: supprime le jeton actuel
+    Token-->>API: supprimé
     API-->>User: 200 { message }
 ```
 
-Rules:
+Règles :
 
-- Logout revokes only the token used by the request.
-- Other tokens for the same user are not revoked.
+- La déconnexion révoque uniquement le jeton utilisé par la requête.
+- Les autres jetons pour le même utilisateur ne sont pas révoqués.
 
-## 4. Notification Workflow
+## 4. Flux de Notification
 
 ```mermaid
 flowchart TD
-    A[Workflow creates a domain event] --> B[NotificationService chooses recipients]
-    B --> C[Create app_notifications documents]
-    C --> D[User calls GET /api/notifications]
-    D --> E[NotificationController returns current user inbox]
-    E --> F{User marks notifications read?}
-    F -- one notification --> G["POST notification read route"]
-    F -- all notifications --> H[POST /api/notifications/read-all]
-    G --> I[Set read_at]
+    A[Le flux crée un événement de domaine] --> B[NotificationService choisit les destinataires]
+    B --> C[Crée les documents app_notifications]
+    C --> D[L'utilisateur appelle GET /api/notifications]
+    D --> E[NotificationController renvoie la boîte de réception de l'utilisateur actuel]
+    E --> F{L'utilisateur marque les notifications comme lues ?}
+    F -- une notification --> G["Route de lecture d'une notification POST"]
+    F -- toutes les notifications --> H[POST /api/notifications/read-all]
+    G --> I[Définit read_at]
     H --> I
-    I --> J[Unread count decreases]
+    I --> J[Le nombre de messages non lus diminue]
 ```
 
-Rules:
+Règles :
 
-- A user can read and update only their own notifications.
-- Notification data is stored as structured metadata in `data`.
+- Un utilisateur ne peut lire et mettre à jour que ses propres notifications.
+- Les données de notification sont stockées sous forme de métadonnées structurées dans `data`.
 
-## 5. Public Event Browsing Workflow
+## 5. Flux de Navigation dans les Événements Publics
 
 ```mermaid
 flowchart TD
-    A[Authenticated user requests /api/events/browse] --> B[EventIndexRequest validates q max 120 chars]
-    B --> C[Query published events]
-    C --> D[Apply optional search]
-    D --> E[Order and paginate]
-    E --> F[Return event list with image_url and ticket_price]
+    A[L'utilisateur authentifié demande /api/events/browse] --> B[EventIndexRequest valide q max 120 chars]
+    B --> C[Requête sur les événements publiés]
+    C --> D[Applique la recherche optionnelle]
+    D --> E[Ordonne et pagine]
+    E --> F[Renvoie la liste des événements avec image_url et ticket_price]
 ```
 
-Rules:
+Règles :
 
-- Browsing is authenticated.
-- Only published events are listed.
-- Money is exposed as `ticket_price`; storage remains `ticket_price_cents`.
+- La navigation est authentifiée.
+- Seuls les événements publiés sont listés.
+- L'argent est exposé sous forme de `ticket_price` ; le stockage reste `ticket_price_cents`.
 
-## 6. Event Detail Visibility Workflow
+## 6. Flux de Visibilité du Détail d'un Événement
 
 ```mermaid
 flowchart TD
-    A["User requests event detail route"] --> B{Event published?}
-    B -- yes --> C[Return event detail]
-    B -- no --> D{User manages event?}
-    D -- yes --> C
-    D -- no --> E[Return hidden/not found response]
+    A["L'utilisateur demande la route de détail de l'événement"] --> B{Événement publié ?}
+    B -- oui --> C[Renvoie le détail de l'événement]
+    B -- non --> D{L'utilisateur gère l'événement ?}
+    D -- oui --> C
+    D -- non --> E[Renvoie une réponse cachée/non trouvé]
 ```
 
-Rules:
+Règles :
 
-- Published events are visible to authenticated users.
-- Draft or pending events are visible only to admins or managing organizers.
+- Les événements publiés sont visibles pour les utilisateurs authentifiés.
+- Les projets ou événements en attente ne sont visibles que par les administrateurs ou les organisateurs gestionnaires.
 
-## 7. Organizer Event Creation Workflow
+## 7. Flux de Création d'un Événement par l'Organisateur
 
 ```mermaid
 sequenceDiagram
@@ -202,27 +202,27 @@ sequenceDiagram
     participant Request as StoreEventRequest
     participant Service as EventManagementService
     participant Storage as EventImageStorage
-    participant Event as Event model
+    participant Event as Modèle Event
 
     Organizer->>API: POST /api/organizer/events
-    API->>Request: validate event payload
-    Request-->>API: validated data
+    API->>Request: valide la charge utile de l'événement
+    Request-->>API: données validées
     API->>Service: create(actor, data)
-    Service->>Storage: store image if present
+    Service->>Storage: stocke l'image si présente
     Storage-->>Service: image_path
-    Service->>Event: create draft event
-    Event-->>Service: event
-    Service-->>API: event
-    API-->>Organizer: 201 event
+    Service->>Event: crée un projet d'événement
+    Event-->>Service: événement
+    Service-->>API: événement
+    API-->>Organizer: 201 événement
 ```
 
-Rules:
+Règles :
 
-- Organizer-created events remain `draft`.
-- Organizers cannot directly publish by sending `status=published`.
-- Image data is validated before storage.
+- Les événements créés par l'organisateur restent au statut `draft` (projet).
+- Les organisateurs ne peuvent pas publier directement en envoyant `status=published`.
+- Les données d'image sont validées avant le stockage.
 
-## 8. Admin Event Creation Workflow
+## 8. Flux de Création d'un Événement par l'Administrateur
 
 ```mermaid
 sequenceDiagram
@@ -230,98 +230,98 @@ sequenceDiagram
     participant API as EventController
     participant Request as StoreEventRequest
     participant Service as EventManagementService
-    participant Event as Event model
+    participant Event as Modèle Event
 
-    Admin->>API: POST /api/organizer/events or admin event route
-    API->>Request: validate payload
+    Admin->>API: POST /api/organizer/events ou route d'événement admin
+    API->>Request: valide la charge utile
     API->>Service: create(admin, data)
-    alt status is published
-        Service->>Event: create published event
-    else other valid status
-        Service->>Event: create event with requested status
+    alt le statut est publié
+        Service->>Event: crée un événement publié
+    else autre statut valide
+        Service->>Event: crée l'événement avec le statut demandé
     end
-    Event-->>API: event
-    API-->>Admin: 201 event
+    Event-->>API: événement
+    API-->>Admin: 201 événement
 ```
 
-Rules:
+Règles :
 
-- Admins can create published events.
-- Admins can later assign organizers.
+- Les administrateurs peuvent créer des événements publiés.
+- Les administrateurs peuvent plus tard assigner des organisateurs.
 
-## 9. Event Update Workflow
+## 9. Flux de Mise à Jour d'un Événement
 
 ```mermaid
 flowchart TD
-    A[Actor submits PATCH event] --> B[UpdateEventRequest validates data]
-    B --> C{Actor is admin or event manager?}
-    C -- no --> D[403 domain error]
-    C -- yes --> E{Actor is organizer and requests published?}
-    E -- yes --> F[Remove/deny direct publish]
-    E -- no --> G[Apply safe updates]
+    A[L'acteur soumet un PATCH sur l'événement] --> B[UpdateEventRequest valide les données]
+    B --> C{L'acteur est admin ou gestionnaire de l'événement ?}
+    C -- non --> D[Erreur de domaine 403]
+    C -- oui --> E{L'acteur est organisateur et demande la publication ?}
+    E -- oui --> F[Supprime/refuse la publication directe]
+    E -- non --> G[Applique les mises à jour sûres]
     F --> G
-    G --> H[Store replacement image if provided]
-    H --> I[Return updated event]
+    G --> H[Stocke l'image de remplacement si fournie]
+    H --> I[Renvoie l'événement mis à jour]
 ```
 
-Rules:
+Règles :
 
-- Ownership is checked in the service.
-- Organizer publish must go through publication request and admin approval.
-- Capacity has its own stricter workflow.
+- La propriété est vérifiée dans le service.
+- La publication par l'organisateur doit passer par une demande de publication et l'approbation d'un administrateur.
+- La capacité a son propre flux de travail plus strict.
 
-## 10. Capacity Update Workflow
+## 10. Flux de Mise à Jour de la Capacité
 
 ```mermaid
 flowchart TD
-    A[Manager submits capacity change] --> B[UpdateEventCapacityRequest validates capacity]
-    B --> C[Load current registered_count]
-    C --> D{new capacity >= registered_count?}
-    D -- no --> E[422 capacity domain error]
-    D -- yes --> F[Update capacity]
-    F --> G[Return event]
+    A[Le gestionnaire soumet un changement de capacité] --> B[UpdateEventCapacityRequest valide la capacité]
+    B --> C[Charge le registered_count actuel]
+    C --> D{nouvelle capacité >= registered_count ?}
+    D -- non --> E[Erreur de domaine de capacité 422]
+    D -- oui --> F[Met à jour la capacité]
+    F --> G[Renvoie l'événement]
 ```
 
-Rules:
+Règles :
 
-- Capacity can never be reduced below the number of registered participants.
-- This keeps existing registrations valid.
+- La capacité ne peut jamais être réduite en dessous du nombre de participants inscrits.
+- Cela garantit la validité des inscriptions existantes.
 
-## 11. Publication Request Workflow
+## 11. Flux de Demande de Publication
 
 ```mermaid
 flowchart TD
-    A[Organizer requests publication] --> B{Organizer manages event?}
-    B -- no --> C[403]
-    B -- yes --> D{Event can be submitted?}
-    D -- no --> E[422 domain error]
-    D -- yes --> F[Set status pending_publication]
-    F --> G[Notify admins]
-    G --> H[Return event]
+    A[L'organisateur demande la publication] --> B{L'organisateur gère l'événement ?}
+    B -- non --> C[403]
+    B -- oui --> D{L'événement peut être soumis ?}
+    D -- non --> E[Erreur de domaine 422]
+    D -- oui --> F[Définit le statut à pending_publication]
+    F --> G[Notifie les administrateurs]
+    G --> H[Renvoie l'événement]
 ```
 
-Rules:
+Règles :
 
-- Publication is a two-step workflow for organizers.
-- Admin approval is required before participants can register.
+- La publication est un flux de travail en deux étapes pour les organisateurs.
+- L'approbation d'un administrateur est requise avant que les participants puissent s'inscrire.
 
-## 12. Publication Approval Workflow
+## 12. Flux d'Approbation de la Publication
 
 ```mermaid
 flowchart TD
-    A[Admin approves publication] --> B{Event is publishable?}
-    B -- no --> C[422 domain error]
-    B -- yes --> D[Set status published]
-    D --> E[Notify organizer or stakeholders]
-    E --> F[Event becomes visible in browse list]
+    A[L'admin approuve la publication] --> B{L'événement est publiable ?}
+    B -- non --> C[Erreur de domaine 422]
+    B -- oui --> D[Définit le statut à published]
+    D --> E[Notifie l'organisateur ou les parties prenantes]
+    E --> F[L'événement devient visible dans la liste de navigation]
 ```
 
-Rules:
+Règles :
 
-- Only admins can approve publication.
-- Published events become registerable if other registration rules pass.
+- Seuls les administrateurs peuvent approuver la publication.
+- Les événements publiés deviennent ouverts aux inscriptions si les autres règles d'inscription passent.
 
-## 13. Admin Organizer Assignment Workflow
+## 13. Flux d'Assignation d'un Organisateur par l'Admin
 
 ```mermaid
 sequenceDiagram
@@ -329,25 +329,25 @@ sequenceDiagram
     participant API as EventController
     participant Request as AssignEventOrganizerRequest
     participant Service as EventManagementService
-    participant Event as Event model
-    participant User as User model
+    participant Event as Modèle Event
+    participant User as Modèle User
 
-    Admin->>API: PATCH admin event organizer assignment route
-    API->>Request: validate organizer_id
-    Request->>User: verify user is organizer
+    Admin->>API: PATCH route d'assignation d'organisateur de l'événement admin
+    API->>Request: valide l'organizer_id
+    Request->>User: vérifie que l'utilisateur est organisateur
     API->>Service: assignOrganizer(event, organizer)
-    Service->>Event: update organizer_id
-    Event-->>Service: updated event
-    Service-->>API: event
-    API-->>Admin: 200 event
+    Service->>Event: met à jour l'organizer_id
+    Event-->>Service: événement mis à jour
+    Service-->>API: événement
+    API-->>Admin: 200 événement
 ```
 
-Rules:
+Règles :
 
-- The assigned user must have the organizer role.
-- Admins can still manage all events even when not assigned.
+- L'utilisateur assigné doit avoir le rôle d'organisateur.
+- Les administrateurs peuvent toujours gérer tous les événements, même s'ils ne sont pas assignés.
 
-## 14. Client Event Request Submission Workflow
+## 14. Flux de Soumission d'une Demande d'Événement par le Client
 
 ```mermaid
 sequenceDiagram
@@ -359,41 +359,41 @@ sequenceDiagram
     participant RequestModel as EventRequest
 
     Client->>API: POST /api/event-requests
-    API->>Request: validate payload
-    Request-->>API: validated data
-    API->>Eligibility: ensure client may submit
-    Eligibility-->>API: allowed
-    API->>Storage: store image if present
+    API->>Request: valide la charge utile
+    Request-->>API: données validées
+    API->>Eligibility: s'assure que le client peut soumettre
+    Eligibility-->>API: autorisé
+    API->>Storage: stocke l'image si présente
     Storage-->>API: image_path
-    API->>RequestModel: create pending request
-    RequestModel-->>API: event request
-    API-->>Client: 201 event request
+    API->>RequestModel: crée une demande en attente
+    RequestModel-->>API: demande d'événement
+    API-->>Client: 201 demande d'événement
 ```
 
-Rules:
+Règles :
 
-- A client with a pending request is blocked from submitting another.
-- A client with an active event is blocked from submitting another.
-- Contact fields default from the authenticated client when omitted.
+- Un client ayant une demande en attente est bloqué pour en soumettre une autre.
+- Un client ayant un événement actif est bloqué pour en soumettre une autre.
+- Les champs de contact sont par défaut ceux du client authentifié s'ils sont omis.
 
-## 15. Client Event Request Deletion Workflow
+## 15. Flux de Suppression d'une Demande d'Événement par le Client
 
 ```mermaid
 flowchart TD
-    A[Client deletes event request] --> B{Client owns request?}
-    B -- no --> C[403 or hidden response]
-    B -- yes --> D{Request is still pending?}
-    D -- no --> E[422 domain error]
-    D -- yes --> F[Delete stored image if present]
-    F --> G[Delete request]
-    G --> H[Return success message]
+    A[Le client supprime la demande d'événement] --> B{Le client possède la demande ?}
+    B -- non --> C[403 ou réponse cachée]
+    B -- oui --> D{La demande est-elle toujours en attente ?}
+    D -- non --> E[Erreur de domaine 422]
+    D -- oui --> F[Supprime l'image stockée si présente]
+    F --> G[Supprime la demande]
+    G --> H[Renvoie un message de succès]
 ```
 
-Rules:
+Règles :
 
-- Reviewed requests are audit history and cannot be deleted by the client.
+- Les demandes révisées constituent un historique d'audit et ne peuvent pas être supprimées par le client.
 
-## 16. Admin Event Request Approval Workflow
+## 16. Flux d'Approbation d'une Demande d'Événement par l'Admin
 
 ```mermaid
 sequenceDiagram
@@ -401,91 +401,91 @@ sequenceDiagram
     participant API as EventRequestController
     participant Request as ReviewEventRequestRequest
     participant Service as EventRequestReviewService
-    participant Mongo as Mongo transaction
+    participant Mongo as Transaction Mongo
     participant EventRequest as EventRequest
     participant Event as Event
     participant Notify as NotificationService
 
-    Admin->>API: POST admin event request review route with decision=approved
-    API->>Request: validate decision
+    Admin->>API: POST route de révision de demande d'événement admin avec decision=approved
+    API->>Request: valide la décision
     API->>Service: approve(eventRequest, admin)
-    Service->>Mongo: start transaction
-    Mongo->>EventRequest: update status pending -> approved
-    Mongo->>Event: create draft event
-    Mongo-->>Service: commit
-    Service->>Notify: notify client
+    Service->>Mongo: démarre la transaction
+    Mongo->>EventRequest: met à jour le statut de pending à approved
+    Mongo->>Event: crée un projet d'événement
+    Mongo-->>Service: valide (commit)
+    Service->>Notify: notifie le client
     Service-->>API: { event_request, event }
-    API-->>Admin: 200 approval response
+    API-->>Admin: 200 réponse d'approbation
 ```
 
-Rules:
+Règles :
 
-- Approval is atomic with draft event creation.
-- The status update is conditional so a reviewed request cannot be reviewed again.
+- L'approbation est atomique avec la création du projet d'événement.
+- La mise à jour du statut est conditionnelle afin qu'une demande déjà révisée ne puisse pas l'être à nouveau.
 
-## 17. Admin Event Request Rejection Workflow
+## 17. Flux de Rejet d'une Demande d'Événement par l'Admin
 
 ```mermaid
 flowchart TD
-    A[Admin rejects request] --> B[ReviewEventRequestRequest validates decision and reason]
-    B --> C{Request is pending?}
-    C -- no --> D[422 already reviewed]
-    C -- yes --> E[Set status rejected]
-    E --> F[Store rejection_reason and reviewed metadata]
-    F --> G[Notify client]
-    G --> H[Return reviewed request]
+    A[L'admin rejette la demande] --> B[ReviewEventRequestRequest valide la décision et le motif]
+    B --> C{La demande est en attente ?}
+    C -- non --> D[422 déjà révisée]
+    C -- oui --> E[Définit le statut à rejected]
+    E --> F[Stocke le rejection_reason et les métadonnées de révision]
+    F --> G[Notifie le client]
+    G --> H[Renvoie la demande révisée]
 ```
 
-Rules:
+Règles :
 
-- Rejection requires a rejection reason.
-- No event is created.
+- Le rejet nécessite un motif de rejet.
+- Aucun événement n'est créé.
 
-## 18. Event Task Workflow
+## 18. Flux de Tâches d'Événement
 
 ```mermaid
 flowchart TD
-    A[Admin or organizer opens event tasks] --> B{Actor manages event?}
-    B -- no --> C[403]
-    B -- yes --> D[List tasks ordered for planning]
-    D --> E{Create, update, or delete?}
-    E -- create --> F[StoreEventTaskRequest validates task]
-    E -- update --> G[UpdateEventTaskRequest validates task]
-    E -- delete --> H[Verify task belongs to route event]
-    F --> I[Create task]
-    G --> J[Update task]
-    H --> K[Delete task]
+    A[L'admin ou l'organisateur ouvre les tâches d'événement] --> B{L'acteur gère l'événement ?}
+    B -- non --> C[403]
+    B -- oui --> D[Liste les tâches ordonnées pour la planification]
+    D --> E{Créer, mettre à jour ou supprimer ?}
+    E -- créer --> F[StoreEventTaskRequest valide la tâche]
+    E -- mettre à jour --> G[UpdateEventTaskRequest valide la tâche]
+    E -- supprimer --> H[Vérifie que la tâche appartient à l'événement de la route]
+    F --> I[Crée la tâche]
+    G --> J[Met à jour la tâche]
+    H --> K[Supprime la tâche]
 ```
 
-Rules:
+Règles :
 
-- Tasks are always scoped to an event.
-- A task from a different event is rejected even if the user manages both events.
+- Les tâches sont toujours liées à un événement.
+- Une tâche d'un autre événement est rejetée même si l'utilisateur gère les deux événements.
 
-## 19. Event Activity Workflow
+## 19. Flux d'Activités d'Événement
 
 ```mermaid
 flowchart TD
-    A[Admin or organizer opens activities] --> B{Actor manages event?}
-    B -- no --> C[403]
-    B -- yes --> D[List activities by sort_order and starts_at]
-    D --> E{Create, update, or delete?}
-    E -- create --> F[Validate title, starts_at, ends_at]
-    E -- update --> G[Validate changed fields]
-    E -- delete --> H[Verify activity belongs to event]
-    F --> I{ends_at before starts_at?}
+    A[L'admin ou l'organisateur ouvre les activités] --> B{L'acteur gère l'événement ?}
+    B -- non --> C[403]
+    B -- oui --> D[Liste les activités par sort_order et starts_at]
+    D --> E{Créer, mettre à jour ou supprimer ?}
+    E -- créer --> F[Valide le titre, starts_at, ends_at]
+    E -- mettre à jour --> G[Valide les champs modifiés]
+    E -- supprimer --> H[Vérifie que l'activité appartient à l'événement]
+    F --> I{ends_at avant starts_at ?}
     G --> I
-    I -- yes --> J[422 validation error]
-    I -- no --> K[Persist activity]
-    H --> L[Delete activity]
+    I -- oui --> J[Erreur de validation 422]
+    I -- no --> K[Enregistre l'activité]
+    H --> L[Supprime l'activité]
 ```
 
-Rules:
+Règles :
 
-- Activities define the event timeline.
-- End time cannot be earlier than start time.
+- Les activités définissent le programme de l'événement.
+- L'heure de fin ne peut pas être antérieure à l'heure de début.
 
-## 20. Participant Registration Workflow
+## 20. Flux d'Inscription d'un Participant
 
 ```mermaid
 sequenceDiagram
@@ -493,74 +493,74 @@ sequenceDiagram
     participant API as RegistrationController
     participant Service as ParticipantRegistrationService
     participant Core as RegistrationService
-    participant Mongo as Mongo transaction
+    participant Mongo as Transaction Mongo
     participant Event as Event
     participant Registration as Registration
     participant Payment as Payment
     participant Notify as NotificationService
 
-    P->>API: POST event registration route
+    P->>API: POST route d'inscription à l'événement
     API->>Service: register(participant, event)
     Service->>Core: register(participant, event)
-    Core->>Mongo: start transaction
-    Mongo->>Event: verify published and capacity available
-    Mongo->>Registration: check duplicate event/user
-    Mongo->>Event: conditional increment registered_count
-    Mongo->>Registration: create registration with unique ticket_code
-    alt free event
-        Mongo->>Payment: create completed free payment
+    Core->>Mongo: démarre la transaction
+    Mongo->>Event: vérifie la publication et la capacité disponible
+    Mongo->>Registration: vérifie l'inscription en double événement/utilisateur
+    Mongo->>Event: incrémentation atomique du registered_count
+    Mongo->>Registration: crée l'inscription avec un ticket_code unique
+    alt événement gratuit
+        Mongo->>Payment: crée un paiement gratuit complété
     end
-    Mongo-->>Core: commit
-    Core->>Notify: notify admins/organizers
-    Core-->>Service: registration
-    Service-->>API: registration
-    API-->>P: 201 registration
+    Mongo-->>Core: valide (commit)
+    Core->>Notify: notifie les admins/organisateurs
+    Core-->>Service: inscription
+    Service-->>API: inscription
+    API-->>P: 201 inscription
 ```
 
-Rules:
+Règles :
 
-- The event must be published.
-- `registered_count` increments only when capacity is still available.
-- `registrations_event_user_unique` prevents duplicate registrations.
-- `registrations_ticket_code_unique` prevents duplicate ticket codes.
+- L'événement doit être publié.
+- `registered_count` n'augmente que si la capacité est encore disponible.
+- `registrations_event_user_unique` empêche les inscriptions en double.
+- `registrations_ticket_code_unique` empêche les codes de ticket en double.
 
-## 21. Full Capacity Registration Failure Workflow
+## 21. Flux d'Échec d'Inscription pour Capacité Maximale
 
 ```mermaid
 flowchart TD
-    A[Participant requests registration] --> B[Load current event]
-    B --> C{registered_count < capacity?}
-    C -- no --> D[Return 422 event full]
-    C -- yes --> E[Try atomic increment where count < capacity]
-    E --> F{increment succeeded?}
-    F -- no --> D
-    F -- yes --> G[Create registration]
+    A[Le participant demande une inscription] --> B[Charge l'événement actuel]
+    B --> C{registered_count < capacity ?}
+    C -- non --> D[Renvoie 422 événement complet]
+    C -- oui --> E[Tente une incrémentation atomique où count < capacity]
+    E --> F{l'incrémentation a réussi ?}
+    F -- non --> D
+    F -- oui --> G[Crée l'inscription]
 ```
 
-Rules:
+Règles :
 
-- The initial capacity check is not enough by itself.
-- The conditional update is the race-condition protection.
+- La vérification initiale de la capacité ne suffit pas à elle seule.
+- La mise à jour conditionnelle est la protection contre les conditions de concurrence (race conditions).
 
-## 22. Duplicate Registration Failure Workflow
+## 22. Flux d'Échec d'Inscription pour Doublon
 
 ```mermaid
 flowchart TD
-    A[Participant requests registration] --> B[Service checks existing event/user registration]
-    B --> C{Existing registration found?}
-    C -- yes --> D[Return 422 with existing registration]
-    C -- no --> E[Create registration]
-    E --> F{Mongo unique index conflict?}
-    F -- no --> G[Registration succeeds]
-    F -- yes --> H[Translate duplicate key into user-friendly 422]
+    A[Le participant demande une inscription] --> B[Le service vérifie l'inscription existante événement/utilisateur]
+    B --> C{Inscription existante trouvée ?}
+    C -- oui --> D[Renvoie 422 avec l'inscription existante]
+    C -- no --> E[Crée l'inscription]
+    E --> F{Conflit d'index unique Mongo ?}
+    F -- non --> G[L'inscription réussit]
+    F -- oui --> H[Traduit la clé en double en une erreur 422 conviviale]
 ```
 
-Rules:
+Règles :
 
-- The service check gives a clean user experience.
-- The unique index is the final database-level protection.
+- La vérification du service offre une expérience utilisateur propre.
+- L'index unique est la protection finale au niveau de la base de données.
 
-## 23. Payment Workflow
+## 23. Flux de Paiement
 
 ```mermaid
 sequenceDiagram
@@ -568,86 +568,86 @@ sequenceDiagram
     participant API as RegistrationController
     participant Service as ParticipantRegistrationService
     participant Core as RegistrationService
-    participant Mongo as Mongo transaction
+    participant Mongo as Transaction Mongo
     participant Registration as Registration
     participant Payment as Payment
     participant Notify as NotificationService
 
-    P->>API: POST registration payment route
+    P->>API: POST route de paiement de l'inscription
     API->>Service: pay(participant, registration)
     Service->>Core: pay(registration)
-    Core->>Mongo: start transaction
-    Mongo->>Registration: update pending -> paid
-    Mongo->>Payment: create completed card_mock payment
-    Mongo-->>Core: commit
-    Core->>Notify: notify admins/organizers
-    Core-->>API: paid registration
-    API-->>P: 200 registration
+    Core->>Mongo: démarre la transaction
+    Mongo->>Registration: met à jour de pending à paid
+    Mongo->>Payment: crée un paiement card_mock complété
+    Mongo-->>Core: valide (commit)
+    Core->>Notify: notifie les admins/organisateurs
+    Core-->>API: inscription payée
+    API-->>P: 200 inscription
 ```
 
-Rules:
+Règles :
 
-- Already paid registrations return a domain response instead of double-charging.
-- Payments are stored as integer cents.
+- Les inscriptions déjà payées renvoient une réponse de domaine au lieu de facturer deux fois.
+- Les paiements sont stockés en centimes entiers.
 
-## 24. Participant Cancellation Workflow
+## 24. Flux d'Annulation par le Participant
 
 ```mermaid
 flowchart TD
-    A[Participant deletes registration] --> B{Participant owns registration?}
-    B -- no --> C[403]
-    B -- yes --> D{payment_status is paid?}
-    D -- yes --> E[422 cannot cancel paid registration]
-    D -- no --> F[Delete registration]
-    F --> G[Decrement event registered_count if above zero]
-    G --> H[Return success message]
+    A[Le participant supprime l'inscription] --> B{Le participant possède l'inscription ?}
+    B -- non --> C[403]
+    B -- oui --> D{payment_status est paid ?}
+    D -- oui --> E[422 impossible d'annuler une inscription payée]
+    D -- non --> F[Supprime l'inscription]
+    F --> G[Décrémente le registered_count de l'événement s'il est au-dessus de zéro]
+    G --> H[Renvoie un message de succès]
 ```
 
-Rules:
+Règles :
 
-- Paid registrations cannot be cancelled through this endpoint.
-- Cancelling an unpaid registration frees capacity.
+- Les inscriptions payées ne peuvent pas être annulées via ce point de terminaison.
+- L'annulation d'une inscription non payée libère de la capacité.
 
-## 25. Ticket Download Workflow
+## 25. Flux de Téléchargement du Ticket
 
 ```mermaid
 flowchart TD
-    A[Participant requests ticket] --> B{Owns registration?}
-    B -- no --> C[403]
-    B -- yes --> D{Registration paid?}
-    D -- no --> E[422 unpaid ticket]
-    D -- yes --> F[Build JSON ticket payload]
-    F --> G[Stream ticket download]
+    A[Le participant demande son ticket] --> B{Possède l'inscription ?}
+    B -- non --> C[403]
+    B -- oui --> D{Inscription payée ?}
+    D -- non --> E[422 ticket non payé]
+    D -- oui --> F[Construit la charge utile JSON du ticket]
+    F --> G[Diffuse le téléchargement du ticket]
 ```
 
-Rules:
+Règles :
 
-- Tickets are available only after payment.
-- The current implementation returns a JSON ticket file.
+- Les tickets ne sont disponibles qu'après le paiement.
+- L'implémentation actuelle renvoie un fichier de ticket JSON.
 
-## 26. Staff Registration Management Workflow
+## 26. Flux de Gestion des Inscriptions par le Personnel
 
 ```mermaid
 flowchart TD
-    A[Organizer or admin opens registration management] --> B{Actor role}
-    B -- admin --> C[Can query registrations for all events]
-    B -- organizer --> D[Can query only managed events]
-    C --> E[Optional event_id filter validated as Mongo ObjectId]
+    A[L'organisateur ou l'admin ouvre la gestion des inscriptions] --> B{Rôle de l'acteur}
+    B -- admin --> C[Peut requêter les inscriptions pour tous les événements]
+    B -- organizer --> D[Peut requêter uniquement ses événements gérés]
+    C --> E[Filtre event_id optionnel validé comme Mongo ObjectId]
     D --> E
-    E --> F[List registrations with event/user data]
-    F --> G{Delete registration?}
-    G -- yes --> H{Registration unpaid and actor manages event?}
-    H -- no --> I[403 or 422 domain error]
-    H -- yes --> J[Delete registration and decrement count]
+    E --> F[Liste les inscriptions avec les données événement/utilisateur]
+    F --> G{Supprimer l'inscription ?}
+    G -- oui --> H{Inscription non payée et l'acteur gère l'événement ?}
+    H -- non --> I[Erreur de domaine 403 ou 422]
+    H -- oui --> J[Supprime l'inscription et décrémente le compteur]
 ```
 
-Rules:
+Règles :
 
-- Organizer views are scoped to their own events.
-- Admin views are global.
-- Staff deletion is still blocked for paid registrations.
+- Les vues de l'organisateur sont limitées à ses propres événements.
+- Les vues de l'administrateur sont globales.
+- La suppression par le personnel est toujours bloquée pour les inscriptions payées.
 
-## 27. Feedback Submission Workflow
+## 27. Flux de Soumission d'un Commentaire
 
 ```mermaid
 sequenceDiagram
@@ -659,159 +659,159 @@ sequenceDiagram
     participant Feedback as Feedback
     participant Notify as NotificationService
 
-    P->>API: POST event feedback route
-    API->>Request: validate rating and comment
+    P->>API: POST route de commentaire d'événement
+    API->>Request: valide la note et le commentaire
     API->>Service: submit(participant, event, data)
-    Service->>Registration: verify paid registration
-    alt no paid registration
-        Service-->>API: 403 domain error
-    else eligible
-        Service->>Feedback: create pending feedback
-        Service->>Notify: notify admins/organizers
-        Service-->>API: feedback
-        API-->>P: 201 feedback
+    Service->>Registration: vérifie l'inscription payée
+    alt aucune inscription payée
+        Service-->>API: Erreur de domaine 403
+    else éligible
+        Service->>Feedback: crée un commentaire en attente
+        Service->>Notify: notifie les admins/organisateurs
+        Service-->>API: commentaire
+        API-->>P: 201 commentaire
     end
 ```
 
-Rules:
+Règles :
 
-- Only paid participants can submit feedback.
-- Feedback starts as `pending`.
-- A unique index prevents duplicate feedback for the same event and user.
+- Seuls les participants ayant payé peuvent soumettre un commentaire.
+- Le commentaire commence au statut `pending` (en attente).
+- Un index unique empêche les commentaires en double pour le même événement et utilisateur.
 
-## 28. Feedback Moderation Workflow
-
-```mermaid
-flowchart TD
-    A[Admin reviews pending feedback] --> B{Approve or delete?}
-    B -- approve --> C[Set status approved]
-    C --> D[Notify author and event client when relevant]
-    D --> E[Feedback becomes visible publicly]
-    B -- delete --> F[Delete feedback]
-    F --> G[Feedback removed from all lists]
-```
-
-Rules:
-
-- Public feedback lists show approved feedback.
-- Admins can see pending feedback for moderation.
-
-## 29. Admin Stats Workflow
+## 28. Flux de Modération des Commentaires
 
 ```mermaid
 flowchart TD
-    A[Admin calls /api/admin/stats] --> B[Count users by role]
-    B --> C[Count events by status]
-    C --> D[Count pending requests and feedback]
-    D --> E[Sum completed payment cents]
-    E --> F[Return dashboard payload]
+    A[L'admin révise les commentaires en attente] --> B{Approuver ou supprimer ?}
+    B -- approuver --> C[Définit le statut à approved]
+    C --> D[Notifie l'auteur et le client de l'événement le cas échéant]
+    D --> E[Le commentaire devient visible publiquement]
+    B -- supprimer --> F[Supprime le commentaire]
+    F --> G[Le commentaire est retiré de toutes les listes]
 ```
 
-Rules:
+Règles :
 
-- Revenue uses completed payments only.
-- Amounts are summed from cents, not decimal display fields.
+- Les listes de commentaires publics affichent les commentaires approuvés.
+- Les administrateurs peuvent voir les commentaires en attente pour la modération.
 
-## 30. Client Stats Workflow
+## 29. Flux de Statistiques Administrateur
 
 ```mermaid
 flowchart TD
-    A[Client calls /api/client/stats] --> B[Find client event requests]
-    B --> C[Find events created from approved requests]
-    C --> D[Group requests by status]
-    D --> E[Sum revenue for owned/requested events]
-    E --> F[Return client dashboard payload]
+    A[L'admin appelle /api/admin/stats] --> B[Compte les utilisateurs par rôle]
+    B --> C[Compte les événements par statut]
+    C --> D[Compte les demandes et commentaires en attente]
+    D --> E[Somme des centimes de paiement complétés]
+    E --> F[Renvoie la charge utile du tableau de bord]
 ```
 
-Rules:
+Règles :
 
-- Client stats are limited to that client's requests/events.
-- Client revenue is derived from completed payments on their events.
+- Le revenu utilise uniquement les paiements complétés.
+- Les montants sont sommés à partir des centimes, et non des champs d'affichage décimaux.
 
-## 31. User Administration Workflow
+## 30. Flux de Statistiques Client
+
+```mermaid
+flowchart TD
+    A[Le client appelle /api/client/stats] --> B[Trouve les demandes d'événement du client]
+    B --> C[Trouve les événements créés à partir des demandes approuvées]
+    C --> D[Groupe les demandes par statut]
+    D --> E[Somme des revenus pour les événements possédés/demandés]
+    E --> F[Renvoie la charge utile du tableau de bord client]
+```
+
+Règles :
+
+- Les statistiques client sont limitées aux demandes/événements de ce client.
+- Le revenu du client est dérivé des paiements complétés sur ses événements.
+
+## 31. Flux d'Administration des Utilisateurs
 
 ```mermaid
 sequenceDiagram
     actor Admin
     participant API as UserAdminController
-    participant Request as User FormRequest
+    participant Request as FormRequest Utilisateur
     participant Service as UserWriteService
-    participant User as User model
+    participant User as Modèle User
 
     Admin->>API: GET/POST/PATCH/DELETE /api/admin/users
-    API->>Request: validate role, email, password, filters
-    API->>Service: create/update/delete user
-    alt self delete requested
-        Service-->>API: 422 self-delete blocked
-    else valid operation
-        Service->>User: persist change
-        User-->>Service: user or delete result
-        Service-->>API: result
-        API-->>Admin: JSON response
+    API->>Request: valide le rôle, l'email, le mot de passe, les filtres
+    API->>Service: crée/met à jour/supprime l'utilisateur
+    alt auto-suppression demandée
+        Service-->>API: 422 auto-suppression bloquée
+    else opération valide
+        Service->>User: enregistre le changement
+        User-->>Service: utilisateur ou résultat de suppression
+        Service-->>API: résultat
+        API-->>Admin: réponse JSON
     end
 ```
 
-Rules:
+Règles :
 
-- Admins manage users.
-- Self-delete is blocked.
-- Email uniqueness is enforced by validation and Mongo index.
+- Les administrateurs gèrent les utilisateurs.
+- L'auto-suppression est bloquée.
+- L'unicité de l'email est appliquée par la validation et l'index Mongo.
 
-## 32. Health Check Workflow
+## 32. Flux de Vérification de Santé (Health Check)
 
 ```mermaid
 flowchart TD
-    A[GET /api/health] --> B[Check MongoDB connection]
-    B --> C[Check Redis connection]
-    C --> D{All dependencies ok?}
-    D -- yes --> E[200 status ok]
-    D -- no --> F[503 status degraded]
-    E --> G[Return service status report]
+    A[GET /api/health] --> B[Vérifie la connexion MongoDB]
+    B --> C[Vérifie la connexion Redis]
+    C --> D{Toutes les dépendances sont OK ?}
+    D -- oui --> E[Statut 200 OK]
+    D -- non --> F[Statut 503 Dégradé]
+    E --> G[Renvoie le rapport d'état des services]
     F --> G
 ```
 
-Rules:
+Règles :
 
-- Health checks are public.
-- The endpoint is used by Docker healthchecks and local smoke testing.
+- Les vérifications de santé sont publiques.
+- Le point de terminaison est utilisé par les healthchecks Docker et les tests de fumée locaux.
 
-## 33. Cross-Cutting API Middleware Workflow
+## 33. Flux des Middlewares API Transversaux
 
 ```mermaid
 flowchart TD
-    A[API request enters Laravel] --> B[AttachRequestId middleware]
-    B --> C[Role/auth middleware if route requires it]
-    C --> D[Controller or FormRequest]
-    D --> E[Response generated]
-    E --> F[ApplyApiSecurityHeaders middleware]
-    F --> G[JSON response with request id and security headers]
+    A[La requête API entre dans Laravel] --> B[Middleware AttachRequestId]
+    B --> C[Middleware de rôle/auth si la route l'exige]
+    C --> D[Contrôleur ou FormRequest]
+    D --> E[Réponse générée]
+    E --> F[Middleware ApplyApiSecurityHeaders]
+    F --> G[Réponse JSON avec ID de requête et en-têtes de sécurité]
 ```
 
-Rules:
+Règles :
 
-- API errors return JSON.
-- A safe inbound `X-Request-Id` is reused; otherwise a new request id is generated.
-- Security headers are attached to success and error responses.
+- Les erreurs d'API renvoient du JSON.
+- Un `X-Request-Id` entrant sûr est réutilisé ; sinon, un nouvel ID de requête est généré.
+- Des en-têtes de sécurité sont attachés aux réponses de succès et d'erreur.
 
-## 34. Workflow Ownership Summary
+## 34. Résumé de la Propriété des Flux de Travail
 
-| Workflow | Main Actor | Main Service | Main Collections |
+| Flux de Travail | Acteur Principal | Service Principal | Collections Principales |
 | --- | --- | --- | --- |
-| Register account | visitor | `UserWriteService` | `users`, `personal_access_tokens` |
-| Login/logout | any user | Laravel Auth/Sanctum | `users`, `personal_access_tokens` |
-| Browse events | authenticated user | `EventManagementService` and query layer | `events` |
-| Create/update event | admin, organizer | `EventManagementService` | `events`, `users` |
-| Request publication | organizer | `EventManagementService` | `events`, `app_notifications` |
-| Approve publication | admin | `EventManagementService` | `events`, `app_notifications` |
-| Submit event request | client | `EventRequestSubmissionService` | `event_requests`, `events` |
-| Review event request | admin | `EventRequestReviewService` | `event_requests`, `events` |
-| Manage tasks | admin, organizer | `EventTaskService` | `event_tasks`, `events` |
-| Manage activities | admin, organizer | `EventActivityService` | `event_activities`, `events` |
-| Register for event | participant | `RegistrationService` | `events`, `registrations`, `payments` |
-| Pay registration | participant | `RegistrationService` | `registrations`, `payments` |
-| Cancel registration | participant | `RegistrationService` | `registrations`, `events` |
-| Staff manage registrations | admin, organizer | `StaffRegistrationService` | `registrations`, `events` |
-| Submit feedback | participant | `FeedbackService` | `feedbacks`, `registrations`, `events` |
-| Moderate feedback | admin | `FeedbackService` | `feedbacks`, `app_notifications` |
-| Notifications | all authenticated users | `NotificationService` | `app_notifications` |
+| Créer un compte | visiteur | `UserWriteService` | `users`, `personal_access_tokens` |
+| Connexion/déconnexion | tout utilisateur | Auth Laravel/Sanctum | `users`, `personal_access_tokens` |
+| Parcourir les événements | utilisateur authentifié | `EventManagementService` et couche de requête | `events` |
+| Créer/maj événement | admin, organisateur | `EventManagementService` | `events`, `users` |
+| Demander publication | organisateur | `EventManagementService` | `events`, `app_notifications` |
+| Approuver publication | admin | `EventManagementService` | `events`, `app_notifications` |
+| Soumettre demande événement | client | `EventRequestSubmissionService` | `event_requests`, `events` |
+| Réviser demande événement | admin | `EventRequestReviewService` | `event_requests`, `events` |
+| Gérer les tâches | admin, organisateur | `EventTaskService` | `event_tasks`, `events` |
+| Gérer les activités | admin, organisateur | `EventActivityService` | `event_activities`, `events` |
+| S'inscrire à un événement | participant | `RegistrationService` | `events`, `registrations`, `payments` |
+| Payer l'inscription | participant | `RegistrationService` | `registrations`, `payments` |
+| Annuler l'inscription | participant | `RegistrationService` | `registrations`, `events` |
+| Staff gère inscriptions | admin, organisateur | `StaffRegistrationService` | `registrations`, `events` |
+| Soumettre commentaire | participant | `FeedbackService` | `feedbacks`, `registrations`, `events` |
+| Modérer commentaires | admin | `FeedbackService` | `feedbacks`, `app_notifications` |
+| Notifications | tous les utilisateurs authentifiés | `NotificationService` | `app_notifications` |
 | Stats | admin, client | `AdminStatsService`, `ClientStatsService` | `users`, `events`, `event_requests`, `registrations`, `payments`, `feedbacks` |

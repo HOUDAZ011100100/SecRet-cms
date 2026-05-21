@@ -11,41 +11,41 @@ use Illuminate\Support\Carbon;
 use MongoDB\Laravel\Eloquent\Model;
 
 /**
- * EventRequest Model
+ * Modèle EventRequest
  *
- * Represents a request made by a client for a new event to be organized.
- * These requests are reviewed by admins and can be approved to create an Event.
+ * Représente une demande faite par un client pour l'organisation d'un nouvel événement.
+ * Ces demandes sont examinées par les administrateurs et peuvent être approuvées pour créer un Événement.
  *
- * @property string $_id MongoDB document ID
- * @property string $user_id ID of the client who submitted the request
- * @property string $title Requested event title
- * @property string $description Detailed description of the requested event
- * @property string|null $image_path Path to the requested event banner/image
- * @property Carbon|null $preferred_start Preferred start date and time
- * @property Carbon|null $preferred_end Preferred end date and time
- * @property string|null $location Requested venue or general location
- * @property int $ticket_price_cents Proposed ticket price in cents
- * @property string $contact_name Contact person name
- * @property string $contact_email Contact person email address
- * @property string $contact_phone Contact person phone number
- * @property string $status Request status (pending, approved, rejected)
- * @property string|null $rejection_reason Explanation if the request was rejected
- * @property Carbon|null $reviewed_at Timestamp when the request was reviewed
- * @property string|null $reviewed_by_id ID of the admin who reviewed the request
+ * @property string $_id ID du document MongoDB
+ * @property string $user_id ID du client ayant soumis la demande
+ * @property string $title Titre de l'événement demandé
+ * @property string $description Description détaillée de l'événement demandé
+ * @property string|null $image_path Chemin vers la bannière/image de l'événement demandé
+ * @property Carbon|null $preferred_start Date et heure de début souhaitées
+ * @property Carbon|null $preferred_end Date et heure de fin souhaitées
+ * @property string|null $location Lieu demandé ou emplacement général
+ * @property int $ticket_price_cents Prix du billet proposé en centimes
+ * @property string $contact_name Nom de la personne à contacter
+ * @property string $contact_email Adresse email de la personne à contacter
+ * @property string $contact_phone Numéro de téléphone de la personne à contacter
+ * @property string $status Statut de la demande (pending, approved, rejected)
+ * @property string|null $rejection_reason Explication si la demande a été rejetée
+ * @property Carbon|null $reviewed_at Horodatage du moment où la demande a été examinée
+ * @property string|null $reviewed_by_id ID de l'administrateur ayant examiné la demande
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read string|null $image_url Computed absolute URL for the event image
- * @property-read float $ticket_price Computed ticket price in main currency units
- * @property-read User $user Client who submitted the request
- * @property-read User|null $reviewer Admin who reviewed the request
- * @property-read Event|null $event The actual event created from this request
+ * @property-read string|null $image_url URL absolue calculée pour l'image de l'événement
+ * @property-read float $ticket_price Prix du billet calculé dans l'unité monétaire principale
+ * @property-read User $user Client ayant soumis la demande
+ * @property-read User|null $reviewer Administrateur ayant examiné la demande
+ * @property-read Event|null $event L'événement réel créé à partir de cette demande
  */
 class EventRequest extends Model
 {
     use HasPublicImage;
     use StoresMoneyAsCents;
 
-    /** Status constants */
+    /** Constantes de statut */
     public const STATUS_APPROVED = 'approved';
 
     public const STATUS_PENDING = 'pending';
@@ -53,35 +53,35 @@ class EventRequest extends Model
     public const STATUS_REJECTED = 'rejected';
 
     /**
-     * The database connection used by the model.
+     * La connexion à la base de données utilisée par le modèle.
      *
      * @var string
      */
     protected $connection = 'mongodb';
 
     /**
-     * The table/collection associated with the model.
+     * La table/collection associée au modèle.
      *
      * @var string
      */
     protected $table = 'event_requests';
 
     /**
-     * Accessors to append to the model's array form.
+     * Accesseurs à ajouter à la forme tableau du modèle.
      *
      * @var list<string>
      */
     protected $appends = ['image_url', 'ticket_price'];
 
     /**
-     * Attributes that should be hidden for serialization.
+     * Attributs qui doivent être cachés pour la sérialisation.
      *
      * @var list<string>
      */
     protected $hidden = ['ticket_price_cents'];
 
     /**
-     * Attributes that are mass assignable.
+     * Attributs qui sont assignables en masse.
      *
      * @var list<string>
      */
@@ -105,7 +105,7 @@ class EventRequest extends Model
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * Récupère les attributs qui doivent être castés.
      *
      * @return array<string, string>
      */
@@ -119,7 +119,7 @@ class EventRequest extends Model
     }
 
     /**
-     * Accessor for the ticket price, converting cents to decimal.
+     * Accesseur pour le prix du billet, convertissant les centimes en décimal.
      */
     protected function ticketPrice(): Attribute
     {
@@ -127,7 +127,7 @@ class EventRequest extends Model
     }
 
     /**
-     * Define the relationship for the client who made the request.
+     * Définit la relation pour le client ayant fait la demande.
      */
     public function user(): BelongsTo
     {
@@ -135,7 +135,7 @@ class EventRequest extends Model
     }
 
     /**
-     * Define the relationship for the admin who reviewed the request.
+     * Définit la relation pour l'administrateur ayant examiné la demande.
      */
     public function reviewer(): BelongsTo
     {
@@ -143,7 +143,7 @@ class EventRequest extends Model
     }
 
     /**
-     * Define the relationship for the resulting event if approved.
+     * Définit la relation pour l'événement résultant si approuvé.
      */
     public function event(): HasOne
     {

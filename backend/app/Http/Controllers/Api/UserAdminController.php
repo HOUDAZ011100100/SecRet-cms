@@ -12,27 +12,27 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Controller for managing users from an Admin perspective.
+ * Contrôleur pour la gestion des utilisateurs du point de vue de l'administrateur.
  *
- * This controller allows Admins to list, create, update, and delete users.
+ * Ce contrôleur permet aux administrateurs de lister, créer, mettre à jour et supprimer des utilisateurs.
  */
 class UserAdminController extends Controller
 {
     /**
-     * @param  UserWriteService  $users  Service for user creation and updates.
+     * @param  UserWriteService  $users  Service pour la création et la mise à jour des utilisateurs.
      */
     public function __construct(private readonly UserWriteService $users) {}
 
     /**
-     * List users (Admin view).
+     * Lister les utilisateurs (vue Administrateur).
      *
-     * @return JsonResponse Paginated list of users, optionally filtered by role.
+     * @return JsonResponse Liste paginée des utilisateurs, optionnellement filtrée par rôle.
      */
     public function index(UserIndexRequest $request)
     {
         $q = User::query()->orderBy('created_at', 'desc');
 
-        // Optional role filter (admin, organizer, client)
+        // Filtre de rôle optionnel (admin, organisateur, client)
         if ($role = $request->validated('role')) {
             $q->where('role', $role);
         }
@@ -41,11 +41,11 @@ class UserAdminController extends Controller
     }
 
     /**
-     * Get a list of all Organizers.
+     * Obtenir une liste de tous les organisateurs.
      *
-     * Used for populating dropdowns (e.g., when assigning an organizer to an event).
+     * Utilisé pour remplir les listes déroulantes (ex : lors de l'assignation d'un organisateur à un événement).
      *
-     * @return JsonResponse List of organizers with basic fields.
+     * @return JsonResponse Liste des organisateurs avec les champs de base.
      */
     public function organizers()
     {
@@ -58,9 +58,9 @@ class UserAdminController extends Controller
     }
 
     /**
-     * Create a new user manually.
+     * Créer un nouvel utilisateur manuellement.
      *
-     * @param  StoreUserRequest  $request  Validated user data.
+     * @param  StoreUserRequest  $request  Données d'utilisateur validées.
      * @return JsonResponse 201 Created.
      */
     public function store(StoreUserRequest $request)
@@ -71,11 +71,11 @@ class UserAdminController extends Controller
     }
 
     /**
-     * Update an existing user's profile.
+     * Mettre à jour le profil d'un utilisateur existant.
      *
-     * @param  UpdateUserRequest  $request  Validated user updates.
-     * @param  User  $user  The user to update.
-     * @return JsonResponse Updated user.
+     * @param  UpdateUserRequest  $request  Mises à jour d'utilisateur validées.
+     * @param  User  $user  L'utilisateur à mettre à jour.
+     * @return JsonResponse Utilisateur mis à jour.
      */
     public function update(UpdateUserRequest $request, User $user)
     {
@@ -83,9 +83,9 @@ class UserAdminController extends Controller
     }
 
     /**
-     * Delete a user account.
+     * Supprimer un compte utilisateur.
      *
-     * @param  User  $user  The user to delete.
+     * @param  User  $user  L'utilisateur à supprimer.
      * @return JsonResponse 204 No Content.
      */
     public function destroy(Request $request, User $user)
@@ -96,7 +96,7 @@ class UserAdminController extends Controller
     }
 
     /**
-     * Retrieve and validate the authenticated user.
+     * Récupérer et valider l'utilisateur authentifié.
      */
     private function actor(Request $request): User
     {

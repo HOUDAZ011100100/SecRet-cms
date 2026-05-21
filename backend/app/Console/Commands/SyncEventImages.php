@@ -6,45 +6,45 @@ use App\Models\Event;
 use Illuminate\Console\Command;
 
 /**
- * Artisan command to synchronize image paths from approved event requests to their actual event models.
+ * Commande Artisan pour synchroniser les chemins d'images des demandes d'événements approuvées avec leurs modèles d'événements réels.
  *
- * This command bridges the gap between the initial client proposal (EventRequest) and the
- * final Event instance, ensuring that the branding images provided by clients are
- * correctly associated with the published events.
+ * Cette commande comble le fossé entre la proposition initiale du client (EventRequest) et
+ * l'instance finale de l'événement (Event), en s'assurant que les images de marque fournies par les clients sont
+ * correctement associées aux événements publiés.
  */
 class SyncEventImages extends Command
 {
     /**
-     * The name and signature of the console command.
+     * Le nom et la signature de la commande de console.
      *
      * @var string
      */
     protected $signature = 'velora:sync-event-images';
 
     /**
-     * The console command description.
+     * La description de la commande de console.
      *
      * @var string
      */
-    protected $description = 'Copies image_path from approved event requests to their linked events if the event lacks an image.';
+    protected $description = 'Copie le image_path des demandes d\'événements approuvées vers leurs événements liés si l\'événement n\'a pas d\'image.';
 
     /**
-     * Execute the console command.
+     * Exécute la commande de console.
      *
-     * Iterates through events that do not have an image path but whose parent
-     * request does, and updates the event model accordingly.
+     * Parcourt les événements qui n'ont pas de chemin d'image mais dont la demande parente
+     * en a un, et met à jour le modèle d'événement en conséquence.
      */
     public function handle(): int
     {
         $count = 0;
 
-        // Find events that are missing an image but have a request with one
+        // Trouve les événements auxquels il manque une image mais qui ont une demande avec une image
         Event::query()
             ->whereNull('image_path')
             ->whereHas('eventRequest', fn ($q) => $q->whereNotNull('image_path'))
             ->with('eventRequest')
             ->each(function (Event $event) use (&$count) {
-                // Update the event's image path from its request
+                // Met à jour le chemin d'image de l'événement à partir de sa demande
                 $event->update(['image_path' => $event->eventRequest->image_path]);
                 $count++;
             });

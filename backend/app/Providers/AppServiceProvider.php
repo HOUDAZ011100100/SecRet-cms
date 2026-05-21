@@ -14,18 +14,18 @@ use Laravel\Sanctum\Sanctum;
 /**
  * AppServiceProvider
  *
- * This provider is responsible for registering and bootstrapping core application services.
- * In this project, it specifically handles MongoDB-only configuration overrides and
- * Sanctum/Carbon customization.
+ * Ce fournisseur est responsable de l'enregistrement et du démarrage des services de base de l'application.
+ * Dans ce projet, il gère spécifiquement les surcharges de configuration pour MongoDB uniquement et
+ * la personnalisation de Sanctum/Carbon.
  */
 class AppServiceProvider extends ServiceProvider
 {
     /**
-     * Register any application services.
+     * Enregistre tous les services de l'application.
      *
-     * This method overrides database and driver configurations at runtime to ensure
-     * that MongoDB, Redis, and other required services are used regardless of
-     * the initial environment setup.
+     * Cette méthode surcharge les configurations de base de données et de pilotes au moment de l'exécution pour s'assurer
+     * que MongoDB, Redis et les autres services requis sont utilisés quel que soit
+     * la configuration initiale de l'environnement.
      */
     public function register(): void
     {
@@ -41,20 +41,20 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Bootstrap any application services.
+     * Démarre tous les services de l'application.
      *
-     * This method is called after all services are registered. It configures:
-     * - Sanctum to use a custom PersonalAccessToken model (MongoDB-compatible).
-     * - Carbon to use a specific date serialization format for JSON responses.
+     * Cette méthode est appelée après l'enregistrement de tous les services. Elle configure :
+     * - Sanctum pour utiliser un modèle PersonalAccessToken personnalisé (compatible MongoDB).
+     * - Carbon pour utiliser un format spécifique de sérialisation de date pour les réponses JSON.
      */
     public function boot(): void
     {
-        // Tell Sanctum to use our MongoDB-compatible token model
+        // Indique à Sanctum d'utiliser notre modèle de jeton compatible MongoDB
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
 
         $this->configureRateLimits();
 
-        // Standardize date format across the API
+        // Standardise le format de date dans toute l'API
         Carbon::serializeUsing(fn (Carbon $date) => $date->format('Y-m-d H:i:s'));
     }
 

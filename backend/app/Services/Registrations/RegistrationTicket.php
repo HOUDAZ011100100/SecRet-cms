@@ -3,16 +3,16 @@
 namespace App\Services\Registrations;
 
 /**
- * Data Transfer Object (DTO) representing a registration ticket.
+ * Objet de Transfert de Données (DTO) représentant un billet d'inscription.
  *
- * This object holds the necessary information to generate or present a ticket
- * to the participant, including the filename for download and the ticket payload.
+ * Cet objet contient les informations nécessaires pour générer ou présenter un billet
+ * au participant, y compris le nom du fichier pour le téléchargement et la charge utile du billet.
  */
 readonly class RegistrationTicket
 {
     /**
-     * @param  string  $filename  Suggested filename for the ticket file (e.g., "ticket-123.json").
-     * @param  array<string, mixed>  $payload  The ticket data (code, event title, participant name, etc.).
+     * @param  string  $filename  Nom de fichier suggéré pour le fichier du billet (ex: "ticket-123.json").
+     * @param  array<string, mixed>  $payload  Les données du billet (code, titre de l'événement, nom du participant, etc.).
      */
     public function __construct(
         public string $filename,

@@ -6,17 +6,17 @@ use App\Exceptions\Contracts\ApiException;
 use RuntimeException;
 
 /**
- * Exception thrown for errors related to event requests (proposals).
+ * Exception levée pour les erreurs liées aux demandes d'événements (propositions).
  *
- * This exception can carry additional context data to help the frontend
- * understand the specific nature of the failure.
+ * Cette exception peut transporter des données contextuelles supplémentaires pour aider le frontend
+ * à comprendre la nature spécifique de l'échec.
  */
 class EventRequestException extends RuntimeException implements ApiException
 {
     /**
-     * @param  string  $message  The error message.
-     * @param  int  $status  The HTTP status code.
-     * @param  array<string, mixed>  $context  Additional data related to the error.
+     * @param  string  $message  Le message d'erreur.
+     * @param  int  $status  Le code de statut HTTP.
+     * @param  array<string, mixed>  $context  Données supplémentaires liées à l'erreur.
      */
     public function __construct(
         string $message,
@@ -27,7 +27,7 @@ class EventRequestException extends RuntimeException implements ApiException
     }
 
     /**
-     * Get the HTTP status code for the response.
+     * Récupère le code de statut HTTP pour la réponse.
      */
     public function statusCode(): int
     {
@@ -35,7 +35,7 @@ class EventRequestException extends RuntimeException implements ApiException
     }
 
     /**
-     * Get the response payload, including the error message and any additional context.
+     * Récupère la charge utile de la réponse, incluant le message d'erreur et tout contexte supplémentaire.
      *
      * @return array<string, mixed>
      */

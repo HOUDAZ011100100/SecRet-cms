@@ -7,26 +7,26 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Service for managing event-related image uploads.
+ * Service pour la gestion des téléchargements d'images liées aux événements.
  *
- * This service specifically handles Base64 encoded image data, which is commonly
- * used in the frontend's image selection and cropping workflows.
+ * Ce service gère spécifiquement les données d'image encodées en base64, qui sont couramment
+ * utilisées dans les flux de travail de sélection et de recadrage d'images du frontend.
  */
 class EventImageStorage
 {
     /**
-     * Maximum allowed image size in bytes (2 MB).
+     * Taille maximale autorisée de l'image en octets (2 Mo).
      */
     private const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
     /**
-     * Decodes and stores a Base64 image.
+     * Décode et stocke une image base64.
      *
-     * @param  string|null  $imageData  The raw base64 string, optionally prefixed with data URI scheme.
-     * @param  string|null  $mime  The MIME type of the image to determine the file extension.
-     * @return string|null The relative path to the stored image, or null if no data provided.
+     * @param  string|null  $imageData  La chaîne base64 brute, éventuellement préfixée par le schéma Data URI.
+     * @param  string|null  $mime  Le type MIME de l'image pour déterminer l'extension du fichier.
+     * @return string|null Le chemin relatif vers l'image stockée, ou null si aucune donnée n'est fournie.
      *
-     * @throws ValidationException If the image is invalid or exceeds the size limit.
+     * @throws ValidationException Si l'image est invalide ou dépasse la limite de taille.
      */
     public function storeBase64(?string $imageData, ?string $mime = null): ?string
     {
@@ -34,12 +34,12 @@ class EventImageStorage
             return null;
         }
 
-        // Handle Base64 strings that include the 'data:image/...;base64,' prefix.
+        // Gérer les chaînes base64 qui incluent le préfixe 'data:image/...;base64,'.
         $raw = str_contains($imageData, ',')
             ? explode(',', $imageData, 2)[1]
             : $imageData;
 
-        // Perform strict base64 decoding to ensure data integrity.
+        // Effectuer un décodage base64 strict pour garantir l'intégrité des données.
         $bytes = base64_decode($raw, true);
         if ($bytes === false) {
             throw ValidationException::withMessages([
@@ -47,24 +47,24 @@ class EventImageStorage
             ]);
         }
 
-        // Enforce the size limit at the service level.
+        // Appliquer la limite de taille au niveau du service.
         if (strlen($bytes) > self::MAX_IMAGE_BYTES) {
             throw ValidationException::withMessages([
                 'image_data' => ['L\'image ne doit pas dépasser 2 Mo.'],
             ]);
         }
 
-        // Generate a unique filename using UUID to prevent collisions.
+        // Générer un nom de fichier unique à l'aide d'un UUID pour éviter les collisions.
         $path = 'events/'.Str::uuid().'.'.$this->extensionFor($mime ?? 'image/jpeg');
 
-        // Store the decoded binary data in the public disk.
+        // Stocker les données binaires décodées dans le disque public.
         Storage::disk('public')->put($path, $bytes);
 
         return $path;
     }
 
     /**
-     * Maps common image MIME types to their standard file extensions.
+     * Associe les types MIME d'images courants à leurs extensions de fichiers standards.
      */
     private function extensionFor(string $mime): string
     {

@@ -10,26 +10,26 @@ use App\Services\RegistrationService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 /**
- * Service handling registration operations from the participant's perspective.
+ * Service gérant les opérations d'inscription du point de vue du participant.
  *
- * It provides methods for participants to register for events, pay, cancel, and retrieve their tickets.
- * Access is strictly restricted to users with the ROLE_PARTICIPANT role.
+ * Il fournit des méthodes permettant aux participants de s'inscrire à des événements, de payer, d'annuler et de récupérer leurs billets.
+ * L'accès est strictement réservé aux utilisateurs ayant le rôle ROLE_PARTICIPANT.
  */
 class ParticipantRegistrationService
 {
     /**
-     * @param  RegistrationService  $registrations  The core registration logic service.
+     * @param  RegistrationService  $registrations  Le service de logique d'inscription de base.
      */
     public function __construct(private readonly RegistrationService $registrations) {}
 
     /**
-     * Registers a participant for an event.
+     * Inscrit un participant à un événement.
      *
-     * @param  User  $participant  The user registering (must be a participant).
-     * @param  Event  $event  The event to register for.
-     * @return Registration The newly created registration.
+     * @param  User  $participant  L'utilisateur qui s'inscrit (doit être un participant).
+     * @param  Event  $event  L'événement auquel s'inscrire.
+     * @return Registration La nouvelle inscription créée.
      *
-     * @throws RegistrationException If the user is not a participant or registration fails.
+     * @throws RegistrationException Si l'utilisateur n'est pas un participant ou si l'inscription échoue.
      */
     public function register(User $participant, Event $event): Registration
     {
@@ -39,13 +39,13 @@ class ParticipantRegistrationService
     }
 
     /**
-     * Processes payment for a registration.
+     * Traite le paiement d'une inscription.
      *
-     * @param  User  $participant  The participant paying for their registration.
-     * @param  Registration  $registration  The registration to pay for.
-     * @return Registration The updated registration with 'paid' status.
+     * @param  User  $participant  Le participant payant son inscription.
+     * @param  Registration  $registration  L'inscription à payer.
+     * @return Registration L'inscription mise à jour avec le statut 'paid'.
      *
-     * @throws RegistrationException If the participant doesn't own the registration.
+     * @throws RegistrationException Si le participant n'est pas le propriétaire de l'inscription.
      */
     public function pay(User $participant, Registration $registration): Registration
     {
@@ -55,12 +55,12 @@ class ParticipantRegistrationService
     }
 
     /**
-     * Cancels a participant's registration.
+     * Annule l'inscription d'un participant.
      *
-     * @param  User  $participant  The participant cancelling.
-     * @param  Registration  $registration  The registration to cancel.
+     * @param  User  $participant  Le participant qui annule.
+     * @param  Registration  $registration  L'inscription à annuler.
      *
-     * @throws RegistrationException If the participant doesn't own the registration.
+     * @throws RegistrationException Si le participant n'est pas le propriétaire de l'inscription.
      */
     public function cancel(User $participant, Registration $registration): void
     {
@@ -70,9 +70,9 @@ class ParticipantRegistrationService
     }
 
     /**
-     * Retrieves a participant's registration for a specific event.
+     * Récupère l'inscription d'un participant pour un événement spécifique.
      *
-     * Useful for checking if a user is already registered for an event on the event details page.
+     * Utile pour vérifier si un utilisateur est déjà inscrit à un événement sur la page des détails de l'événement.
      */
     public function registrationForEvent(User $participant, Event $event): ?Registration
     {
@@ -86,9 +86,9 @@ class ParticipantRegistrationService
     }
 
     /**
-     * Lists all registrations for a participant, optionally filtered by payment status.
+     * Liste toutes les inscriptions d'un participant, éventuellement filtrées par statut de paiement.
      *
-     * @param  string|null  $paymentStatus  'paid' or 'pending'.
+     * @param  string|null  $paymentStatus  'paid' ou 'pending'.
      */
     public function listForParticipant(User $participant, ?string $paymentStatus): LengthAwarePaginator
     {
@@ -107,16 +107,16 @@ class ParticipantRegistrationService
     }
 
     /**
-     * Generates a ticket for a paid registration.
+     * Génère un billet pour une inscription payée.
      *
      *
-     * @throws RegistrationException If the registration is not paid.
+     * @throws RegistrationException Si l'inscription n'est pas payée.
      */
     public function ticketFor(User $participant, Registration $registration): RegistrationTicket
     {
         $this->ensureParticipantOwnsRegistration($participant, $registration);
 
-        // Tickets are only available for confirmed (paid) registrations.
+        // Les billets ne sont disponibles que pour les inscriptions confirmées (payées).
         if ($registration->getAttribute('payment_status') !== 'paid') {
             throw new RegistrationException('Paiement requis pour le billet.');
         }
@@ -138,7 +138,7 @@ class ParticipantRegistrationService
     }
 
     /**
-     * Returns the relationships to eager load for a registration.
+     * Retourne les relations à charger avec impatience pour une inscription.
      *
      * @return array<string, mixed>
      */
@@ -151,7 +151,7 @@ class ParticipantRegistrationService
     }
 
     /**
-     * Returns the fields to select from the event table.
+     * Retourne les champs à sélectionner dans la table des événements.
      *
      * @return list<string>
      */
@@ -173,7 +173,7 @@ class ParticipantRegistrationService
     }
 
     /**
-     * Enforces ownership: only the participant who registered can manage the registration.
+     * Impose la propriété : seul le participant qui s'est inscrit peut gérer l'inscription.
      *
      * @throws RegistrationException
      */
@@ -187,7 +187,7 @@ class ParticipantRegistrationService
     }
 
     /**
-     * Enforces the participant role.
+     * Impose le rôle de participant.
      *
      * @throws RegistrationException
      */

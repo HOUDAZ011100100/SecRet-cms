@@ -8,20 +8,20 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
- * Middleware to restrict access based on user roles.
+ * Middleware pour restreindre l'accès en fonction des rôles des utilisateurs.
  *
- * This middleware checks if the authenticated user has one of the allowed roles
- * before permitting the request to proceed.
+ * Ce middleware vérifie si l'utilisateur authentifié possède l'un des rôles autorisés
+ * avant de permettre à la requête de se poursuivre.
  */
 class EnsureRole
 {
     /**
-     * Handle an incoming request.
+     * Gérer une requête entrante.
      *
-     * Parses the allowed roles (which can be passed as multiple arguments or a comma-separated string)
-     * and validates the current user's role against this list.
+     * Analyse les rôles autorisés (qui peuvent être passés sous forme de plusieurs arguments ou d'une chaîne séparée par des virgules)
+     * et valide le rôle de l'utilisateur actuel par rapport à cette liste.
      *
-     * @param  string  ...$roles  Allowed roles (e.g. "admin", "organizer" or "admin,organizer")
+     * @param  string  ...$roles  Rôles autorisés (ex: "admin", "organizer" ou "admin,organizer")
      *
      * @throws HttpException
      */
@@ -29,18 +29,18 @@ class EnsureRole
     {
         $user = $request->user();
         if (! $user) {
-            // Require authentication
+            // Authentification requise
             abort(401);
         }
 
-        // Normalize roles list from potential comma-separated strings or multiple arguments
+        // Normaliser la liste des rôles à partir de chaînes potentielles séparées par des virgules ou de plusieurs arguments
         $allowed = [];
         foreach ($roles as $chunk) {
             $allowed = array_merge($allowed, array_map('trim', explode(',', $chunk)));
         }
         $allowed = array_values(array_unique(array_filter($allowed)));
 
-        // Perform the role check
+        // Effectuer la vérification du rôle
         if (! in_array($user->role, $allowed, true)) {
             abort(403, 'Accès refusé pour ce rôle.');
         }

@@ -5,20 +5,20 @@ namespace App\Http\Requests\EventActivities;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Form request for updating an existing event activity.
+ * Requête de formulaire pour la mise à jour d'une activité d'événement existante.
  *
- * Allows for partial updates of activity details including title, timing, and sequence.
+ * Permet des mises à jour partielles des détails de l'activité, y compris le titre, les horaires et l'ordre.
  */
 class UpdateEventActivityRequest extends FormRequest
 {
     /**
-     * Get the validation rules that apply to the request.
+     * Obtenir les règles de validation qui s'appliquent à la requête.
      *
-     * Rules:
-     * - title: Optional string (if provided), max 255 chars.
-     * - description: Optional string.
-     * - starts_at/ends_at: Optional dates, ends_at must be after starts_at.
-     * - sort_order: Optional integer for display sequencing.
+     * Règles :
+     * - title : Chaîne de caractères optionnelle (si fournie), max 255 caractères.
+     * - description : Chaîne de caractères optionnelle.
+     * - starts_at/ends_at : Dates optionnelles, ends_at doit être après starts_at.
+     * - sort_order : Entier optionnel pour l'ordre d'affichage.
      *
      * @return array<string, list<string>>
      */

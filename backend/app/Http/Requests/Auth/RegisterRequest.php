@@ -8,20 +8,20 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 /**
- * Form request for new user registration.
+ * Requête de formulaire pour l'inscription d'un nouvel utilisateur.
  *
- * Handles the validation of data for new public accounts (Participant or Client).
+ * Gère la validation des données pour les nouveaux comptes publics (Participant ou Client).
  */
 class RegisterRequest extends FormRequest
 {
     /**
-     * Get the validation rules that apply to the request.
+     * Obtenir les règles de validation qui s'appliquent à la requête.
      *
-     * Rules:
-     * - name: Required string, max 255.
-     * - email: Required, unique email format.
-     * - password: Required, must match confirmation, follows security defaults.
-     * - role: Required, must be either PARTICIPANT or CLIENT.
+     * Règles :
+     * - name : Chaîne de caractères requise, max 255.
+     * - email : Requis, format email unique.
+     * - password : Requis, doit correspondre à la confirmation, suit les paramètres de sécurité par défaut.
+     * - role : Requis, doit être soit PARTICIPANT, soit CLIENT.
      *
      * @return array<string, mixed>
      */
@@ -39,7 +39,7 @@ class RegisterRequest extends FormRequest
     }
 
     /**
-     * Get custom error messages for validation failures.
+     * Obtenir les messages d'erreur personnalisés pour les échecs de validation.
      *
      * @return array<string, string>
      */

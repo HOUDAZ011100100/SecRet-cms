@@ -8,61 +8,61 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Service for handling image storage for event requests.
+ * Service pour la gestion du stockage des images pour les demandes d'événements.
  *
- * Supports both standard multi-part form uploads and base64 encoded data (often used in SPA/Mobile integrations).
+ * Supporte à la fois les téléchargements de formulaires multi-parties standards et les données encodées en base64 (souvent utilisées dans les intégrations SPA/Mobiles).
  */
 class EventRequestImageStorage
 {
-    /** @var int Maximum allowed size for base64 images (2MB) */
+    /** @var int Taille maximale autorisée pour les images en base64 (2 Mo) */
     private const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
     /**
-     * Stores an image and returns its public path.
+     * Stocke une image et retourne son chemin public.
      *
-     * This method is polymorphic: it prefers an UploadedFile object but falls back to base64 data.
+     * Cette méthode est polymorphe : elle préfère un objet UploadedFile mais se rabat sur les données base64.
      *
-     * @param  UploadedFile|null  $image  Standard Laravel uploaded file.
-     * @param  string|null  $imageData  Base64 encoded image string (can include Data URI prefix).
-     * @param  string|null  $mime  Explicit MIME type for base64 data (defaults to image/jpeg).
-     * @return string|null The relative path to the stored image, or null if no image was provided.
+     * @param  UploadedFile|null  $image  Fichier téléchargé Laravel standard.
+     * @param  string|null  $imageData  Chaîne d'image encodée en base64 (peut inclure le préfixe Data URI).
+     * @param  string|null  $mime  Type MIME explicite pour les données base64 (par défaut image/jpeg).
+     * @return string|null Le chemin relatif vers l'image stockée, ou null si aucune image n'a été fournie.
      *
-     * @throws ValidationException If base64 decoding fails or exceeds size limits.
+     * @throws ValidationException Si le décodage base64 échoue ou dépasse les limites de taille.
      */
     public function store(?UploadedFile $image, ?string $imageData, ?string $mime = null): ?string
     {
-        // Case 1: Standard Laravel File Upload
+        // Cas 1 : Téléchargement de fichier Laravel standard
         if ($image?->isValid()) {
             return $image->store('event-requests', 'public');
         }
 
-        // Case 2: Base64 Data (used when sending JSON payloads)
+        // Cas 2 : Données base64 (utilisées lors de l'envoi de charges utiles JSON)
         if (! $imageData) {
             return null;
         }
 
-        // Strip Data URI prefix if present (e.g., "data:image/png;base64,")
+        // Supprimer le préfixe Data URI s'il est présent (ex: "data:image/png;base64,")
         $raw = str_contains($imageData, ',')
             ? explode(',', $imageData, 2)[1]
             : $imageData;
 
         $bytes = base64_decode($raw, true);
 
-        // Edge Case: Invalid base64 characters or formatting.
+        // Cas limite : caractères base64 ou formatage invalides.
         if ($bytes === false) {
             throw ValidationException::withMessages([
                 'image' => ['Image invalide.'],
             ]);
         }
 
-        // Enforce size limit for base64 (since it's not handled by PHP's upload_max_filesize)
+        // Appliquer la limite de taille pour le base64 (puisqu'elle n'est pas gérée par le upload_max_filesize de PHP)
         if (strlen($bytes) > self::MAX_IMAGE_BYTES) {
             throw ValidationException::withMessages([
                 'image' => ['L\'image ne doit pas dépasser 2 Mo.'],
             ]);
         }
 
-        // Generate a unique filename using UUID to prevent collisions.
+        // Générer un nom de fichier unique à l'aide d'un UUID pour éviter les collisions.
         $path = 'event-requests/'.Str::uuid().'.'.$this->extensionFor($mime ?? 'image/jpeg');
         Storage::disk('public')->put($path, $bytes);
 
@@ -70,9 +70,9 @@ class EventRequestImageStorage
     }
 
     /**
-     * Deletes an image from storage.
+     * Supprime une image du stockage.
      *
-     * @param  string|null  $path  The relative path to the image to delete.
+     * @param  string|null  $path  Le chemin relatif de l'image à supprimer.
      */
     public function delete(?string $path): void
     {
@@ -82,10 +82,10 @@ class EventRequestImageStorage
     }
 
     /**
-     * Maps common MIME types to file extensions.
+     * Associe les types MIME courants à des extensions de fichiers.
      *
-     * @param  string  $mime  The MIME type to map.
-     * @return string The appropriate file extension.
+     * @param  string  $mime  Le type MIME à associer.
+     * @return string L'extension de fichier appropriée.
      */
     private function extensionFor(string $mime): string
     {

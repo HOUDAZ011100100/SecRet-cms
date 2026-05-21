@@ -1,11 +1,11 @@
 openapi: 3.1.0
 info:
-  title: VELORA Backend API
+  title: API Backend VELORA
   version: 1.0.0
-  summary: MongoDB-only Laravel API for event requests, event planning, registrations, feedback, notifications, and dashboards.
+  summary: API Laravel exclusivement MongoDB pour les demandes d'événements, la planification d'événements, les inscriptions, les commentaires, les notifications et les tableaux de bord.
 servers:
   - url: http://127.0.0.1:8000/api
-    description: Local Docker backend
+    description: Backend Docker local
 security:
   - bearerAuth: []
 tags:
@@ -22,17 +22,17 @@ paths:
   /health:
     get:
       tags: [Auth]
-      summary: Health check
+      summary: Vérification de santé (health check)
       security: []
       responses:
         "200":
-          description: Backend is healthy.
+          description: Le backend est en bonne santé.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthReport"
         "503":
-          description: MongoDB or Redis is unavailable.
+          description: MongoDB ou Redis est indisponible.
           content:
             application/json:
               schema:
@@ -40,7 +40,7 @@ paths:
   /register:
     post:
       tags: [Auth]
-      summary: Register a participant or client
+      summary: Enregistrer un participant ou un client
       security: []
       requestBody:
         required: true
@@ -50,7 +50,7 @@ paths:
               $ref: "#/components/schemas/RegisterRequest"
       responses:
         "201":
-          description: Registered user and token.
+          description: Utilisateur enregistré et jeton.
           content:
             application/json:
               schema:
@@ -62,7 +62,7 @@ paths:
   /login:
     post:
       tags: [Auth]
-      summary: Login
+      summary: Connexion
       security: []
       requestBody:
         required: true
@@ -72,7 +72,7 @@ paths:
               $ref: "#/components/schemas/LoginRequest"
       responses:
         "200":
-          description: Authenticated user and token.
+          description: Utilisateur authentifié et jeton.
           content:
             application/json:
               schema:
@@ -84,7 +84,7 @@ paths:
   /logout:
     post:
       tags: [Auth]
-      summary: Revoke current token
+      summary: Révoquer le jeton actuel
       responses:
         "200":
           $ref: "#/components/responses/Message"
@@ -93,10 +93,10 @@ paths:
   /user:
     get:
       tags: [Auth]
-      summary: Current user
+      summary: Utilisateur actuel
       responses:
         "200":
-          description: Current authenticated user.
+          description: Utilisateur authentifié actuel.
           content:
             application/json:
               schema:
@@ -106,10 +106,10 @@ paths:
   /notifications:
     get:
       tags: [Notifications]
-      summary: List current user notifications
+      summary: Lister les notifications de l'utilisateur actuel
       responses:
         "200":
-          description: Notification list.
+          description: Liste de notifications.
           content:
             application/json:
               schema:
@@ -119,10 +119,10 @@ paths:
   /notifications/unread-count:
     get:
       tags: [Notifications]
-      summary: Unread notification count
+      summary: Nombre de notifications non lues
       responses:
         "200":
-          description: Count payload.
+          description: Charge utile du décompte.
           content:
             application/json:
               schema:
@@ -135,14 +135,14 @@ paths:
   /notifications/read-all:
     post:
       tags: [Notifications]
-      summary: Mark all notifications as read
+      summary: Marquer toutes les notifications comme lues
       responses:
         "200":
           $ref: "#/components/responses/Message"
   /notifications/{notification}/read:
     post:
       tags: [Notifications]
-      summary: Mark one notification as read
+      summary: Marquer une notification comme lue
       parameters:
         - $ref: "#/components/parameters/notification"
       responses:
@@ -153,12 +153,12 @@ paths:
   /events/browse:
     get:
       tags: [Events]
-      summary: Browse published events
+      summary: Parcourir les événements publiés
       parameters:
         - $ref: "#/components/parameters/search"
       responses:
         "200":
-          description: Paginated published events.
+          description: Événements publiés paginés.
           content:
             application/json:
               schema:
@@ -168,12 +168,12 @@ paths:
   /events/{event}:
     get:
       tags: [Events]
-      summary: Event detail
+      summary: Détail de l'événement
       parameters:
         - $ref: "#/components/parameters/event"
       responses:
         "200":
-          description: Event with planning relations.
+          description: Événement avec relations de planification.
           content:
             application/json:
               schema:
@@ -183,12 +183,12 @@ paths:
   /events/{event}/feedbacks:
     get:
       tags: [Feedback]
-      summary: Feedback for an event
+      summary: Commentaires pour un événement
       parameters:
         - $ref: "#/components/parameters/event"
       responses:
         "200":
-          description: Feedback collection.
+          description: Collection de commentaires.
           content:
             application/json:
               schema:
@@ -198,13 +198,13 @@ paths:
   /events/{event}/register:
     post:
       tags: [Registrations]
-      summary: Participant registration for an event
-      description: Participant role only. Rejects duplicate registrations and full events.
+      summary: Inscription d'un participant à un événement
+      description: Rôle participant uniquement. Rejette les inscriptions en double et les événements complets.
       parameters:
         - $ref: "#/components/parameters/event"
       responses:
         "201":
-          description: Created registration.
+          description: Inscription créée.
           content:
             application/json:
               schema:
@@ -216,12 +216,12 @@ paths:
   /events/{event}/my-registration:
     get:
       tags: [Registrations]
-      summary: Current participant registration for one event
+      summary: Inscription actuelle du participant pour un événement
       parameters:
         - $ref: "#/components/parameters/event"
       responses:
         "200":
-          description: Registration or null response depending on current state.
+          description: Inscription ou réponse nulle selon l'état actuel.
           content:
             application/json:
               schema:
@@ -235,12 +235,12 @@ paths:
   /my-registrations:
     get:
       tags: [Registrations]
-      summary: Current participant registrations
+      summary: Inscriptions actuelles du participant
       parameters:
         - $ref: "#/components/parameters/paymentStatusFilter"
       responses:
         "200":
-          description: Registration list.
+          description: Liste d'inscriptions.
           content:
             application/json:
               schema:
@@ -252,12 +252,12 @@ paths:
   /registrations/{registration}/pay:
     post:
       tags: [Registrations]
-      summary: Pay pending registration
+      summary: Payer une inscription en attente
       parameters:
         - $ref: "#/components/parameters/registration"
       responses:
         "200":
-          description: Paid registration.
+          description: Inscription payée.
           content:
             application/json:
               schema:
@@ -269,7 +269,7 @@ paths:
   /registrations/{registration}:
     delete:
       tags: [Registrations]
-      summary: Cancel unpaid participant registration
+      summary: Annuler une inscription participant non payée
       parameters:
         - $ref: "#/components/parameters/registration"
       responses:
@@ -282,12 +282,12 @@ paths:
   /registrations/{registration}/ticket:
     get:
       tags: [Registrations]
-      summary: Download paid registration ticket payload
+      summary: Télécharger la charge utile du ticket d'une inscription payée
       parameters:
         - $ref: "#/components/parameters/registration"
       responses:
         "200":
-          description: Ticket payload.
+          description: Charge utile du ticket.
           content:
             application/json:
               schema:
@@ -299,7 +299,7 @@ paths:
   /events/{event}/feedback:
     post:
       tags: [Feedback]
-      summary: Submit feedback for an event
+      summary: Soumettre un commentaire pour un événement
       parameters:
         - $ref: "#/components/parameters/event"
       requestBody:
@@ -310,7 +310,7 @@ paths:
               $ref: "#/components/schemas/FeedbackWriteRequest"
       responses:
         "201":
-          description: Feedback submitted.
+          description: Commentaire soumis.
           content:
             application/json:
               schema:
@@ -320,17 +320,17 @@ paths:
   /organizer/events:
     get:
       tags: [Events]
-      summary: Organizer event list
+      summary: Liste d'événements de l'organisateur
       responses:
         "200":
-          description: Paginated managed events.
+          description: Événements gérés paginés.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedEvents"
     post:
       tags: [Events]
-      summary: Create organizer event
+      summary: Créer un événement organisateur
       requestBody:
         required: true
         content:
@@ -339,7 +339,7 @@ paths:
               $ref: "#/components/schemas/EventWriteRequest"
       responses:
         "201":
-          description: Created event.
+          description: Événement créé.
           content:
             application/json:
               schema:
@@ -349,7 +349,7 @@ paths:
   /organizer/events/{event}:
     patch:
       tags: [Events]
-      summary: Update organizer event
+      summary: Mettre à jour un événement organisateur
       parameters:
         - $ref: "#/components/parameters/event"
       requestBody:
@@ -360,7 +360,7 @@ paths:
               $ref: "#/components/schemas/EventWriteRequest"
       responses:
         "200":
-          description: Updated event.
+          description: Événement mis à jour.
           content:
             application/json:
               schema:
@@ -370,7 +370,7 @@ paths:
   /organizer/events/{event}/capacity:
     patch:
       tags: [Events]
-      summary: Update organizer event capacity
+      summary: Mettre à jour la capacité d'un événement organisateur
       parameters:
         - $ref: "#/components/parameters/event"
       requestBody:
@@ -381,7 +381,7 @@ paths:
               $ref: "#/components/schemas/CapacityRequest"
       responses:
         "200":
-          description: Updated event.
+          description: Événement mis à jour.
           content:
             application/json:
               schema:
@@ -391,12 +391,12 @@ paths:
   /organizer/events/{event}/request-publication:
     post:
       tags: [Events]
-      summary: Request event publication
+      summary: Demander la publication de l'événement
       parameters:
         - $ref: "#/components/parameters/event"
       responses:
         "200":
-          description: Event moved to pending publication.
+          description: Événement passé en attente de publication.
           content:
             application/json:
               schema:
@@ -404,12 +404,12 @@ paths:
   /organizer/events/{event}/tasks:
     get:
       tags: [Event Planning]
-      summary: List organizer event tasks
+      summary: Lister les tâches de l'événement organisateur
       parameters:
         - $ref: "#/components/parameters/event"
       responses:
         "200":
-          description: Task list.
+          description: Liste de tâches.
           content:
             application/json:
               schema:
@@ -418,7 +418,7 @@ paths:
                   $ref: "#/components/schemas/EventTask"
     post:
       tags: [Event Planning]
-      summary: Create organizer event task
+      summary: Créer une tâche d'événement organisateur
       parameters:
         - $ref: "#/components/parameters/event"
       requestBody:
@@ -429,7 +429,7 @@ paths:
               $ref: "#/components/schemas/EventTaskWriteRequest"
       responses:
         "201":
-          description: Created task.
+          description: Tâche créée.
           content:
             application/json:
               schema:
@@ -437,7 +437,7 @@ paths:
   /organizer/events/{event}/tasks/{eventTask}:
     patch:
       tags: [Event Planning]
-      summary: Update organizer event task
+      summary: Mettre à jour une tâche d'événement organisateur
       parameters:
         - $ref: "#/components/parameters/event"
         - $ref: "#/components/parameters/eventTask"
@@ -449,29 +449,29 @@ paths:
               $ref: "#/components/schemas/EventTaskWriteRequest"
       responses:
         "200":
-          description: Updated task.
+          description: Tâche mise à jour.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/EventTask"
     delete:
       tags: [Event Planning]
-      summary: Delete organizer event task
+      summary: Supprimer une tâche d'événement organisateur
       parameters:
         - $ref: "#/components/parameters/event"
         - $ref: "#/components/parameters/eventTask"
       responses:
         "204":
-          description: Deleted.
+          description: Supprimé.
   /organizer/events/{event}/activities:
     get:
       tags: [Event Planning]
-      summary: List organizer event activities
+      summary: Lister les activités de l'événement organisateur
       parameters:
         - $ref: "#/components/parameters/event"
       responses:
         "200":
-          description: Activity list.
+          description: Liste d'activités.
           content:
             application/json:
               schema:
@@ -480,7 +480,7 @@ paths:
                   $ref: "#/components/schemas/EventActivity"
     post:
       tags: [Event Planning]
-      summary: Create organizer event activity
+      summary: Créer une activité d'événement organisateur
       parameters:
         - $ref: "#/components/parameters/event"
       requestBody:
@@ -491,7 +491,7 @@ paths:
               $ref: "#/components/schemas/EventActivityWriteRequest"
       responses:
         "201":
-          description: Created activity.
+          description: Activité créée.
           content:
             application/json:
               schema:
@@ -499,7 +499,7 @@ paths:
   /organizer/events/{event}/activities/{eventActivity}:
     patch:
       tags: [Event Planning]
-      summary: Update organizer event activity
+      summary: Mettre à jour une activité d'événement organisateur
       parameters:
         - $ref: "#/components/parameters/event"
         - $ref: "#/components/parameters/eventActivity"
@@ -511,27 +511,27 @@ paths:
               $ref: "#/components/schemas/EventActivityWriteRequest"
       responses:
         "200":
-          description: Updated activity.
+          description: Activité mise à jour.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/EventActivity"
     delete:
       tags: [Event Planning]
-      summary: Delete organizer event activity
+      summary: Supprimer une activité d'événement organisateur
       parameters:
         - $ref: "#/components/parameters/event"
         - $ref: "#/components/parameters/eventActivity"
       responses:
         "204":
-          description: Deleted.
+          description: Supprimé.
   /organizer/registrations/events:
     get:
       tags: [Registrations]
-      summary: Organizer registration event summary
+      summary: Résumé des inscriptions aux événements de l'organisateur
       responses:
         "200":
-          description: Events with registration counts.
+          description: Événements avec le nombre d'inscriptions.
           content:
             application/json:
               schema:
@@ -541,12 +541,12 @@ paths:
   /organizer/registrations:
     get:
       tags: [Registrations]
-      summary: Organizer registration list
+      summary: Liste des inscriptions de l'organisateur
       parameters:
         - $ref: "#/components/parameters/eventIdQuery"
       responses:
         "200":
-          description: Registration list.
+          description: Liste d'inscriptions.
           content:
             application/json:
               schema:
@@ -556,7 +556,7 @@ paths:
   /organizer/registrations/{registration}:
     delete:
       tags: [Registrations]
-      summary: Organizer delete unpaid registration
+      summary: L'organisateur supprime une inscription non payée
       parameters:
         - $ref: "#/components/parameters/registration"
       responses:
@@ -567,12 +567,12 @@ paths:
   /admin/events:
     get:
       tags: [Events]
-      summary: Admin event list
+      summary: Liste des événements admin
       parameters:
         - $ref: "#/components/parameters/search"
       responses:
         "200":
-          description: Paginated events.
+          description: Événements paginés.
           content:
             application/json:
               schema:
@@ -582,10 +582,10 @@ paths:
   /admin/organizer-events:
     get:
       tags: [Events]
-      summary: Admin organizer-space events
+      summary: Événements de l'espace organisateur admin
       responses:
         "200":
-          description: Paginated organizer events.
+          description: Événements organisateurs paginés.
           content:
             application/json:
               schema:
@@ -593,10 +593,10 @@ paths:
   /admin/my-events:
     get:
       tags: [Events]
-      summary: Admin assigned events
+      summary: Événements assignés à l'admin
       responses:
         "200":
-          description: Paginated admin events.
+          description: Événements admin paginés.
           content:
             application/json:
               schema:
@@ -604,7 +604,7 @@ paths:
   /admin/events/{event}:
     patch:
       tags: [Events]
-      summary: Admin update event
+      summary: L'admin met à jour l'événement
       parameters:
         - $ref: "#/components/parameters/event"
       requestBody:
@@ -615,23 +615,23 @@ paths:
               $ref: "#/components/schemas/EventWriteRequest"
       responses:
         "200":
-          description: Updated event.
+          description: Événement mis à jour.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Event"
     delete:
       tags: [Events]
-      summary: Admin delete event
+      summary: L'admin supprime l'événement
       parameters:
         - $ref: "#/components/parameters/event"
       responses:
         "204":
-          description: Deleted.
+          description: Supprimé.
   /admin/events/{event}/capacity:
     patch:
       tags: [Events]
-      summary: Admin update event capacity
+      summary: L'admin met à jour la capacité de l'événement
       parameters:
         - $ref: "#/components/parameters/event"
       requestBody:
@@ -642,7 +642,7 @@ paths:
               $ref: "#/components/schemas/CapacityRequest"
       responses:
         "200":
-          description: Updated event.
+          description: Événement mis à jour.
           content:
             application/json:
               schema:
@@ -650,7 +650,7 @@ paths:
   /admin/events/{event}/assign-organizer:
     patch:
       tags: [Events]
-      summary: Assign organizer to event
+      summary: Assigner un organisateur à l'événement
       parameters:
         - $ref: "#/components/parameters/event"
       requestBody:
@@ -665,7 +665,7 @@ paths:
                   $ref: "#/components/schemas/ObjectId"
       responses:
         "200":
-          description: Updated event.
+          description: Événement mis à jour.
           content:
             application/json:
               schema:
@@ -673,12 +673,12 @@ paths:
   /admin/events/{event}/approve-publication:
     post:
       tags: [Events]
-      summary: Approve event publication
+      summary: Approuver la publication de l'événement
       parameters:
         - $ref: "#/components/parameters/event"
       responses:
         "200":
-          description: Published event.
+          description: Événement publié.
           content:
             application/json:
               schema:
@@ -686,12 +686,12 @@ paths:
   /admin/events/{event}/tasks:
     get:
       tags: [Event Planning]
-      summary: Admin list event tasks
+      summary: L'admin liste les tâches de l'événement
       parameters:
         - $ref: "#/components/parameters/event"
       responses:
         "200":
-          description: Task list.
+          description: Liste de tâches.
           content:
             application/json:
               schema:
@@ -700,7 +700,7 @@ paths:
                   $ref: "#/components/schemas/EventTask"
     post:
       tags: [Event Planning]
-      summary: Admin create event task
+      summary: L'admin crée une tâche d'événement
       parameters:
         - $ref: "#/components/parameters/event"
       requestBody:
@@ -711,7 +711,7 @@ paths:
               $ref: "#/components/schemas/EventTaskWriteRequest"
       responses:
         "201":
-          description: Created task.
+          description: Tâche créée.
           content:
             application/json:
               schema:
@@ -719,7 +719,7 @@ paths:
   /admin/events/{event}/tasks/{eventTask}:
     patch:
       tags: [Event Planning]
-      summary: Admin update event task
+      summary: L'admin met à jour une tâche d'événement
       parameters:
         - $ref: "#/components/parameters/event"
         - $ref: "#/components/parameters/eventTask"
@@ -731,29 +731,29 @@ paths:
               $ref: "#/components/schemas/EventTaskWriteRequest"
       responses:
         "200":
-          description: Updated task.
+          description: Tâche mise à jour.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/EventTask"
     delete:
       tags: [Event Planning]
-      summary: Admin delete event task
+      summary: L'admin supprime une tâche d'événement
       parameters:
         - $ref: "#/components/parameters/event"
         - $ref: "#/components/parameters/eventTask"
       responses:
         "204":
-          description: Deleted.
+          description: Supprimé.
   /admin/events/{event}/activities:
     get:
       tags: [Event Planning]
-      summary: Admin list event activities
+      summary: L'admin liste les activités de l'événement
       parameters:
         - $ref: "#/components/parameters/event"
       responses:
         "200":
-          description: Activity list.
+          description: Liste d'activités.
           content:
             application/json:
               schema:
@@ -762,7 +762,7 @@ paths:
                   $ref: "#/components/schemas/EventActivity"
     post:
       tags: [Event Planning]
-      summary: Admin create event activity
+      summary: L'admin crée une activité d'événement
       parameters:
         - $ref: "#/components/parameters/event"
       requestBody:
@@ -773,7 +773,7 @@ paths:
               $ref: "#/components/schemas/EventActivityWriteRequest"
       responses:
         "201":
-          description: Created activity.
+          description: Activité créée.
           content:
             application/json:
               schema:
@@ -781,7 +781,7 @@ paths:
   /admin/events/{event}/activities/{eventActivity}:
     patch:
       tags: [Event Planning]
-      summary: Admin update event activity
+      summary: L'admin met à jour une activité d'événement
       parameters:
         - $ref: "#/components/parameters/event"
         - $ref: "#/components/parameters/eventActivity"
@@ -793,29 +793,29 @@ paths:
               $ref: "#/components/schemas/EventActivityWriteRequest"
       responses:
         "200":
-          description: Updated activity.
+          description: Activité mise à jour.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/EventActivity"
     delete:
       tags: [Event Planning]
-      summary: Admin delete event activity
+      summary: L'admin supprime une activité d'événement
       parameters:
         - $ref: "#/components/parameters/event"
         - $ref: "#/components/parameters/eventActivity"
       responses:
         "204":
-          description: Deleted.
+          description: Supprimé.
   /admin/event-requests:
     get:
       tags: [Event Requests]
-      summary: Admin event request list
+      summary: Liste des demandes d'événements admin
       parameters:
         - $ref: "#/components/parameters/eventRequestStatusFilter"
       responses:
         "200":
-          description: Event requests.
+          description: Demandes d'événements.
           content:
             application/json:
               schema:
@@ -827,7 +827,7 @@ paths:
   /admin/event-requests/{eventRequest}/review:
     post:
       tags: [Event Requests]
-      summary: Review client event request
+      summary: Réviser la demande d'événement du client
       parameters:
         - $ref: "#/components/parameters/eventRequest"
       requestBody:
@@ -838,7 +838,7 @@ paths:
               $ref: "#/components/schemas/EventRequestReviewRequest"
       responses:
         "200":
-          description: Reviewed request.
+          description: Demande révisée.
           content:
             application/json:
               schema:
@@ -850,12 +850,12 @@ paths:
   /admin/users:
     get:
       tags: [Users]
-      summary: Admin user list
+      summary: Liste des utilisateurs admin
       parameters:
         - $ref: "#/components/parameters/roleFilter"
       responses:
         "200":
-          description: Users.
+          description: Utilisateurs.
           content:
             application/json:
               schema:
@@ -866,7 +866,7 @@ paths:
           $ref: "#/components/responses/ValidationError"
     post:
       tags: [Users]
-      summary: Admin create user
+      summary: L'admin crée un utilisateur
       requestBody:
         required: true
         content:
@@ -875,7 +875,7 @@ paths:
               $ref: "#/components/schemas/AdminUserWriteRequest"
       responses:
         "201":
-          description: Created user.
+          description: Utilisateur créé.
           content:
             application/json:
               schema:
@@ -883,7 +883,7 @@ paths:
   /admin/users/{user}:
     patch:
       tags: [Users]
-      summary: Admin update user
+      summary: L'admin met à jour l'utilisateur
       parameters:
         - $ref: "#/components/parameters/user"
       requestBody:
@@ -894,28 +894,28 @@ paths:
               $ref: "#/components/schemas/AdminUserWriteRequest"
       responses:
         "200":
-          description: Updated user.
+          description: Utilisateur mis à jour.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
     delete:
       tags: [Users]
-      summary: Admin delete user
+      summary: L'admin supprime l'utilisateur
       parameters:
         - $ref: "#/components/parameters/user"
       responses:
         "204":
-          description: Deleted.
+          description: Supprimé.
         "422":
           $ref: "#/components/responses/DomainError"
   /admin/organizers:
     get:
       tags: [Users]
-      summary: Admin organizer list
+      summary: Liste des organisateurs admin
       responses:
         "200":
-          description: Organizers.
+          description: Organisateurs.
           content:
             application/json:
               schema:
@@ -925,10 +925,10 @@ paths:
   /admin/stats:
     get:
       tags: [Stats]
-      summary: Admin dashboard stats
+      summary: Statistiques du tableau de bord admin
       responses:
         "200":
-          description: Admin dashboard metrics.
+          description: Métriques du tableau de bord admin.
           content:
             application/json:
               schema:
@@ -936,10 +936,10 @@ paths:
   /admin/registrations/events:
     get:
       tags: [Registrations]
-      summary: Admin registration event summary
+      summary: Résumé des inscriptions aux événements admin
       responses:
         "200":
-          description: Events with registration counts.
+          description: Événements avec le nombre d'inscriptions.
           content:
             application/json:
               schema:
@@ -949,12 +949,12 @@ paths:
   /admin/registrations:
     get:
       tags: [Registrations]
-      summary: Admin registration list
+      summary: Liste des inscriptions admin
       parameters:
         - $ref: "#/components/parameters/eventIdQuery"
       responses:
         "200":
-          description: Registration list.
+          description: Liste d'inscriptions.
           content:
             application/json:
               schema:
@@ -964,7 +964,7 @@ paths:
   /admin/registrations/{registration}:
     delete:
       tags: [Registrations]
-      summary: Admin delete unpaid registration
+      summary: L'admin supprime une inscription non payée
       parameters:
         - $ref: "#/components/parameters/registration"
       responses:
@@ -975,12 +975,12 @@ paths:
   /admin/feedbacks/{feedback}/approve:
     post:
       tags: [Feedback]
-      summary: Approve feedback
+      summary: Approuver le commentaire
       parameters:
         - $ref: "#/components/parameters/feedback"
       responses:
         "200":
-          description: Approved feedback.
+          description: Commentaire approuvé.
           content:
             application/json:
               schema:
@@ -988,16 +988,16 @@ paths:
   /admin/feedbacks/{feedback}:
     delete:
       tags: [Feedback]
-      summary: Delete feedback
+      summary: Supprimer le commentaire
       parameters:
         - $ref: "#/components/parameters/feedback"
       responses:
         "204":
-          description: Deleted.
+          description: Supprimé.
   /event-requests:
     post:
       tags: [Event Requests]
-      summary: Client submit event request
+      summary: Le client soumet une demande d'événement
       requestBody:
         required: true
         content:
@@ -1006,7 +1006,7 @@ paths:
               $ref: "#/components/schemas/EventRequestWriteRequest"
       responses:
         "201":
-          description: Created event request.
+          description: Demande d'événement créée.
           content:
             application/json:
               schema:
@@ -1016,7 +1016,7 @@ paths:
   /event-requests/{eventRequest}:
     delete:
       tags: [Event Requests]
-      summary: Client delete own pending request
+      summary: Le client supprime sa propre demande en attente
       parameters:
         - $ref: "#/components/parameters/eventRequest"
       responses:
@@ -1029,10 +1029,10 @@ paths:
   /client/stats:
     get:
       tags: [Stats]
-      summary: Client dashboard stats
+      summary: Statistiques du tableau de bord client
       responses:
         "200":
-          description: Client dashboard payload.
+          description: Charge utile du tableau de bord client.
           content:
             application/json:
               schema:
@@ -1126,58 +1126,58 @@ components:
         $ref: "#/components/schemas/ObjectId"
   headers:
     RequestId:
-      description: Correlation identifier returned on every API response.
+      description: Identifiant de corrélation renvoyé à chaque réponse d'API.
       schema:
         type: string
         maxLength: 128
     ContentTypeOptions:
-      description: Prevents MIME sniffing.
+      description: Empêche le MIME sniffing.
       schema:
         type: string
         const: nosniff
     FrameOptions:
-      description: Disallows framing of API responses.
+      description: Interdit l'encadrement (framing) des réponses d'API.
       schema:
         type: string
         const: DENY
     ReferrerPolicy:
-      description: Prevents referrer leakage from API responses.
+      description: Empêche la fuite du référent (referrer) des réponses d'API.
       schema:
         type: string
         const: no-referrer
   responses:
     Message:
-      description: Message response.
+      description: Réponse de message.
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/Message"
     Unauthorized:
-      description: Missing or invalid bearer token.
+      description: Jeton porteur manquant ou invalide.
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/Message"
     Forbidden:
-      description: Authenticated user is not allowed to perform the action.
+      description: L'utilisateur authentifié n'est pas autorisé à effectuer l'action.
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/Message"
     NotFound:
-      description: Resource not found or hidden by authorization.
+      description: Ressource non trouvée ou cachée par l'autorisation.
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/Message"
     DomainError:
-      description: Domain rule rejected the action.
+      description: Une règle de domaine a rejeté l'action.
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/Message"
     ValidationError:
-      description: Validation failed.
+      description: Échec de la validation.
       content:
         application/json:
           schema:
@@ -1193,7 +1193,7 @@ components:
                   items:
                     type: string
     TooManyRequests:
-      description: Request was rate limited.
+      description: La requête a été limitée en débit.
       headers:
         X-Request-Id:
           $ref: "#/components/headers/RequestId"
@@ -1376,7 +1376,7 @@ components:
           type: string
         image_data:
           type: string
-          description: Base64-encoded image payload.
+          description: Contenu de l'image encodé en Base64.
         image_mime:
           type: string
           example: image/png

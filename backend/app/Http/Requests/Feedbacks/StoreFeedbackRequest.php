@@ -6,17 +6,17 @@ use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Form request for submitting feedback for an event.
+ * Requête de formulaire pour soumettre un commentaire pour un événement.
  *
- * This request ensures that only participants can submit feedback
- * and validates that the rating and comments meet specific standards.
+ * Cette requête garantit que seuls les participants peuvent soumettre des commentaires
+ * et valide que la note et les commentaires respectent des normes spécifiques.
  */
 class StoreFeedbackRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Détermine si l'utilisateur est autorisé à effectuer cette requête.
      *
-     * Only users with the 'PARTICIPANT' role are allowed to submit feedback.
+     * Seuls les utilisateurs ayant le rôle 'PARTICIPANT' sont autorisés à soumettre des commentaires.
      */
     public function authorize(): bool
     {
@@ -26,11 +26,11 @@ class StoreFeedbackRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * Obtenir les règles de validation qui s'appliquent à la requête.
      *
-     * Rules:
-     * - rating: Required integer between 1 and 5.
-     * - comment: Optional string, maximum 2000 characters.
+     * Règles :
+     * - rating : Entier requis entre 1 et 5.
+     * - comment : Chaîne de caractères optionnelle, maximum 2000 caractères.
      *
      * @return array<string, list<string>>
      */
