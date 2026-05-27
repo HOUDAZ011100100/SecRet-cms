@@ -57,7 +57,7 @@ export function AdminEventsPage() {
   const load = async () => {
     const [ev, org] = await Promise.all([api.get('/admin/events'), api.get('/admin/organizers')]);
     setEvents(ev.data.data);
-    setOrganizers(org.data.filter((o) => o.role === 'organizer'));
+    setOrganizers(org.data.filter((o) => o.role === 'organizer' || o.role === 'admin'));
   };
 
   useEffect(() => {

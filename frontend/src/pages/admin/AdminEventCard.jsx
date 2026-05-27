@@ -1,4 +1,4 @@
-﻿import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Badge, Button } from '../../components/ui';
 import { eventPublicDetailPath } from '../../lib/eventPaths';
 import { formatDate, formatEventStatus } from '../../lib/format';
@@ -81,11 +81,11 @@ export function AdminEventCard({
           }}
         >
           <option value="" disabled>
-            Choisir un organisateur
+            Choisir un organisateur ou administrateur
           </option>
           {organizers.map((o) => (
             <option key={o.id} value={o.id}>
-              {o.name}
+              {o.name} {o.role === 'admin' ? '(Admin)' : ''}
             </option>
           ))}
         </select>

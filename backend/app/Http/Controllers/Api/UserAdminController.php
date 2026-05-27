@@ -49,7 +49,7 @@ class UserAdminController extends ApiController
     public function organizers()
     {
         $users = User::query()
-            ->where('role', User::ROLE_ORGANIZER)
+            ->whereIn('role', [User::ROLE_ORGANIZER, User::ROLE_ADMIN])
             ->orderBy('name', 'asc')
             ->get(['id', 'name', 'email', 'role']);
 

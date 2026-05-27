@@ -237,7 +237,7 @@ class AuthAndUserManagementFlowTest extends TestCase
 
     public function test_admin_organizers_endpoint_returns_only_organizers_by_name(): void
     {
-        $admin = $this->user(User::ROLE_ADMIN);
+        $admin = $this->user(User::ROLE_ADMIN, ['name' => 'M Admin']);
         $zOrganizer = $this->user(User::ROLE_ORGANIZER, ['name' => 'Z Organizer']);
         $aOrganizer = $this->user(User::ROLE_ORGANIZER, ['name' => 'A Organizer']);
         $this->user(User::ROLE_CLIENT, ['name' => 'Client User']);
@@ -246,9 +246,10 @@ class AuthAndUserManagementFlowTest extends TestCase
 
         $this->getJson('/api/admin/organizers')
             ->assertOk()
-            ->assertJsonCount(2)
+            ->assertJsonCount(3)
             ->assertJsonPath('0.id', $aOrganizer->id)
-            ->assertJsonPath('1.id', $zOrganizer->id);
+            ->assertJsonPath('1.id', $admin->id)
+            ->assertJsonPath('2.id', $zOrganizer->id);
     }
 
     /** @param array<string, mixed> $overrides */
