@@ -1,4 +1,4 @@
-# Deployment Instructions (Render + Supabase)
+# Deployment Instructions (Back4app + Vercel)
 
 This document tracks the autonomous deployment process of the SecRet-cms application.
 
@@ -8,12 +8,12 @@ This document tracks the autonomous deployment process of the SecRet-cms applica
 - [x] React Version: 19.x
 - [x] Identify .env variables: Done
 - [x] Check for Dockerfile: Created
-- [x] Database Compatibility: MongoDB (Atlas instead of Supabase)
+- [x] Database Compatibility: MongoDB (Atlas)
 
 ## Phase 2: Prepare Backend
 - [x] Create `backend/Dockerfile`
 - [x] Create `backend/nginx.conf`
-- [x] Create `render.yaml` (Root)
+- [x] Update CORS for Back4app/Vercel
 
 ## Phase 3: Prepare Frontend
 - [x] Create `frontend/.env.production`
@@ -21,17 +21,12 @@ This document tracks the autonomous deployment process of the SecRet-cms applica
 
 ## Phase 4: Database Setup
 - [x] Request MongoDB Atlas connection string
-- [x] Update `render.yaml`
 
-## Phase 5: CORS & API Connection
-- [x] Update `config/cors.php`
-- [x] Verify `routes/api.php`
-
-## Phase 6: Git & Deploy
+## Phase 5: Git & Deploy
 - [x] Update `.gitignore`
 - [x] Commit and Push
 
-## Phase 7: Post-Deploy
-- [ ] Update live URLs
-- [ ] Run migrations
-- [ ] Verify health check
+## Target URLs (Back4app)
+- Backend: https://velora-backend.back4app.io (Update after deploy)
+- Frontend: https://velora-frontend.vercel.app (Update after deploy)
+
