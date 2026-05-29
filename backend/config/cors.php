@@ -23,7 +23,7 @@ return [
         'http://localhost:5173',
         'http://127.0.0.1:5173',
         'https://velora-frontend.vercel.app',
-        'https://velora-frontend.onrender.com',
+        'https://houdaz-q1n0mt41.b4a.run',
     ],
 
     'allowed_origins_patterns' => [],
