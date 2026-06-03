@@ -1,5 +1,7 @@
 FROM node:22-alpine3.21 AS deps
 
+RUN apk upgrade --no-cache
+
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -25,6 +27,8 @@ COPY . .
 RUN npm run build
 
 FROM nginx:1.27-alpine3.21 AS production
+
+RUN apk upgrade --no-cache
 
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html

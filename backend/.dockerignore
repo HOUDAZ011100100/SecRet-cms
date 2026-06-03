@@ -2,6 +2,8 @@
 .env.*
 .phpdoc
 .phpunit.cache
+.phpunit.result.cache
+.vercel
 auth.json
 docs/classes
 docs/css

@@ -1,11 +1,11 @@
-FROM php:8.4-fpm-alpine3.20
+FROM php:8.4-fpm-alpine3.23
 
 ARG MONGODB_EXT_VERSION=2.3.3
 ARG REDIS_EXT_VERSION=6.3.0
 
 # Update system packages to patch security vulnerabilities (zlib CVE-2026-22184 and others)
-RUN apk update && apk upgrade && \
-    apk add --no-cache \
+RUN apk upgrade --no-cache \
+    && apk add --no-cache \
         bash \
         curl \
         libpng-dev \

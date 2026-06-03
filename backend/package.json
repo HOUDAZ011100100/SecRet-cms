@@ -4,6 +4,7 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
+        "deploy:vercel": "bash scripts/deploy-vercel-safe.sh",
         "dev": "vite"
     },
     "devDependencies": {

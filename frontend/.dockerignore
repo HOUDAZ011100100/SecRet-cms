@@ -1,5 +1,6 @@
 .env
 .env.*
+.vercel
 dist
 dist-ssr
 node_modules
